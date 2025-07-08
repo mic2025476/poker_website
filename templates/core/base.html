@@ -1,0 +1,303 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% trans "MG Entertainment UG | Poker Lounge Berlin" %}</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+  <!-- Custom CSS -->
+  <link href="{% static 'core/styles.css' %}" rel="stylesheet" />
+  <style>
+    :root {
+      --theme-red: #ff0022;
+      --theme-red-hover: #cc001a;
+    }
+    .navbar {
+      background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red) 100%);
+      border-bottom: 3px solid var(--theme-red);
+      z-index: 1100;
+    }
+    .navbar-brand {
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .navbar-nav .nav-link {
+      font-size: 1.05rem;
+      margin-right: 1rem;
+      transition: color 0.3s;
+      cursor: pointer;
+    }
+    .navbar-nav .nav-link.active {
+      color: #fff;
+      font-weight: 600;
+      border-bottom: 3px solid #fff;
+    }
+    .navbar-nav .btn {
+      margin-right: 0.5rem;
+      background-color: var(--theme-red);
+      border-color: var(--theme-red);
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    .navbar-nav .btn:hover {
+      background-color: var(--theme-red-hover);
+      border-color: var(--theme-red-hover);
+    }
+    .auth-hidden {
+      display: none !important;
+    }
+    footer {
+      background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red) 100%);
+      position: relative;
+    }
+    footer .container {
+      position: relative;
+      z-index: 2;
+    }
+    footer::before {
+      content: "";
+      background: url("{% static 'images/footer_bg.svg' %}") no-repeat center center / cover;
+      opacity: 0.1;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      position: absolute;
+      z-index: 1;
+    }
+    footer p {
+      margin: 0;
+    }
+    footer a {
+      font-size: 1.2rem;
+      transition: color 0.3s;
+    }
+    footer a:hover {
+      color: #ffc107 !important;
+    }
+    .custom-red-button {
+      background-color: var(--theme-red) !important;
+      border-color: var(--theme-red) !important;
+      color: white !important;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    .custom-red-button:hover {
+      background-color: var(--theme-red-hover) !important;
+      border-color: var(--theme-red-hover) !important;
+    }
+    @media (max-width: 767px) {
+      .navbar-nav .nav-link {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+      }
+    }
+    section {
+      min-height: calc(100vh - 70px);
+      padding: 4rem 0;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    .dropdown-menu {
+      z-index: 1101 !important; /* Slightly higher than navbar */
+    }
+  </style>
+</head>
+
+<body tabindex="0">
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow">
+    <div class="container">
+      <!-- Brand -->
+      <a class="navbar-brand" href="{% url 'home' %}">
+        <i class="bi bi-controller"></i> {% trans "MG Entertainment UG" %}
+      </a>
+
+      <!-- Row for Toggler + Mobile Language -->
+      <div class="d-flex d-lg-none align-items-center">
+        <!-- Navbar Toggler for mobile -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="{% trans 'Toggle navigation' %}">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- Language Dropdown for mobile (icon only) -->
+        <div class="dropdown ms-2">
+          <button class="btn btn-light dropdown-toggle py-1 px-2" type="button" id="mobileLangBtn"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            <!-- Just the globe icon, no text -->
+            <i class="bi bi-globe"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mobileLangBtn">
+            <li>
+              <a
+                class="dropdown-item d-flex justify-content-between align-items-center"
+                href="#" onclick="submitLanguage('en'); return false;">
+                English
+                {% if LANGUAGE_CODE == 'en' %}
+                  <i class="bi bi-check"></i>
+                {% endif %}
+              </a>
+            </li>
+            <li>
+              <a
+                class="dropdown-item d-flex justify-content-between align-items-center"
+                href="#" onclick="submitLanguage('de'); return false;">
+                Deutsch
+                {% if LANGUAGE_CODE == 'de' %}
+                  <i class="bi bi-check"></i>
+                {% endif %}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Collapsible Content (desktop + mobile) -->
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-center">
+          <li class="nav-item">
+            <a class="nav-link nav-link-toggle {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">{% trans "Home" %}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-toggle {% if request.path == '/gallery/' %}active{% endif %}" href="{% url 'gallery' %}">{% trans "Gallery" %}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-toggle {% if request.path == '/pricing/' %}active{% endif %}" href="{% url 'pricing' %}">{% trans "Pricing" %}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-toggle {% if request.path == '/contact/' %}active{% endif %}" href="{% url 'contact' %}">{% trans "Contact" %}</a>
+          </li>
+
+          <!-- Desktop Language Dropdown (icon only) -->
+          <li class="nav-item dropdown d-none d-lg-block">
+            <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">
+              <!-- Just the globe icon, no text -->
+              <i class="bi bi-globe"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+              <li>
+                <a
+                  class="dropdown-item d-flex justify-content-between align-items-center"
+                  href="#" onclick="submitLanguage('en'); return false;">
+                  English
+                  {% if LANGUAGE_CODE == 'en' %}
+                    <i class="bi bi-check"></i>
+                  {% endif %}
+                </a>
+              </li>
+              <li>
+                <a
+                  class="dropdown-item d-flex justify-content-between align-items-center"
+                  href="#" onclick="submitLanguage('de'); return false;">
+                  Deutsch
+                  {% if LANGUAGE_CODE == 'de' %}
+                    <i class="bi bi-check"></i>
+                  {% endif %}
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Always render both account and book now elements; hide via JS if needed -->
+          <li class="nav-item dropdown" id="profileNavItem">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle me-1"></i>
+              <span>{% trans "My Account" %}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+              <li>
+                <a class="dropdown-item" href="#" id="logoutBtn">{% trans "Logout" %}</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item" id="bookNowItem">
+            <button type="button" class="btn custom-red-button px-3 py-2 toggleAuthForm">{% trans "Book Now" %}</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- One hidden form to submit the language choice -->
+  <form id="langForm" method="post" action="{% url 'set_language' %}">
+    {% csrf_token %}
+    <input type="hidden" name="language" id="langCode" />
+    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+  </form>
+
+  <div class="container-fluid">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer class="text-white pt-4 mt-5 position-relative">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+          <p class="fw-light">&copy; {{ current_year }} {% trans "MG Entertainment UG. All rights reserved." %}</p>
+        </div>
+        <div class="col-md-6 text-center text-md-end">
+          <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="text-white"><i class="bi bi-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Helper function to submit the hidden language form
+    function submitLanguage(lang) {
+      document.getElementById('langCode').value = lang;
+      document.getElementById('langForm').submit();
+    }
+
+    const isAuthenticated = {% if request.session.user_id %}true{% else %}false{% endif %};
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const profileNavItem = document.getElementById('profileNavItem');
+      const bookNowItem = document.getElementById('bookNowItem');
+      if (isAuthenticated) {
+        profileNavItem.classList.remove('auth-hidden');
+        bookNowItem.classList.add('auth-hidden');
+      } else {
+        profileNavItem.classList.add('auth-hidden');
+        bookNowItem.classList.remove('auth-hidden');
+      }
+
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (confirm('{% trans "Are you sure you want to log out?" %}')) {
+            fetch("/customers/api/logout/", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+              },
+            })
+            .then(response => {
+              if (response.ok) {
+                profileNavItem.classList.add('d-none');
+                bookNowItem.classList.remove('d-none');
+                window.location.href = "{% url 'home' %}";
+              } else {
+                alert("{% trans 'Logout failed.' %}");
+              }
+            })
+            .catch(error => console.error("{% trans 'Error logging out:' %}", error));
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

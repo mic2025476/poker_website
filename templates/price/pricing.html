@@ -1,0 +1,65 @@
+<!-- core/templates/pricing.html -->
+{% extends 'core/base.html' %}
+
+{% block content %}
+<section id="pricing" class="d-flex justify-content-center align-items-center min-vh-100 py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <!-- Basic Package -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h3>Basic Package</h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <ul class="list-unstyled">
+                            <li><strong>Table Booking:</strong> 2 Hours</li>
+                            <li><strong>Price:</strong> €100</li>
+                            <li><strong>Includes:</strong> Standard Chips & Cards</li>
+                        </ul>
+                        <button type="button" class="btn btn-primary w-100 mt-3 custom-red-button toggleAuthForm">
+                            Book Now
+                        </button>                 
+                    </div>
+                </div>
+            </div>
+            <!-- Premium Package -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow">
+                    <div class="card-header bg-success text-white text-center">
+                        <h3>Premium Package</h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <ul class="list-unstyled">
+                            <li><strong>Table Booking:</strong> 4 Hours</li>
+                            <li><strong>Price:</strong> €180</li>
+                            <li><strong>Includes:</strong> Premium Chips, Cards & Complimentary Drinks</li>
+                        </ul>
+                        <button type="button" class="btn btn-success w-100 mt-3 custom-red-button toggleAuthForm">
+                            Book Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Deluxe Package -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow">
+                    <div class="card-header bg-warning text-white text-center">
+                        <h3>Deluxe Package</h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <ul class="list-unstyled">
+                            <li><strong>Table Booking:</strong> 6 Hours</li>
+                            <li><strong>Price:</strong> €250</li>
+                            <li><strong>Includes:</strong> Deluxe Chips, Cards, Complimentary Drinks & Professional Dealer</li>
+                        </ul>
+                        <button type="button" class="btn btn-warning w-100 mt-3 custom-red-button toggleAuthForm">
+                            Book Now
+                        </button>                   
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

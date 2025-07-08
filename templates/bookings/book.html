@@ -1,0 +1,419 @@
+{% extends 'core/base.html' %}
+{% load static %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+{% block content %}
+<!-- Include external JS files for new booking and edit booking logic -->
+<script src="{% static 'js/booking_form.js' %}?v={{ timestamp }}"></script>
+<script src="{% static 'js/booking_edit_form.js' %}"></script>
+
+<style>
+  /* Card background for form */
+  .card {
+    background-color: #fff;
+  }
+  /* Custom border style for form controls */
+  .form-control,
+  .form-select,
+  .form-check-input {
+    border: 2px solid #ccc;
+    border-radius: 4px;
+  }
+  .form-control:focus,
+  .form-select:focus,
+  .form-check-input:focus {
+    border-color: #d44;
+    box-shadow: 0 0 5px rgba(212, 68, 68, 0.5);
+  }
+  /* Active tab styling for bottom navigation */
+  .nav-link.active {
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  .hover-scale {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .hover-scale:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  /* Icon styling */
+  .fas {
+    color: #d44;
+  }
+</style>
+
+<!-- Top App Bar -->
+<section id="hero"
+         class="d-flex flex-column justify-content-center align-items-center"
+         style="background-image: url('{% static 'images/poker_1.avif' %}');
+                background-size: cover;
+                background-position: center;">
+  <div class="container" style="margin-top: 4.5rem; margin-bottom: 4rem;">
+    <div class="tab-content" id="bookingTabsContent">
+      <!-- Book Poker Tab Pane -->
+      <div class="tab-pane fade show active"
+           id="book-poker"
+           role="tabpanel"
+           style="background: linear-gradient(135deg, #f5f7fa, #c3cfe2); padding: 20px; border-radius: 10px;"
+           aria-labelledby="book-poker-tab">
+        <div class="card border-0 shadow-sm"
+             style="border: 2px solid #333; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+          <div class="card-body" style="background-color: #fff;">
+            <h2 class="text-center mb-4" style="font-weight: bold; color: #333;">
+              Book Your Poker Lounge 
+              <span style="font-size: 1.3rem; margin-left: 10px;">♠︎ ♥︎ ♣︎ ♦︎</span>
+            </h2>
+            {% include "bookings/booking_form.html" %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- My Bookings Tab Pane -->
+      <div class="tab-pane fade"
+           id="my-bookings"
+           role="tabpanel"
+           aria-labelledby="my-bookings-tab"
+           style="background: linear-gradient(135deg, #f5f7fa, #c3cfe2); padding: 20px; border-radius: 10px;">
+        <!-- Bookings List Container -->
+        <div id="bookings-list-container">
+          <h2 class="text-center mb-4">My Bookings</h2>
+          <div class="row mb-4">
+            <div class="col-12 col-md-4 offset-md-4">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="fas fa-calendar-alt"></i>
+                </span>
+                <input type="date" class="form-control" id="filterDate" placeholder="Select Date" />
+                <button class="btn btn-primary" id="applyFilterBtn">Filter</button>
+              </div>
+            </div>
+          </div>
+          <div id="my-bookings-loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading your bookings...</p>
+          </div>
+          <div id="my-bookings-container" class="row g-4" style="display: none;"></div>
+          <div id="no-bookings-message" class="text-center" style="display: none;">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <p class="text-muted">You currently have no bookings.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Inline Edit Booking Container (hidden by default) -->
+        <div id="edit-booking-container" class="d-none">
+          <button id="back-to-bookings" class="btn btn-link mb-3">
+            <i class="fas fa-arrow-left"></i> Back to Bookings
+          </button>
+          <div class="card border-0 shadow-sm"
+               style="border: 2px solid #333; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <div class="card-body" style="background-color: #fff;">
+              <h2 class="text-center mb-4" style="font-weight: bold; color: #333;">
+                Edit My Bookings 
+                <span style="font-size: 1.3rem; margin-left: 10px;">♠︎ ♥︎ ♣︎ ♦︎</span>
+              </h2>
+              {% include "bookings/booking_edit_form.html" %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Bottom Navigation Bar -->
+<nav class="navbar navbar-dark bg-dark fixed-bottom">
+  <div class="container-fluid">
+    <ul class="nav nav-justified w-100">
+      <li class="nav-item">
+        <a class="nav-link active text-white" id="book-poker-tab" data-bs-toggle="tab"
+           data-bs-target="#book-poker" role="tab" aria-controls="book-poker" aria-selected="true">
+          Book Poker
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-white" id="my-bookings-tab" data-bs-toggle="tab"
+           data-bs-target="#my-bookings" role="tab" aria-controls="my-bookings" aria-selected="false">
+          My Bookings
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Include Braintree Drop-in Library -->
+<script src="https://js.braintreegateway.com/web/dropin/1.38.0/js/dropin.min.js"></script>
+
+<!-- Consolidated JavaScript for both New & Edit Booking Forms -->
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+  // Ensure you have a container element in your HTML where the drop-in UI will render.
+  var dropinContainer = document.getElementById('dropin-container');
+  if (!dropinContainer) {
+    console.error('Dropin container element not found.');
+    return;
+  }
+  
+  // Fetch the client token from your endpoint
+  fetch('/payments/braintree/client-token/')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok.');
+      }
+      return response.text();  // The server returns plain text
+    })
+    .then(clientToken => {
+      // Initialize the Braintree drop-in UI with the retrieved client token.
+      braintree.dropin.create({
+        authorization: clientToken,
+        container: '#dropin-container'
+      }, function (createErr, instance) {
+        if (createErr) {
+          console.error('Error creating dropin UI:', createErr);
+          return;
+        }
+        window.braintreeInstance = instance; // Save instance globally so you can use it later in your payment submission
+        console.log('Braintree dropin UI initialized successfully.');
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching client token:', error);
+    });
+  const user_id = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
+  let allBookings = []; // Global variable for bookings
+
+  // --- Helper Functions ---
+  function formatHour(hour) {
+    var displayHour = hour % 12 === 0 ? 12 : hour % 12;
+    var ampm = hour < 12 ? "AM" : "PM";
+    return displayHour + ":00 " + ampm;
+  }
+  
+  
+  // --- Booking List & Other Logic ---
+  function renderBookings(bookings) {
+    const container = document.getElementById('my-bookings-container');
+    container.innerHTML = '';
+    if (!bookings || bookings.length === 0) {
+      document.getElementById('no-bookings-message').style.display = 'block';
+      return;
+    } else {
+      document.getElementById('no-bookings-message').style.display = 'none';
+    }
+    bookings.forEach(booking => {
+      const card = `
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card booking-card"
+               data-booking-id="${booking.id}"
+               data-booking-date="${booking.start_time}"
+               data-booking-time="${booking.start_time}"
+               data-total-people="${booking.total_people}"
+               data-hours="${booking.hours_booked}"
+               data-drinks="${booking.drinks.join(',')}"
+               style="background-color: #fff; border: 2px solid #333; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <div class="card-header d-flex justify-content-between align-items-center"
+                 style="background-color: #f8f8f8; border-bottom: 2px solid #333;">
+              <h5 class="card-title mb-0" style="font-weight: bold; color: #333;">
+                <i class="fas fa-calendar-alt me-2"></i>Booking #${booking.id}
+              </h5>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary edit-booking" data-booking-id="${booking.id}">
+                  <i class="fas fa-edit me-1"></i>Edit
+                </button>
+                <button class="btn btn-sm btn-outline-danger cancel-booking" data-booking-id="${booking.id}">
+                  <i class="fas fa-trash-alt me-1"></i>Cancel
+                </button>
+              </div>
+            </div>
+            <div class="card-body" style="color: #333;">
+              <p class="card-text mb-2">
+                <i class="fas fa-clock me-2"></i>
+                <strong>Date & Time:</strong> ${booking.start_time}
+              </p>
+              <p class="card-text mb-2">
+                <i class="fas fa-users me-2"></i>
+                <strong>People:</strong> ${booking.total_people}
+              </p>
+              <p class="card-text mb-2">
+                <i class="fas fa-hourglass me-2"></i>
+                <strong>Hours:</strong> ${booking.hours_booked}
+              </p>
+              <p class="card-text mb-2">
+                <i class="fas fa-coins me-2"></i>
+                <strong>Total:</strong> €${booking.total_amount.toFixed(2)}
+              </p>
+              <p class="card-text mb-2">
+                <i class="fas fa-tags me-2"></i>
+                <strong>Drinks:</strong> ${booking.drinks.join(', ') || 'None'}
+              </p>
+              <p class="card-text mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Status:</strong> ${ booking.is_cancelled 
+                  ? '<span class="text-danger fw-bold">Cancelled</span>' 
+                  : '<span class="text-success fw-bold">Active</span>' }
+              </p>
+            </div>
+            <div class="card-footer text-center"
+                 style="background-color: #f8f8f8; border-top: 2px solid #333;">
+              <small style="color: #555;">Thank you for choosing <strong>Poka Lawn</strong>!</small>
+            </div>
+          </div>
+        </div>
+      `;
+      container.innerHTML += card;
+    });
+    container.style.display = 'flex';
+  }
+  
+  function loadMyBookings() {
+    document.getElementById('my-bookings-loading').style.display = 'block';
+    document.getElementById('my-bookings-container').style.display = 'none';
+    document.getElementById('no-bookings-message').style.display = 'none';
+    fetch('/bookings/get-user-bookings/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({ 'customer_id': user_id })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('my-bookings-loading').style.display = 'none';
+      allBookings = data.bookings || [];
+      renderBookings(allBookings);
+    })
+    .catch(error => {
+      console.error('Error fetching bookings:', error);
+      document.getElementById('my-bookings-loading').style.display = 'none';
+      document.getElementById('my-bookings-container').innerHTML = `
+        <p class="text-center text-danger">Error loading bookings. Please try again later.</p>`;
+    });
+  }
+  
+  document.getElementById('applyFilterBtn').addEventListener('click', function() {
+    const selectedDate = document.getElementById('filterDate').value;
+    if (!selectedDate) {
+      renderBookings(allBookings);
+      return;
+    }
+    const filtered = allBookings.filter(booking => {
+      const bDate = new Date(booking.created_at.replace(' ', 'T'));
+      const bDateString = bDate.toISOString().split('T')[0];
+      return bDateString === selectedDate;
+    });
+    renderBookings(filtered);
+  });
+  
+  document.getElementById('my-bookings-tab').addEventListener('click', loadMyBookings);
+  
+  // --- Back Button for Edit Form ---
+  document.getElementById('back-to-bookings').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('edit-booking-container').classList.add('d-none');
+    document.getElementById('bookings-list-container').classList.remove('d-none');
+  });
+  
+  const bookingDateInput = document.getElementById('bookingDate');
+  const bookingTimeSelect = document.getElementById('bookingTime');
+  const numberOfPeopleInput = document.getElementById('numberOfPeople');
+  const numberOfHoursInput = document.getElementById('numberOfHours');
+console.log('bookingDate',bookingDateInput.value);
+console.log('bookingTime',bookingTimeSelect.value);
+console.log('hours',numberOfHoursInput.value);
+
+  // --- Booking Form Submission ---
+  document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+// Call the availability check API
+  const availabilityResponse = await fetch('/bookings/check_availability/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+    },
+    body: JSON.stringify({
+      user_id: user_id,
+      date: bookingDateInput.value,
+      total_people: numberOfPeopleInput.value,
+      start_time: bookingTimeSelect.value,
+      hours_booked: numberOfHoursInput.value
+    })
+  });
+    const availabilityData = await availabilityResponse.json();
+    console.log('availabilityData',availabilityData);
+    if (!availabilityData.available) {
+      alert(availabilityData.message || "Selected time slot is unavailable.");
+      return; // Prevent form submission
+    }
+    const costSummaryDiv = document.getElementById('costSummary');
+  const computedColor = window.getComputedStyle(costSummaryDiv).color;
+
+  // Compare to red (may vary slightly depending on browser; safest to match RGB)
+  if (computedColor === 'rgb(255, 0, 0)') {
+    return; // ❌ Stop submission
+  }
+    const submitButton = this.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+    if (!window.braintreeInstance) {
+      alert("Payment interface not loaded yet.");
+      submitButton.disabled = false;
+      submitButton.innerHTML = 'Confirm Booking';
+      return;
+    }
+    window.braintreeInstance.requestPaymentMethod(async (err, payload) => {
+      if (err) {
+        alert("Payment error. Please check card details.");
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Confirm Booking';
+        return;
+      }
+
+      const formData = {
+        booking_date: bookingDateInput.value + "T" + bookingTimeSelect.value,
+        number_of_people: numberOfPeopleInput.value,
+        number_of_hours: numberOfHoursInput.value,
+        drinks: Array.from(document.querySelectorAll('input[name="drinks"]:checked')).map(o => parseInt(o.value)),
+        payment_method_nonce: payload.nonce,
+        user_id: user_id
+      };
+      try {
+        const response = await fetch('/payments/braintree/process-payment/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          },
+          body: JSON.stringify(formData)
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          document.getElementById('my-bookings-tab').click();
+          loadMyBookings(); 
+          document.getElementById('bookingForm').reset();
+        } else {
+          alert('Error: ' + (data.message || 'Payment failed'));
+        }
+      } catch (error) {
+        alert('Network error. Please try again.');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Confirm Booking';
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}

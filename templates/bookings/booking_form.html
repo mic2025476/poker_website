@@ -1,0 +1,46 @@
+<!-- booking_form_snippet.html -->
+<form id="bookingForm" method="POST">
+    {% csrf_token %}
+    <!-- Date Field -->
+    <div class="mb-3">
+      <label for="bookingDate" class="form-label">Booking Date</label>
+      <input type="date" class="form-control" id="bookingDate" name="booking_date" required />
+    </div>
+    <!-- Time Dropdown Field -->
+    <div class="mb-3">
+      <label for="bookingTime" class="form-label">Booking Time</label>
+      <select class="form-select" id="bookingTime" name="booking_time" required>
+        <option value="">Select Time</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="numberOfPeople" class="form-label">Number of People</label>
+      <input type="number" class="form-control" id="numberOfPeople" name="number_of_people" min="1" required />
+    </div>
+    <div class="mb-3">
+      <label for="numberOfHours" class="form-label">Number of Hours</label>
+      <input type="number" class="form-control" id="numberOfHours" name="number_of_hours" min="1" required />
+    </div>
+    <!-- Cost Summary Message -->
+    <div id="costSummary" class="mb-3"></div>
+    <div class="mb-3">
+      <label for="drinks" class="form-label">Select Drinks</label>
+      <div class="border rounded p-2">
+        {% for drink in drinks %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="drink{{ drink.id }}" name="drinks" value="{{ drink.id }}">
+            <label class="form-check-label" for="drink{{ drink.id }}">
+              {{ drink.name }}
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Payment Message -->
+    <div id="paymentMessage" class="mb-3 text-muted"></div>
+    <!-- Braintree Drop-in Container -->
+    <div id="dropin-container" class="mb-3"></div>
+    
+    <button type="submit" class="btn btn-danger w-100 py-2">Confirm Booking</button>
+  </form>
+  

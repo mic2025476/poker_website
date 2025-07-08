@@ -1,0 +1,47 @@
+<!-- bookings/booking_edit_form.html -->
+<form id="editBookingForm" method="POST">
+    {% csrf_token %}
+    <!-- Date Field -->
+    <div class="mb-3">
+      <label for="editBookingDate" class="form-label">Booking Date</label>
+      <input type="date" class="form-control" id="editBookingDate" name="booking_date" required />
+    </div>
+    <!-- Time Dropdown Field -->
+    <div class="mb-3">
+      <label for="editBookingTime" class="form-label">Booking Time</label>
+      <select class="form-select" id="editBookingTime" name="booking_time" required>
+        <option value="">Select Time</option>
+      </select>
+    </div>
+    <!-- Number of People -->
+    <div class="mb-3">
+      <label for="editNumberOfPeople" class="form-label">Number of People</label>
+      <input type="number" class="form-control" id="editNumberOfPeople" name="number_of_people" min="1" required />
+    </div>
+    <!-- Number of Hours -->
+    <div class="mb-3">
+      <label for="editNumberOfHours" class="form-label">Number of Hours</label>
+      <input type="number" class="form-control" id="editNumberOfHours" name="number_of_hours" min="1" required />
+    </div>
+    <div id="editCostSummary" class="mb-3 text-muted"></div>
+    <!-- Drinks Selection -->
+    <div class="mb-3">
+      <label for="editDrinks" class="form-label">Select Drinks</label>
+      <div class="border rounded p-2" id="editDrinksContainer">
+        {% for drink in drinks %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="editDrink{{ drink.id }}" name="drinks" value="{{ drink.id }}">
+            <label class="form-check-label" for="editDrink{{ drink.id }}">
+              {{ drink.name }}
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Payment Message -->
+    <div id="paymentMessage" class="mb-3 text-muted"></div>
+    <!-- Braintree Drop-in Container -->
+    <div id="dropin-container" class="mb-3"></div>
+    <button type="submit" class="btn btn-primary w-100 py-2">Update Booking</button>
+  </form>
+  

@@ -1,0 +1,531 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<style>
+    /* Custom CSS for authForm */
+    #authForm {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1050;
+      width: 600px;
+      max-width: 90%;
+      max-height: 80vh;
+      background-color: white;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+      overflow-y: auto;
+    }
+    
+</style>
+<!-- Auth Form -->
+<div id="authForm" class="d-none">
+  <ul class="nav nav-tabs mb-4" id="authTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link active fw-semibold"
+        id="signup-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#signup"
+        type="button"
+        role="tab"
+        aria-controls="signup"
+        aria-selected="true"
+      >
+        {% trans "Sign Up" %}
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link fw-semibold"
+        id="login-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#login"
+        type="button"
+        role="tab"
+        aria-controls="login"
+        aria-selected="false"
+      >
+        {% trans "Login" %}
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content" id="authTabContent">
+    <!-- Sign Up Tab -->
+    <div
+      class="tab-pane fade show active"
+      id="signup"
+      role="tabpanel"
+      aria-labelledby="signup-tab"
+    >
+      <div id="recaptcha-container"></div>
+      <form id="signupForm">
+        <div class="mb-3">
+          <label for="signupFirstName" class="form-label fw-semibold">
+            {% trans "First Name" %}
+          </label>
+          <input
+            type="text"
+            class="form-control form-control-lg"
+            id="signupFirstName"
+            name="first_name"
+            placeholder="{% trans 'Enter your first name' %}"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="signupLastName" class="form-label fw-semibold">
+            {% trans "Last Name" %}
+          </label>
+          <input
+            type="text"
+            class="form-control form-control-lg"
+            id="signupLastName"
+            name="last_name"
+            placeholder="{% trans 'Enter your last name' %}"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="signupEmail" class="form-label fw-semibold">
+            {% trans "Email ID" %}
+          </label>
+          <input
+            type="email"
+            class="form-control form-control-lg"
+            id="signupEmail"
+            name="email_id"
+            placeholder="yourname@example.com"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="signupPhone" class="form-label fw-semibold">
+            {% trans "Phone Number" %}
+          </label>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text">
+              <i class="bi bi-telephone-forward-fill"></i>
+            </span>
+            <select class="form-select" style="max-width: 100px;" id="countryCode">
+              <option value="+49">DE +49</option>
+              <!-- Add other country codes if needed -->
+            </select>
+            <input
+              type="tel"
+              class="form-control"
+              id="signupPhone"
+              name="phone_number"
+              placeholder="{% trans '10-digit phone number' %}"
+              required
+              pattern="[0-9]{10}"
+            />
+          </div>
+          <small class="text-muted">
+            {% trans "We'll send OTPs to both your phone and email." %}
+          </small>
+        </div>
+        <div class="mb-3">
+          <label for="signupPassword" class="form-label fw-semibold">
+            {% trans "Password" %}
+          </label>
+          <input
+            type="password"
+            class="form-control form-control-lg"
+            id="signupPassword"
+            name="password"
+            placeholder="{% trans 'Enter your password' %}"
+            required
+          />
+        </div>
+        <div class="mb-4">
+          <label for="signupConfirmPassword" class="form-label fw-semibold">
+            {% trans "Confirm Password" %}
+          </label>
+          <input
+            type="password"
+            class="form-control form-control-lg"
+            id="signupConfirmPassword"
+            name="confirm_password"
+            placeholder="{% trans 'Re-enter your password' %}"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          class="btn btn-primary w-100 py-2 fw-semibold custom-red-button"
+        >
+          {% trans "Sign Up" %}
+        </button>
+      </form>
+      <!-- OTP Verification Section (Hidden initially) -->
+      <div id="signupOtpSection" class="d-none mt-4">
+        <div class="mb-3">
+          <label for="phoneOtp" class="form-label fw-semibold">
+            {% trans "Phone OTP" %}
+          </label>
+          <input
+            type="text"
+            class="form-control form-control-lg"
+            id="phoneOtp"
+            placeholder="{% trans 'Enter phone OTP' %}"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="emailOtp" class="form-label fw-semibold">
+            {% trans "Email OTP" %}
+          </label>
+          <input
+            type="text"
+            class="form-control form-control-lg"
+            id="emailOtp"
+            placeholder="{% trans 'Enter email OTP' %}"
+            required
+          />
+        </div>
+        <button
+          type="button"
+          id="verifyOtpBtn"
+          class="btn btn-success w-100 py-2 fw-semibold custom-red-button"
+        >
+          {% trans "Verify OTP" %}
+        </button>
+      </div>
+    </div>
+    <!-- Login Tab -->
+    <div class="tab-pane fade" id="login" role="tabpanel" aria-labelledby="login-tab">
+      <form id="loginForm">
+        <div class="mb-3">
+          <label for="loginEmail" class="form-label fw-semibold">
+            {% trans "Email" %}
+          </label>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text">
+              <i class="bi bi-envelope-fill"></i>
+            </span>
+            <input
+              type="email"
+              class="form-control"
+              id="loginEmail"
+              name="email_id"
+              placeholder="yourname@example.com"
+              required
+            />
+          </div>
+        </div>
+        <div class="mb-4">
+          <label for="loginPassword" class="form-label fw-semibold">
+            {% trans "Password" %}
+          </label>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text">
+              <i class="bi bi-lock-fill"></i>
+            </span>
+            <input
+              type="password"
+              class="form-control"
+              id="loginPassword"
+              name="password"
+              placeholder="{% trans 'Enter your password' %}"
+              required
+            />
+          </div>
+        </div>
+        <div id="loginMessage" style="color: red; margin-bottom: 1rem;"></div>
+        <button
+          type="submit"
+          class="btn btn-success w-100 py-2 fw-semibold custom-red-button"
+        >
+          {% trans "Login" %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Main Hero Section -->
+<section
+  id="hero"
+  class="d-flex flex-column justify-content-center align-items-center"
+  style="
+    background-image: url('{% static 'images/poker_1.avif' %}');
+    background-size: cover;
+    background-position: center;
+  "
+>
+  <div class="text-center text-white mb-4">
+    <h1 class="display-4 fw-bold">{% trans "Welcome to Poka Lawn" %}</h1>
+    <p class="lead">
+      {% trans "Berlin's Premier Poker Lounge by MG Entertainment UG" %}
+    </p>
+    <button
+      type="button"
+      class="btn btn-lg mt-3 custom-red-button toggleAuthForm"
+    >
+      {% trans "Book Your Table Now" %}
+    </button>
+  </div>
+</section>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+<script>
+  // Your Firebase config (same as in Flutter)
+  const firebaseConfig = {
+    apiKey: "AIzaSyA0R-xN9wPPgmorZ88MZocTscqYMk00Azg",
+    authDomain: "pokerwebsite-96259.firebaseapp.com",
+    projectId: "pokerwebsite-96259",
+    storageBucket: "pokerwebsite-96259.firebasestorage.app",
+    messagingSenderId: "559302370986",
+    appId: "1:559302370986:web:2a5d5506635149dcb892d3",
+    measurementId: "G-C1V5K6VBWF"
+  };
+
+  // Initialize Firebase
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+</script>
+<script>
+  function getCSRFToken() {
+    return document.cookie.split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    const isAuthenticated = {% if request.session.user_id %}true{% else %}false{% endif %};
+    console.log('isAuthenticated');
+    console.log(isAuthenticated);
+    // Check the localStorage flag
+    // Call your simulateLogin function or update UI
+    if (window.simulateLogin) {
+      window.simulateLogin();
+    }
+    const profileNavItem = document.getElementById('profileNavItem');
+    const bookNowItem = document.getElementById('bookNowItem');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const authForm = document.getElementById('authForm');
+    const signupForm = document.getElementById('signupForm');
+    const signupOtpSection = document.getElementById('signupOtpSection');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+
+    window.simulateLogin = function() {
+      if (bookNowItem) bookNowItem.classList.add('d-none');
+      if (profileNavItem) profileNavItem.classList.remove('d-none');
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (confirm('{% trans "Are you sure you want to log out?" %}')) {
+          fetch("/customers/api/logout/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+            },
+          })
+          .then(response => {
+            if (response.ok) {
+              // Update UI elements accordingly
+              profileNavItem.classList.add('d-none');
+              bookNowItem.classList.remove('d-none');
+              window.location.href = "{% url 'home' %}";
+            } else {
+              alert("{% trans 'Logout failed.' %}");
+            }
+          })
+          .catch(error => console.error("Error logging out:", error));
+        }
+      });
+    }
+
+    const toggleAuthFormButtons = document.querySelectorAll('.toggleAuthForm');
+    toggleAuthFormButtons.forEach(button => {
+      button.addEventListener('click', function () {
+        console.log('called');
+        if (isAuthenticated) {
+          window.location.href = "/bookings/book";
+        } else {
+          authForm.classList.remove('d-none');
+        }
+      });
+    });
+
+    if (signupForm) {
+      signupForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        
+        const countryCode = document.getElementById('countryCode').value;
+        const phoneNumber = countryCode + document.getElementById('signupPhone').value;
+        const signupData = {
+          first_name: document.getElementById('signupFirstName').value,
+          last_name: document.getElementById('signupLastName').value,
+          email_id: document.getElementById('signupEmail').value,
+          phone_number: countryCode + document.getElementById('signupPhone').value,
+          password: document.getElementById('signupPassword').value,
+          confirm_password: document.getElementById('signupConfirmPassword').value,
+        };
+
+        const signupResponse = await fetch('/customers/api/signup/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+          },
+          body: JSON.stringify(signupData)
+        });
+        const signupResult = await signupResponse.json();
+        console.log('signupResult',signupResult);
+        if (signupResult.success) {
+          try {
+            // First send phone verification
+            const recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+              'size': 'invisible',
+              'callback': (response) => {
+                console.log('proceed');
+              }
+            });
+            
+            const confirmation = await auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier);
+            
+            // Show OTP input
+            signupForm.classList.add('d-none');
+            signupOtpSection.classList.remove('d-none');
+            console.log("{% trans 'OTP has been sent to' %} " + phoneNumber);
+            // Handle OTP verification
+            verifyOtpBtn.addEventListener('click', async function () {
+              const otp = document.getElementById('phoneOtp').value;
+              try {
+                const verifyMobileOtp = await confirmation.confirm(otp);
+                const firebaseUser = verifyMobileOtp.user;
+                console.log("{% trans 'OTP verified successfully. Firebase user:' %}", firebaseUser.uid);
+
+                // Prepare data for backend OTP verification
+                const phoneOtp = document.getElementById('phoneOtp').value;
+                const emailOtp = document.getElementById('emailOtp').value;
+                const verifyData = {
+                  phone_number: document.getElementById('signupPhone').value,
+                  phone_otp: phoneOtp,
+                  email_id: document.getElementById('signupEmail').value,
+                  email_otp: emailOtp
+                };
+
+                const verifyResponse = await fetch('/customers/api/verify-otp/', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                  },
+                  body: JSON.stringify(verifyData)
+                });
+                const verifyResult = await verifyResponse.json();
+                alert(verifyResult.message);
+
+                if (verifyResult.success) {
+                  const signupData = {
+                    first_name: document.getElementById('signupFirstName').value,
+                    last_name: document.getElementById('signupLastName').value,
+                    email_id: document.getElementById('signupEmail').value,
+                    phone_number: countryCode + document.getElementById('signupPhone').value,
+                    password: document.getElementById('signupPassword').value,
+                    confirm_password: document.getElementById('signupConfirmPassword').value,
+                    firebase_uid: firebaseUser.uid
+                  };
+
+                  const signupResponse = await fetch('/customers/api/signup/', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify(signupData)
+                  });
+                  const signupResult = await signupResponse.json();
+                  if (signupResult.success) {
+                    window.simulateLogin();
+                    authForm.classList.add('d-none');
+                  } else {
+                    alert(signupResult.message);
+                  }
+                }
+              } catch (error) {
+                console.error('{% trans "OTP verification error:" %}', error);
+                alert("{% trans 'Invalid OTP or verification failed. Please try again.' %}");
+              }
+            });
+          } catch (error) {
+            console.error('{% trans "Phone auth error:" %}', error);
+            alert("{% trans 'Error sending verification code:' %} " + error.message);
+          }
+        } else {
+          alert(signupResult.message);
+        }
+      });
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+      loginForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const loginButton = loginForm.querySelector('button[type="submit"]');
+        const originalButtonText = loginButton.innerHTML;
+        const loginMessageDiv = document.getElementById('loginMessage');
+        loginMessageDiv.innerText = '';
+        loginButton.disabled = true;
+        loginButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Loading..." %}`;
+
+        const data = {
+          email_id: document.getElementById('loginEmail').value,
+          password: document.getElementById('loginPassword').value
+        };
+        fetch('/customers/api/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+          },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            if (window.simulateLogin) {
+              window.simulateLogin();
+            }
+            authForm.classList.add('d-none');
+            console.log("{% trans 'Logged-in User ID:' %}", result.data);
+            window.location.href = "/bookings/book";
+          } else {
+            loginMessageDiv.style.backgroundColor = 'red';
+            loginMessageDiv.style.color = 'white';
+            loginMessageDiv.innerText = result.message;
+            loginButton.disabled = false;
+            loginButton.innerHTML = originalButtonText;
+          }
+        })
+        .catch(error => {
+          console.error('{% trans "Error:" %}', error);
+          alert("{% trans 'An error occurred during login.' %}");
+        });
+      });
+    }
+
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.nav-link-toggle');
+    navLinks.forEach(link => {
+      if (link.getAttribute('href') === currentPath) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  });
+</script>
+{% endblock %}

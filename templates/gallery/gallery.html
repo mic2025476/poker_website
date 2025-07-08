@@ -1,0 +1,35 @@
+<!-- core/templates/gallery.html -->
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+<section id="gallery" class="py-5">
+    <div class="container">
+        <div class="row g-3">
+            {% for image in gallery_images %}
+            <div class="col-sm-6 col-md-4">
+                <div class="card">
+                    <a href="{{ image }}" data-bs-toggle="modal" data-bs-target="#imageModal{{ forloop.counter }}">
+                        <img src="{{ image }}" class="card-img-top" alt="Poker Lounge Image {{ forloop.counter }}">
+                    </a>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade" id="imageModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="imageModalLabel{{ forloop.counter }}" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="imageModalLabel{{ forloop.counter }}">Poker Lounge Image {{ forloop.counter }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <img src="{{ image }}" class="img-fluid" alt="Poker Lounge Image {{ forloop.counter }}">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

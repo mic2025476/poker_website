@@ -1,0 +1,35 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+header {
+    background: #ff0000;
+    color: #fff;
+    padding: 10px 20px;
+}
+nav a {
+    color: #fff;
+    margin-right: 15px;
+    text-decoration: none;
+}
+footer {
+    background: #ff0000;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.hero-content {
+    margin-top: 200px; /* Adjust this value to move the text down */
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        margin-top: 200px; /* Reduced margin for smaller screens */
+    }
+}
+
