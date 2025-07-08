@@ -170,8 +170,8 @@ BRAINTREE_PUBLIC_KEY = "xcf8hntvh4m2v6nt"
 BRAINTREE_PRIVATE_KEY = "4a6d6d5ec9955ffb061226e73198a99e"
 BRAINTREE_ENVIRONMENT = "Sandbox"  # or 'Production'
 
-cred = credentials.Certificate("pokerwebsite-96259-firebase-adminsdk-fbsvc-69c0d02c3a.json")
-firebase_admin.initialize_app(cred)
+#cred = credentials.Certificate("pokerwebsite-96259-firebase-adminsdk-fbsvc-69c0d02c3a.json")
+#firebase_admin.initialize_app(cred)
 
 LANGUAGE_CODE = 'en'  # default
 
