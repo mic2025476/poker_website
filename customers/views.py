@@ -7,6 +7,7 @@ from requests import Response
 from rest_framework.decorators import api_view
 from rest_framework.response import Response as DRFResponse
 from rest_framework import status
+from django.db import connection
 from django.contrib.auth import login
 from django.contrib.auth import logout
 from poker_lounge import settings
