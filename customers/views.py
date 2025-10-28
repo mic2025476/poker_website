@@ -189,9 +189,12 @@ def customer_login(request):
         if not customer.is_active:
             return DRFResponse(ResponseData.error("Account is not active. Please verify both phone and email."), status=status.HTTP_200_OK)
         login(request, customer)  # or set session variables manually
-        request.session["user_id"] = customer.id
-        request.session.set_expiry(1209600)            # 2 weeks (matches your settings)
-        request.session.save()                        # <- force write
+        request.session.cycle_key()
+        request.session['user_id'] = customer.id
+        request.session.set_expiry(1209600)     # 2 weeks
+        request.session.save()
+
+        print("LOGIN session_key:", request.session.session_key)
         return DRFResponse(ResponseData.success(customer.id,"Login successful."), status=status.HTTP_200_OK)
     except Exception as e:
         return DRFResponse(ResponseData.error(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
