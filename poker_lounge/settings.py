@@ -227,6 +227,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8002",
     "http://127.0.0.1:8002",
     "https://accounts.google.com",
+    "http://51.21.201.248:8000"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
