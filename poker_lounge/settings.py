@@ -297,3 +297,6 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 # Ensure SECRET_KEY is constant across instances (do not regenerate on each deploy)
 # SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+
+# settings.py
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
