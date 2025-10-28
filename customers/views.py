@@ -484,6 +484,8 @@ def google_auth(request):
 
 @api_view(["GET"])
 def whoami(request):
+    print("COOKIES", request.COOKIES)                 # see sessionid sent by client
+    print("SESSION_KEY", request.session.session_key) # server’s current key
     return DRFResponse({
         "request_user_is_authenticated": getattr(request.user, "is_authenticated", False),
         "session_user_id": request.session.get("user_id"),
