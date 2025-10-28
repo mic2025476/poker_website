@@ -190,6 +190,8 @@ def customer_login(request):
             return DRFResponse(ResponseData.error("Account is not active. Please verify both phone and email."), status=status.HTTP_200_OK)
         login(request, customer)  # or set session variables manually
         request.session["user_id"] = customer.id
+        request.session.set_expiry(1209600)            # 2 weeks (matches your settings)
+        request.session.save()                        # <- force write
         return DRFResponse(ResponseData.success(customer.id,"Login successful."), status=status.HTTP_200_OK)
     except Exception as e:
         return DRFResponse(ResponseData.error(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -479,3 +481,11 @@ def google_auth(request):
             ResponseData.error(str(e)),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+@api_view(["GET"])
+def whoami(request):
+    return DRFResponse({
+        "request_user_is_authenticated": getattr(request.user, "is_authenticated", False),
+        "session_user_id": request.session.get("user_id"),
+        "session_keys": list(request.session.keys()),
+    })
