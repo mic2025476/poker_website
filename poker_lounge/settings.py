@@ -272,3 +272,24 @@ LOGGING = {
         },
     },
 }
+
+# If you serve via a proxy/load-balancer that terminates TLS, ensure Django sees requests as secure:
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Cookie/security settings (set True only if you serve HTTPS)
+SESSION_COOKIE_SECURE = True   # only send session cookie over HTTPS
+CSRF_COOKIE_SECURE = True      # only send CSRF cookie over HTTPS
+
+# SameSite: 'Lax' is a good default; use 'None' + Secure if cross-site flows required
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Domain (optional) — set if you have a specific domain or subdomain
+# SESSION_COOKIE_DOMAIN = '.yourdomain.com'
+
+# Keep sessions longer & refresh on each request if desired
+SESSION_COOKIE_AGE = 1209600  # 2 weeks (seconds)
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Ensure SECRET_KEY is constant across instances (do not regenerate on each deploy)
+# SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
