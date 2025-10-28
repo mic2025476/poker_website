@@ -1,6 +1,7 @@
 import random
 import braintree
 import json
+from django.contrib.sessions.models import Session
 from django.utils.timezone import now
 from requests import Response
 from rest_framework.decorators import api_view
@@ -487,10 +488,16 @@ def google_auth(request):
 
 @api_view(["GET"])
 def whoami(request):
-    print("COOKIES", request.COOKIES)                 # see sessionid sent by client
-    print("SESSION_KEY", request.session.session_key) # server’s current key
+    incoming = request.COOKIES.get("sessionid")
+    exists = Session.objects.filter(session_key=incoming).exists() if incoming else False
+    print("COOKIES", request.COOKIES)
+    print("SESSION_KEY", request.session.session_key)
+    print("HAS_ROW_FOR_COOKIE", exists)
+    print("DB NAME", settings.DATABASES['default']['NAME'])
+    print("DB HOST", settings.DATABASES['default']['HOST'])
+    print("DB USER", settings.DATABASES['default']['USER'])
     return DRFResponse({
-        "request_user_is_authenticated": getattr(request.user, "is_authenticated", False),
+        "session_cookie": incoming,
+        "session_row_exists": exists,
         "session_user_id": request.session.get("user_id"),
-        "session_keys": list(request.session.keys()),
     })
