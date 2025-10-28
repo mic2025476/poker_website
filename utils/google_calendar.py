@@ -6,47 +6,34 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from django.conf import settings
+from google.oauth2 import service_account
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 class GoogleCalendarService:
     def __init__(self):
-        self.credentials_file = getattr(settings, 'GOOGLE_CALENDAR_CREDENTIALS_FILE', 'credentials.json')
+        self.credentials_file = getattr(settings, 'GOOGLE_CALENDAR_CREDENTIALS_FILE', 'service_account.json')
         self.token_file = getattr(settings, 'GOOGLE_CALENDAR_TOKEN_FILE', 'token.json')
         self.calendar_id = getattr(settings, 'GOOGLE_CALENDAR_ID', 'primary')
         self.service = None
     
     def authenticate(self):
-        """Authenticate with Google Calendar API"""
-        creds = None
-        
-        # Load existing token
-        if os.path.exists(self.token_file):
-            creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
-        
-        # If no valid credentials, get new ones
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                try:
-                    creds.refresh(Request())
-                except Exception as e:
-                    print(f"Error refreshing token: {e}")
-                    creds = None
-            
-            if not creds:
-                if not os.path.exists(self.credentials_file):
-                    raise FileNotFoundError(f"Google Calendar credentials file not found: {self.credentials_file}")
-                
-                flow = InstalledAppFlow.from_client_secrets_file(self.credentials_file, SCOPES)
-                creds = flow.run_local_server(port=8080, open_browser=True)
-            
-            # Save credentials for next run
-            with open(self.token_file, 'w') as token:
-                token.write(creds.to_json())
-        
-        self.service = build('calendar', 'v3', credentials=creds)
-        return self.service
-    
+        """Authenticate using a Google Service Account (no browser needed)"""
+        if not os.path.exists(self.credentials_file):
+            raise FileNotFoundError(f"Google Calendar credentials file not found: {self.credentials_file}")
+
+        try:
+            credentials = service_account.Credentials.from_service_account_file(
+                self.credentials_file,
+                scopes=SCOPES
+            )
+            self.service = build('calendar', 'v3', credentials=credentials)
+            print("✅ Google Calendar service authenticated successfully (service account mode)")
+            return self.service
+        except Exception as e:
+            print(f"❌ Calendar service authentication failed: {e}")
+            raise
+
     def get_events(self, start_date, end_date=None):
         """
         Get calendar events for a specific date range

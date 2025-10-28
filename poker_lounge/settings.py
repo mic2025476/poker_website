@@ -172,7 +172,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SESSION_COOKIE_AGE = 86400  # 1 day in seconds
 
 # Google Calendar Settings
-GOOGLE_CALENDAR_CREDENTIALS_FILE = 'credentials.json'
+GOOGLE_CALENDAR_CREDENTIALS_FILE = 'service_account.json'
 GOOGLE_CALENDAR_TOKEN_FILE = 'token.json'
 GOOGLE_CALENDAR_ID = 'primary'
 
@@ -214,7 +214,7 @@ LOCALE_PATHS = [
 ]
 
 # Google Calendar Settings
-GOOGLE_CALENDAR_CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credentials.json')
+GOOGLE_CALENDAR_CREDENTIALS_FILE = os.path.join(BASE_DIR, 'service_account.json')
 GOOGLE_CALENDAR_TOKEN_FILE = os.path.join(BASE_DIR, 'token.json')
 
 # CORS Settings for Google OAuth
