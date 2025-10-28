@@ -181,25 +181,39 @@ def verify_otp(request):
 @api_view(["POST"])
 def customer_login(request):
     try:
-        print(f'request.data {request.data}')
         email = request.data.get('email_id')
         password = request.data.get('password')
-        customer = CustomerModel.objects.filter(email_id=email, password=password, is_deleted=False).first()
+        customer = CustomerModel.objects.filter(
+            email_id=email, password=password, is_deleted=False
+        ).first()
         if not customer:
-            return DRFResponse(ResponseData.error("Invalid credentials or user not found."), status=status.HTTP_400_BAD_REQUEST)
+            return DRFResponse(ResponseData.error("Invalid credentials or user not found."),
+                               status=status.HTTP_400_BAD_REQUEST)
         if not customer.is_active:
-            return DRFResponse(ResponseData.error("Account is not active. Please verify both phone and email."), status=status.HTTP_200_OK)
-        login(request, customer)  # or set session variables manually
+            return DRFResponse(ResponseData.error("Account is not active. Please verify both phone and email."),
+                               status=status.HTTP_200_OK)
+
+        # Only use custom session (remove django login() if CustomerModel isn't an auth User)
         request.session.cycle_key()
         request.session['user_id'] = customer.id
-        request.session.set_expiry(1209600)     # 2 weeks
+        request.session.set_expiry(1209600)
         request.session.save()
 
-        print("LOGIN session_key:", request.session.session_key)
-        return DRFResponse(ResponseData.success(customer.id,"Login successful."), status=status.HTTP_200_OK)
-    except Exception as e:
-        return DRFResponse(ResponseData.error(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        key = request.session.session_key
+        exists_now = Session.objects.filter(session_key=key).exists()
+        decoded = Session.objects.get(session_key=key).get_decoded() if exists_now else {}
 
+        print("LOGIN session_key:", key)
+        print("LOGIN session_row_exists:", exists_now)
+        print("LOGIN decoded_keys:", list(decoded.keys()))
+        print("LOGIN DB:", settings.DATABASES['default'])
+        print("LOGIN CONN:", connection.settings_dict)
+
+        return DRFResponse(ResponseData.success(customer.id, "Login successful."),
+                           status=status.HTTP_200_OK)
+    except Exception as e:
+        return DRFResponse(ResponseData.error(str(e)),
+                           status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["POST"])
 def customer_logout(request):
