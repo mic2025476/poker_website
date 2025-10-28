@@ -4,7 +4,7 @@ class CustomerSignupSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=255)
     last_name = serializers.CharField(max_length=255)
     email_id = serializers.EmailField()
-    phone_number = serializers.CharField(max_length=15)
+    phone_number = serializers.CharField(max_length=15, required=False, allow_blank=True)
     password = serializers.CharField(max_length=128)
     confirm_password = serializers.CharField(max_length=128)
 

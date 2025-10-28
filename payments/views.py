@@ -12,6 +12,7 @@ from django.conf import settings
 import braintree
 
 from customers.models import CustomerModel  # to fetch the customer
+from utils.google_calendar import GoogleCalendarService
 # Make sure you have a CustomerPaymentModel that references CustomerModel
 
 gateway = braintree.BraintreeGateway(
@@ -73,7 +74,6 @@ def process_braintree_payment(nonce, amount, customer_id):
 @api_view(["POST"])
 def process_payment(request):
     try:
-        print(f'data123 {request.data}')
         data = request.data
         # Validate required fields
         required_fields = ['booking_date', 'number_of_people', 'number_of_hours', 'payment_method_nonce','user_id','drinks']
@@ -99,11 +99,18 @@ def process_payment(request):
             return Response(ResponseData.error(message), status=400)
 
         # Create booking
-        start_time = datetime.strptime(data['booking_date'], "%Y-%m-%dT%H:%M").time()
+        booking_datetime = datetime.strptime(data['booking_date'], "%Y-%m-%dT%H:%M")
+        booking_date = booking_datetime.date()
+        start_time = booking_datetime.time()
+
+        # Debug logging
+        print(f'payment_processor: booking_date_str={data["booking_date"]}')
+        print(f'payment_processor: parsed booking_date={booking_date}, start_time={start_time}')
 
         # Try to find existing booking with is_active = False
         existing_booking = BookingModel.objects.filter(
             customer=customer,
+            booking_date=booking_date,
             start_time=start_time,
             total_people=data['number_of_people'],
             hours_booked=data['number_of_hours'],
@@ -111,11 +118,49 @@ def process_payment(request):
             deposit_amount=deposit,
             is_active=False
         ).first()
+
+        print(f'payment_processor: Looking for existing booking with:')
+        print(f'  booking_date={booking_date}, start_time={start_time}')
+        print(f'  total_people={data["number_of_people"]}, hours_booked={data["number_of_hours"]}')
+        print(f'  total_amount={total}, deposit_amount={deposit}')
+        print(f'payment_processor: Found existing_booking={existing_booking}')
 # Assign many-to-many field after object creation
         if 'drinks' in data:
             existing_booking.drinks.set(data['drinks'])  # Correct way to assign M2M relationships
             existing_booking.is_active = True
             existing_booking.save()
+        
+        # Add event to Google Calendar after successful booking
+        try:
+            calendar_service = GoogleCalendarService()
+            
+            # Get drink names for the calendar event
+            drink_names = []
+            if 'drinks' in data and data['drinks']:
+                from menu.models import DrinkModel
+                drink_objects = DrinkModel.objects.filter(id__in=data['drinks'])
+                drink_names = [drink.name for drink in drink_objects]
+            
+            booking_data = {
+                'customer_name': f"{customer.first_name} {customer.last_name}",
+                'booking_date': booking_date,
+                'start_time': start_time,
+                'duration_hours': hours,
+                'total_people': people,
+                'drinks': drink_names,
+                'booking_id': existing_booking.id
+            }
+            
+            calendar_event = calendar_service.add_booking_event(booking_data)
+            if calendar_event:
+                print(f"Successfully created calendar event for booking {existing_booking.id}")
+            else:
+                print(f"Failed to create calendar event for booking {existing_booking.id}")
+                
+        except Exception as e:
+            print(f"Error adding booking to calendar: {e}")
+            # Don't fail the booking if calendar creation fails
+        
         return Response(ResponseData.success_without_data("Booking created & payment processed"))
 
     except Exception as e:

@@ -1,5 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load i18n %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 {% block content %}
@@ -8,94 +9,1619 @@
 <script src="{% static 'js/booking_edit_form.js' %}"></script>
 
 <style>
-  /* Card background for form */
-  .card {
-    background-color: #fff;
+  :root {
+    --theme-red: #ff0022;
+    --theme-red-hover: #cc001a;
   }
-  /* Custom border style for form controls */
+
+  /* Mobile-first responsive design with sticky layout */
+  .main-container {
+    padding-top: clamp(3rem, 5vh, 5rem);
+    padding-left: var(--container-gutter);
+    padding-right: var(--container-gutter);
+    margin: 0 auto;
+    min-height: 100vh;
+    max-width: var(--container-max-width);
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  @media (min-width: 1920px) {
+    .main-container {
+      max-width: var(--container-max-width-wide);
+    }
+  }
+  
+  /* Checkbox styling - using flexbox for better alignment */
+  .booking-page .form-check {
+    margin-bottom: var(--space-4);
+    padding-left: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .booking-page .form-check-input {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 0.125rem;
+    cursor: pointer;
+    border: 2px solid var(--gray-600);
+  }
+
+  .booking-page .form-check-input:checked {
+    background-color: var(--theme-red);
+    border-color: var(--theme-red);
+  }
+
+  .booking-page .form-check-input:focus {
+    border-color: var(--theme-red);
+    box-shadow: 0 0 0 3px var(--theme-red-light);
+    outline: none;
+  }
+
+  .booking-page .form-check-label {
+    line-height: 1.5;
+    cursor: pointer;
+  }
+  
+  /* Enhanced form group spacing */
+  .mb-3 {
+    margin-bottom: 2rem !important;
+  }
+  
+  /* Form inputs with better spacing and padding */
+  .booking-page .form-control,
+  .booking-page .form-select {
+    margin-bottom: var(--space-4);
+    padding: clamp(0.625rem, 1vw, 0.75rem) clamp(0.875rem, 1.5vw, 1.125rem);
+    border-radius: 0.5rem;
+    border: 2px solid var(--gray-200);
+    font-size: var(--font-size-base);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-height: 44px;
+  }
+
+  .booking-page .form-control:focus,
+  .booking-page .form-select:focus {
+    border-color: var(--theme-red);
+    box-shadow: 0 0 0 3px var(--theme-red-light);
+    outline: none;
+  }
+
+  @media (min-width: 1280px) {
+    .booking-page .form-control,
+    .booking-page .form-select {
+      padding: 0.75rem 1rem;
+    }
+  }
+  
+  /* Better spacing for form rows */
+  .row .col-md-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Enhanced button spacing */
+  .d-flex.justify-content-between {
+    padding: 1rem 0;
+    margin-top: 1.5rem;
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    .main-container {
+      padding-left: 30px;
+      padding-right: 30px;
+    }
+    
+    .tab-content {
+      max-width: 100%;
+      padding: 0 10px;
+    }
+    
+    .form-check {
+      padding-left: 2.5rem;
+    }
+    
+    .form-check-input {
+      margin-left: -2.5rem;
+    }
+  }
+
+  .tab-content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 150px);
+    height: auto;
+    padding: 0;
+  }
+
+  @media (min-width: 1280px) {
+    .tab-content {
+      padding: 0 var(--space-6);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .tab-content {
+      padding: 0 var(--space-4);
+    }
+  }
+
+  /* Sticky header section */
+  .booking-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: white;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.75rem 1rem 0.5rem;
+    flex-shrink: 0;
+  }
+
+  /* Sticky step indicators */
+  .booking-steps {
+    position: sticky;
+    top: 0;
+    z-index: 9;
+    background: white;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+    flex-shrink: 0;
+  }
+
+  /* Scrollable content area */
+  .booking-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    padding-bottom: 8rem; /* Increased space for sticky buttons */
+    max-height: none; /* Remove height restriction */
+  }
+
+  /* Sticky navigation buttons */
+  .booking-nav-buttons {
+    position: fixed;
+    bottom: 4rem; /* Above bottom nav */
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    z-index: 8;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  }
+
+  /* Modern card styling */
+  .booking-card {
+    background: white;
+    border: none;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Form controls */
   .form-control,
-  .form-select,
-  .form-check-input {
-    border: 2px solid #ccc;
-    border-radius: 4px;
+  .form-select {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+    height: 2.5rem;
   }
+  
   .form-control:focus,
-  .form-select:focus,
-  .form-check-input:focus {
-    border-color: #d44;
-    box-shadow: 0 0 5px rgba(212, 68, 68, 0.5);
+  .form-select:focus {
+    border-color: var(--theme-red);
+    box-shadow: 0 0 0 0.2rem rgba(255, 0, 34, 0.15);
+    background-color: white;
+    transform: translateY(-1px);
   }
-  /* Active tab styling for bottom navigation */
-  .nav-link.active {
-    font-weight: bold;
+
+  /* Professional bottom navigation */
+  .bottom-nav {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 0;
+  }
+
+  .nav-tab {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 0.75rem 0.5rem;
+    border-radius: 1rem;
+    margin: 0 0.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-tab i {
     font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.3s ease;
   }
-  .hover-scale {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  .nav-tab:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
   }
-  .hover-scale:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+  .nav-tab.active {
+    color: white;
+    background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red-hover) 100%);
+    box-shadow: 0 4px 15px rgba(255, 0, 34, 0.4);
+    transform: translateY(-3px);
   }
-  /* Icon styling */
-  .fas {
-    color: #d44;
+
+  .nav-tab.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
   }
+
+  /* Mobile-optimized hero section */
+  #hero {
+    min-height: auto;
+    padding: 1rem 0;
+    background-attachment: scroll;
+  }
+
+  /* Step indicator for forms */
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .step {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0.3rem;
+    font-weight: 600;
+    font-size: 0.7rem;
+    transition: all 0.3s ease;
+  }
+
+  .step.completed {
+    background: var(--theme-red);
+    color: white;
+  }
+
+  .step.active {
+    background: var(--theme-red);
+    color: white;
+    transform: scale(1.1);
+  }
+
+  .step.pending {
+    background: #e9ecef;
+    color: #6c757d;
+  }
+
+  /* Modern buttons */
+  .btn-primary-custom {
+    background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red-hover) 100%);
+    border: none;
+    border-radius: 2rem;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 0, 34, 0.3);
+    font-size: 0.8rem;
+    height: 2.5rem;
+  }
+
+  .btn-primary-custom:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 0, 34, 0.4);
+  }
+
+  .btn-secondary-custom {
+    background: #6c757d;
+    border: none;
+    border-radius: 2rem;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    font-size: 0.8rem;
+    height: 2.5rem;
+  }
+
+  .btn-secondary-custom:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+  }
+
+  /* Pricing display */
+  .pricing-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin: 0.75rem 0;
+    border-left: 3px solid var(--theme-red);
+  }
+
+  .price-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    font-size: 0.85rem;
+  }
+
+  .price-item:last-child {
+    border-bottom: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--theme-red);
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 576px) {
+    .booking-header {
+      padding: 0.5rem 0.75rem 0.25rem;
+    }
+
+    .booking-steps {
+      padding: 0.25rem 0.75rem;
+    }
+
+    .booking-content {
+      padding: 0.75rem;
+      padding-bottom: 5rem;
+    }
+
+    .booking-nav-buttons {
+      padding: 0.5rem 0.75rem;
+    }
+
+    .nav-tab {
+      font-size: 0.65rem;
+      padding: 0.4rem 0.2rem;
+    }
+
+    .nav-tab i {
+      font-size: 0.9rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .booking-card {
+      margin-bottom: 0.5rem;
+      border-radius: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 16px; /* Prevent iOS zoom */
+      height: 2.2rem;
+      padding: 0.4rem;
+    }
+
+    .btn-primary-custom,
+    .btn-secondary-custom {
+      font-size: 0.75rem;
+      padding: 0.5rem 1.2rem;
+      height: 2.2rem;
+    }
+
+    .pricing-card {
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 0.5rem;
+    }
+
+    .price-item {
+      padding: 0.3rem 0;
+      font-size: 0.8rem;
+    }
+
+    .price-item:last-child {
+      font-size: 0.85rem;
+    }
+
+    .step {
+      width: 1.25rem;
+      height: 1.25rem;
+      margin: 0 0.2rem;
+      font-size: 0.65rem;
+    }
+
+    .step-indicator {
+      margin-bottom: 0.5rem;
+    }
+
+    .booking-card .card-body {
+      padding: 1rem !important;
+    }
+
+    .booking-card {
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Make headers even smaller on mobile */
+    .text-center h6 {
+      font-size: 0.95rem;
+    }
+
+    .text-center p {
+      font-size: 0.8rem !important;
+    }
+
+    /* Better mobile spacing */
+    .tab-content {
+      max-width: 100%;
+    }
+  }
+
+  /* Animation classes */
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Enhanced Modern Booking Card Styles */
+  .booking-card-modern {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    margin-bottom: 12px;
+    border: 1px solid #f1f3f5;
+    transition: all 0.4s ease;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .booking-card-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--theme-red) 0%, #ff6b6b 100%);
+  }
+
+  .booking-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.1);
+  }
+
+  .booking-card-header {
+    padding: 12px 16px 10px;
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #e9ecef;
+    position: relative;
+  }
+
+  .booking-date-info .booking-date {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1a1d21;
+    margin-bottom: 2px;
+    letter-spacing: -0.02em;
+  }
+
+  .booking-date-info .booking-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .booking-date-info .booking-time::before {
+    content: '🕐';
+    font-size: 0.9rem;
+  }
+
+  .booking-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 16px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .status-active {
+    background: linear-gradient(135deg, #20c997 0%, #198754 100%);
+    color: white;
+  }
+
+  .status-cancelled {
+    background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+    color: white;
+  }
+
+  .booking-card-body {
+    padding: 14px 16px;
+  }
+
+  .booking-details-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .booking-detail {
+    text-align: center;
+    background: #f8f9fa;
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  .booking-detail:hover {
+    border-color: var(--theme-red);
+    background: rgba(255, 0, 34, 0.02);
+    transform: translateY(-2px);
+  }
+
+  .detail-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    color: #495057;
+    margin-bottom: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .detail-label i {
+    font-size: 0.9rem;
+    color: var(--theme-red);
+    padding: 4px;
+    background: rgba(255, 0, 34, 0.1);
+    border-radius: 50%;
+  }
+
+  .detail-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1a1d21;
+    letter-spacing: -0.02em;
+  }
+
+  .booking-drinks {
+    padding: 12px 0 0;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .drinks-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: #495057;
+    margin-bottom: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .drinks-label i {
+    font-size: 1rem;
+    color: var(--theme-red);
+    padding: 4px;
+    background: rgba(255, 0, 34, 0.1);
+    border-radius: 50%;
+  }
+
+  .drinks-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .drink-tag {
+    background: linear-gradient(135deg, rgba(255, 0, 34, 0.1) 0%, rgba(255, 0, 34, 0.05) 100%);
+    color: var(--theme-red);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border: 1px solid rgba(255, 0, 34, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .drink-tag:hover {
+    background: var(--theme-red);
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  .booking-card-actions {
+    padding: 16px;
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70px;
+  }
+
+  .btn-action {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: relative;
+    overflow: hidden;
+    min-height: 44px;
+    max-width: 180px;
+    margin: 0 auto;
+  }
+
+  .btn-action::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .btn-action:hover::before {
+    left: 100%;
+  }
+
+  .btn-cancel {
+    background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3);
+  }
+
+  .btn-cancel:hover:not(:disabled) {
+    background: linear-gradient(135deg, #b02a37 0%, #8b1e29 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(220, 53, 69, 0.4);
+  }
+
+  .btn-cancel:disabled {
+    background: #6c757d;
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-cancel:disabled::before {
+    display: none;
+  }
+
+  /* Cancelled booking button */
+  .btn-cancelled {
+    background: #6c757d;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+    opacity: 0.8;
+    cursor: not-allowed;
+  }
+
+  .btn-cancelled:hover {
+    background: #6c757d;
+    transform: none;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+  }
+
+  .btn-cancelled::before {
+    display: none;
+  }
+
+  /* Warning style for late cancellation */
+  .btn-cancel-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: #212529;
+    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3);
+  }
+
+  .btn-cancel-warning:hover:not(:disabled) {
+    background: linear-gradient(135deg, #e0a800 0%, #c69500 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 193, 7, 0.4);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 576px) {
+    .booking-details-row {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    
+    .booking-card-header {
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .booking-card-actions {
+      flex-direction: column;
+      padding: 12px;
+    }
+
+    .btn-action {
+      max-width: 160px;
+      font-size: 0.75rem;
+      padding: 8px 12px;
+    }
+  }
+
+  /* ===== MODERN PROFILE STYLES ===== */
+  .profile-modern-container {
+    padding: 1rem;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Profile Header Card */
+  .profile-header-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    position: relative;
+  }
+
+  .profile-background-gradient {
+    height: 120px;
+    background: linear-gradient(135deg, var(--theme-red) 0%, #ff6b6b 50%, #ffa726 100%);
+    position: relative;
+  }
+
+  .profile-background-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="poker" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><text x="10" y="15" text-anchor="middle" fill="rgba(255,255,255,0.1)" font-size="12">♠♥♣♦</text></pattern></defs><rect width="100" height="100" fill="url(%23poker)"/></svg>');
+    opacity: 0.3;
+  }
+
+  .profile-content {
+    padding: 1.5rem;
+    margin-top: -40px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .profile-avatar-section {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+  }
+
+  .profile-avatar {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border: 4px solid white;
+  }
+
+  .profile-avatar i {
+    font-size: 3.5rem;
+    color: var(--theme-red);
+  }
+
+  .verification-indicator {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    background: #28a745;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .verification-indicator i {
+    font-size: 0.7rem;
+    color: white;
+  }
+
+  .profile-title {
+    flex: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .profile-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .profile-subtitle {
+    color: #6c757d;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  /* Profile Information Cards */
+  .profile-info-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f1f3f5;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .profile-info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .profile-card-header {
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .profile-card-header i {
+    font-size: 1.1rem;
+    color: var(--theme-red);
+    width: 20px;
+    text-align: center;
+  }
+
+  .profile-card-header h6 {
+    margin: 0;
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+  }
+
+  .profile-card-body {
+    padding: 1.25rem;
+  }
+
+  /* Info Rows and Items */
+  .info-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .info-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .info-item {
+    flex: 1;
+  }
+
+  .info-item.full-width {
+    flex: unset;
+    width: 100%;
+  }
+
+  .info-item label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .info-item span {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    display: block;
+  }
+
+  .info-with-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .verified-badge {
+    background: #28a745;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .verified-badge.unverified {
+    background: #ffc107;
+    color: #1a1a1a;
+  }
+
+  /* Mobile Number Section */
+  .mobile-input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: stretch;
+  }
+
+  .input-with-icon {
+    flex: 1;
+    position: relative;
+  }
+
+  .input-with-icon i {
+    position: absolute;
+    left: 1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--theme-red);
+    z-index: 2;
+    font-size: 1.1rem;
+  }
+
+  .input-with-icon input {
+    width: 100%;
+    padding: 1rem 1.2rem 1rem 3.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: #fafbfc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .input-with-icon input:focus {
+    outline: none;
+    border-color: var(--theme-red);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(255, 0, 34, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .input-with-icon input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+  }
+
+  .save-mobile-btn {
+    background: linear-gradient(135deg, var(--theme-red) 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(255, 0, 34, 0.2);
+    min-width: 120px;
+    justify-content: center;
+  }
+
+  .save-mobile-btn:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 0, 34, 0.3);
+  }
+
+  .save-mobile-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(255, 0, 34, 0.2);
+  }
+
+  .save-mobile-btn:disabled {
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+    transform: none;
+    cursor: not-allowed;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .help-text {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border-left: 4px solid var(--theme-red);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .help-text::before {
+    content: '\f05a';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    color: var(--theme-red);
+    font-size: 0.9rem;
+  }
+
+  .mobile-display-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+  }
+
+  .mobile-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+  }
+
+  .mobile-number {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    font-family: 'Segoe UI', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  .mobile-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+
+  .btn-action.secondary {
+    background: white;
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .btn-action.secondary:hover {
+    background: #f3f4f6;
+    color: #374151;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-action.primary {
+    background: linear-gradient(135deg, var(--theme-red) 0%, #dc2626 100%);
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    width: auto;
+    gap: 0.5rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(255, 0, 34, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .btn-action.primary:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 0, 34, 0.3);
+  }
+
+  /* Support Card */
+  .support-card .profile-card-body {
+    text-align: center;
+  }
+
+  .support-card p {
+    margin-bottom: 0.75rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+
+  .support-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--theme-red);
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+  }
+
+  .support-email:hover {
+    background: var(--theme-red-hover);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(255, 0, 34, 0.3);
+  }
+
+  /* ===== MOBILE VERIFICATION MODAL STYLES ===== */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .verification-modal {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transform: scale(0.9);
+    animation: modalAppear 0.3s ease forwards;
+  }
+
+  @keyframes modalAppear {
+    to {
+      transform: scale(1);
+    }
+  }
+
+  .verification-modal-header {
+    background: linear-gradient(135deg, var(--theme-red) 0%, #ff6b6b 100%);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .verification-modal-header h5 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .modal-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+  }
+
+  .verification-modal-body {
+    padding: 2rem;
+  }
+
+  .verification-step {
+    text-align: center;
+  }
+
+  .verification-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--theme-red) 0%, #ff6b6b 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 24px rgba(255, 0, 34, 0.3);
+  }
+
+  .verification-icon i {
+    font-size: 1.5rem;
+    color: white;
+  }
+
+  .verification-step h6 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+  }
+
+  .verification-step p {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .phone-display {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .phone-display i {
+    color: var(--theme-red);
+  }
+
+  .otp-input-container {
+    margin-bottom: 1.5rem;
+  }
+
+  .otp-input-container input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.5rem;
+    color: #1a1a1a;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+  }
+
+  .otp-input-container input:focus {
+    outline: none;
+    border-color: var(--theme-red);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255, 0, 34, 0.1);
+  }
+
+  .verification-btn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .verification-btn.primary {
+    background: var(--theme-red);
+    color: white;
+    margin-bottom: 0.75rem;
+  }
+
+  .verification-btn.primary:hover {
+    background: var(--theme-red-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(255, 0, 34, 0.3);
+  }
+
+  .verification-btn.secondary {
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #e9ecef;
+  }
+
+  .verification-btn.secondary:hover {
+    background: #e9ecef;
+    color: #495057;
+  }
+
+  .verification-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 576px) {
+    .profile-modern-container {
+      padding: 0.5rem;
+    }
+
+    .profile-content {
+      padding: 0.75rem;
+    }
+
+    .profile-avatar-section {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.5rem;
+    }
+
+    .profile-avatar {
+      width: 60px;
+      height: 60px;
+    }
+
+    .profile-avatar i {
+      font-size: 2.5rem;
+    }
+
+    .info-row {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .mobile-input-group {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .input-with-icon input {
+      padding: 0.75rem 1rem 0.75rem 3rem;
+      font-size: 0.9rem;
+    }
+
+    .save-mobile-btn {
+      width: 100%;
+      min-width: unset;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .help-text {
+      padding: 0.5rem 0.75rem;
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .mobile-display-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+      padding: 0.75rem 0.5rem;
+    }
+
+    .mobile-info {
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem;
+    }
+
+    .mobile-actions {
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .btn-action.primary {
+      min-width: 100px;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+    }
+
+    .verification-modal {
+      margin: 0.5rem;
+    }
+
+    .verification-modal-body {
+      padding: 1rem;
+    }
+  }
+
 </style>
 
-<!-- Top App Bar -->
-<section id="hero"
-         class="d-flex flex-column justify-content-center align-items-center"
-         style="background-image: url('{% static 'images/poker_1.avif' %}');
-                background-size: cover;
-                background-position: center;">
-  <div class="container" style="margin-top: 4.5rem; margin-bottom: 4rem;">
-    <div class="tab-content" id="bookingTabsContent">
-      <!-- Book Poker Tab Pane -->
-      <div class="tab-pane fade show active"
-           id="book-poker"
-           role="tabpanel"
-           style="background: linear-gradient(135deg, #f5f7fa, #c3cfe2); padding: 20px; border-radius: 10px;"
-           aria-labelledby="book-poker-tab">
-        <div class="card border-0 shadow-sm"
-             style="border: 2px solid #333; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-          <div class="card-body" style="background-color: #fff;">
-            <h2 class="text-center mb-4" style="font-weight: bold; color: #333;">
-              Book Your Poker Lounge 
-              <span style="font-size: 1.3rem; margin-left: 10px;">♠︎ ♥︎ ♣︎ ♦︎</span>
-            </h2>
-            {% include "bookings/booking_form.html" %}
+<!-- Main Content Area -->
+<div class="main-container booking-page">
+  <h1 class="visually-hidden">Book Your Table</h1>
+  <div class="tab-content" id="bookingTabsContent">
+    <!-- Book Poker Tab Pane -->
+    <div class="tab-pane fade show active" id="book-poker" role="tabpanel" aria-labelledby="book-poker-tab">
+      <div class="booking-card">
+        <!-- Sticky Header -->
+        <div class="booking-header">
+          <div class="text-center">
+            <h6 class="fw-bold text-dark mb-0">
+              {% trans "Book Your Day at Poka Lawn" %}
+            </h6>
+            <p class="text-muted mb-1" style="font-size: 0.75rem;">Premium poker experience</p>
+            <div class="d-flex justify-content-center">
+              <span style="font-size: 0.9rem; color: var(--theme-red);">♠︎ ♥︎ ♣︎ ♦︎</span>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <!-- My Bookings Tab Pane -->
-      <div class="tab-pane fade"
-           id="my-bookings"
-           role="tabpanel"
-           aria-labelledby="my-bookings-tab"
-           style="background: linear-gradient(135deg, #f5f7fa, #c3cfe2); padding: 20px; border-radius: 10px;">
-        <!-- Bookings List Container -->
-        <div id="bookings-list-container">
-          <h2 class="text-center mb-4">My Bookings</h2>
-          <div class="row mb-4">
-            <div class="col-12 col-md-4 offset-md-4">
-              <div class="input-group">
-                <span class="input-group-text">
-                  <i class="fas fa-calendar-alt"></i>
-                </span>
-                <input type="date" class="form-control" id="filterDate" placeholder="Select Date" />
-                <button class="btn btn-primary" id="applyFilterBtn">Filter</button>
+        
+        <!-- Sticky Step Indicators -->
+        <div class="booking-steps">
+          <div class="step-indicator">
+            <div class="step completed" data-step="1">1</div>
+            <div class="step pending" data-step="2">2</div>
+            <div class="step pending" data-step="3">3</div>
+          </div>
+        </div>
+        
+        <!-- Scrollable Content -->
+        <div class="booking-content">
+          {% include "bookings/booking_form.html" %}
+        </div>
+        
+        <!-- Sticky Navigation Buttons -->
+        <div class="booking-nav-buttons">
+          <!-- Step 1: Only Next button -->
+          <div class="nav-buttons-step1">
+            <button type="button" class="btn btn-primary-custom w-100 next-step">
+              {% trans "Next Step" %} <i class="fas fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+          
+          <!-- Step 2: Back and Next buttons -->
+          <div class="nav-buttons-step2" style="display: none;">
+            <div class="row g-2">
+              <div class="col-6">
+                <button type="button" class="btn btn-secondary-custom w-100 prev-step">
+                  <i class="fas fa-arrow-left me-1"></i>{% trans "Back" %}
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-primary-custom w-100 next-step">
+                  {% trans "Next" %} <i class="fas fa-arrow-right ms-1"></i>
+                </button>
               </div>
             </div>
           </div>
+          
+          <!-- Step 3: Back and Confirm buttons -->
+          <div class="nav-buttons-step3" style="display: none;">
+            <div class="row g-2">
+              <div class="col-6">
+                <button type="button" class="btn btn-secondary-custom w-100 prev-step">
+                  <i class="fas fa-arrow-left me-1"></i>{% trans "Back" %}
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="submit" form="bookingForm" class="btn btn-primary-custom w-100">
+                  <i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- My Bookings Tab Pane -->
+    <div class="tab-pane fade" id="my-bookings" role="tabpanel" aria-labelledby="my-bookings-tab">
+      <!-- Bookings List Container -->
+      <div id="bookings-list-container">
+        <div class="booking-card mb-2">
+          <div class="card-body p-2">
+            <div class="text-center mb-2">
+              <h6 class="fw-bold text-dark mb-0">My Bookings</h6>
+              <p class="text-muted mb-1" style="font-size: 0.75rem;">Manage your sessions</p>
+            </div>
+            
+            <!-- Filter Section -->
+            <div class="mb-2">
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fas fa-calendar-alt text-muted"></i>
+                </span>
+                <input type="date" class="form-control border-start-0" id="filterDate" placeholder="Select Date" />
+                <button class="btn btn-primary-custom" id="applyFilterBtn" type="button">
+                  <i class="fas fa-filter me-1"></i>Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
           <div id="my-bookings-loading" class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
             <p class="mt-2">Loading your bookings...</p>
           </div>
-          <div id="my-bookings-container" class="row g-4" style="display: none;"></div>
+          <div id="my-bookings-container" style="display: none;"></div>
           <div id="no-bookings-message" class="text-center" style="display: none;">
             <div class="card border-0 shadow-sm">
               <div class="card-body">
@@ -108,13 +1634,13 @@
         <!-- Inline Edit Booking Container (hidden by default) -->
         <div id="edit-booking-container" class="d-none">
           <button id="back-to-bookings" class="btn btn-link mb-3">
-            <i class="fas fa-arrow-left"></i> Back to Bookings
+            <i class="fas fa-arrow-left"></i> {% trans "Back to Bookings" %}
           </button>
           <div class="card border-0 shadow-sm"
                style="border: 2px solid #333; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
             <div class="card-body" style="background-color: #fff;">
               <h2 class="text-center mb-4" style="font-weight: bold; color: #333;">
-                Edit My Bookings 
+                {% trans "Edit My Bookings" %}
                 <span style="font-size: 1.3rem; margin-left: 10px;">♠︎ ♥︎ ♣︎ ♦︎</span>
               </h2>
               {% include "bookings/booking_edit_form.html" %}
@@ -122,52 +1648,426 @@
           </div>
         </div>
       </div>
+    <!-- Profile Tab Pane -->
+    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+      <div class="profile-modern-container">
+
+        <!-- Profile Header Card -->
+        <div class="profile-header-card">
+          <div class="profile-background-gradient"></div>
+          <div class="profile-content">
+            <div class="profile-avatar-section">
+              <div class="profile-avatar">
+                <i class="fas fa-user-circle"></i>
+                <div class="verification-indicator" id="verification-status">
+                  <i class="fas fa-check-circle" title="Verified Account"></i>
+                </div>
+              </div>
+              <div class="profile-title">
+                <h4 class="profile-name" id="profile-display-name">Loading...</h4>
+                <p class="profile-subtitle">Premium Member</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Information Cards -->
+        <div id="profile-info" style="display: none;">
+          <!-- Personal Information Card -->
+          <div class="profile-info-card">
+            <div class="profile-card-header">
+              <i class="fas fa-user"></i>
+              <h6>Personal Information</h6>
+            </div>
+            <div class="profile-card-body">
+              <div class="info-row">
+                <div class="info-item">
+                  <label>First Name</label>
+                  <span id="profile-first-name">-</span>
+                </div>
+                <div class="info-item">
+                  <label>Last Name</label>
+                  <span id="profile-last-name">-</span>
+                </div>
+              </div>
+              <div class="info-row">
+                <div class="info-item full-width">
+                  <label>Email Address</label>
+                  <div class="info-with-badge">
+                    <span id="profile-email">-</span>
+                    <span class="verified-badge" id="email-verified" style="display: none;">
+                      <i class="fas fa-check"></i> Verified
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="info-row">
+                <div class="info-item full-width">
+                  <label>Member Since</label>
+                  <span id="profile-member-since">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Verification Card -->
+          <div class="profile-info-card">
+            <div class="profile-card-header">
+              <i class="fas fa-mobile-alt"></i>
+              <h6>Mobile Number</h6>
+            </div>
+            <div class="profile-card-body">
+
+              <!-- Mobile Number Input Section -->
+              <div id="mobile-input-section">
+                <div class="mobile-input-group">
+                  <div class="input-with-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                    <input type="tel" id="profile-phone-input"
+                           placeholder="Enter mobile number (+49 123 456 789)">
+                  </div>
+                  <button class="save-mobile-btn" type="button" id="save-mobile-btn" onclick="saveMobileNumber()">
+                    <i class="fas fa-save"></i>
+                    Save
+                  </button>
+                </div>
+                <div class="help-text">Include country code (e.g., +49 for Germany)</div>
+              </div>
+
+              <!-- Mobile Number Display Section -->
+              <div id="mobile-display-section" style="display: none;">
+                <div class="mobile-display-row">
+                  <div class="mobile-info">
+                    <span class="mobile-number" id="profile-phone">-</span>
+                    <span class="verified-badge verified" id="phone-verified" style="display: none;">
+                      <i class="fas fa-check"></i> Verified
+                    </span>
+                    <span class="verified-badge unverified" id="phone-unverified" style="display: none;">
+                      <i class="fas fa-exclamation"></i> Not Verified
+                    </span>
+                  </div>
+                  <div class="mobile-actions">
+                    <button class="btn-action secondary" id="edit-mobile-btn" onclick="editMobileNumber()">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-action primary" id="verify-phone-btn" style="display: none;" onclick="openMobileVerification()">
+                      <i class="fas fa-shield-alt"></i>
+                      Verify
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Support Card -->
+          <div class="profile-info-card support-card">
+            <div class="profile-card-header">
+              <i class="fas fa-headset"></i>
+              <h6>Need Help?</h6>
+            </div>
+            <div class="profile-card-body">
+              <p>For special requests or support:</p>
+              <a href="mailto:mgen@ming-group.de" class="support-email">
+                <i class="fas fa-envelope"></i>
+                mgen@ming-group.de
+              </a>
+            </div>
+          </div>
+        </div>
+          
+          <!-- Loading State -->
+          <div id="profile-loading" class="text-center py-4">
+            <div class="spinner-border text-primary mb-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted small">Loading profile...</p>
+          </div>
+          
+          <!-- Error State -->
+          <div id="profile-error" class="text-center py-4" style="display: none;">
+            <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+            <p class="text-muted small">Unable to load profile</p>
+            <button class="btn btn-sm btn-outline-primary" onclick="loadProfile()">Try Again</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mobile Verification Modal -->
+      <div class="modal-overlay" id="mobileVerificationModal" style="display: none;">
+        <div class="verification-modal">
+          <div class="verification-modal-header">
+            <h5>Verify Mobile Number</h5>
+            <button type="button" class="modal-close-btn" onclick="closeMobileModal()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div class="verification-modal-body">
+            <!-- Step 1: Send OTP -->
+            <div id="verification-step-1" class="verification-step">
+              <div class="verification-icon">
+                <i class="fas fa-mobile-alt"></i>
+              </div>
+              <h6>Verify Your Number</h6>
+              <p>We'll send a verification code to your mobile number</p>
+
+              <div class="phone-display">
+                <i class="fas fa-phone"></i>
+                <span id="modal-phone-display"></span>
+              </div>
+
+              <button class="verification-btn primary" id="send-otp-btn">
+                <i class="fas fa-paper-plane"></i>
+                Send Verification Code
+              </button>
+            </div>
+
+            <!-- Step 2: Verify OTP -->
+            <div id="verification-step-2" class="verification-step" style="display: none;">
+              <div class="verification-icon">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <h6>Enter Verification Code</h6>
+              <p>Enter the 6-digit code sent to your mobile</p>
+
+              <div class="otp-input-container">
+                <input type="text" id="otp-input"
+                       placeholder="000000"
+                       maxlength="6"
+                       pattern="[0-9]{6}"
+                       inputmode="numeric">
+              </div>
+
+              <div class="verification-buttons">
+                <button class="verification-btn primary" id="verify-otp-btn">
+                  <i class="fas fa-check"></i>
+                  Verify Code
+                </button>
+                <button class="verification-btn secondary" id="resend-otp-btn">
+                  <i class="fas fa-redo"></i>
+                  Resend Code
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</section>
+</div>
 
-<!-- Bottom Navigation Bar -->
-<nav class="navbar navbar-dark bg-dark fixed-bottom">
+<!-- Modern Bottom Navigation -->
+<nav class="navbar fixed-bottom bottom-nav">
   <div class="container-fluid">
-    <ul class="nav nav-justified w-100">
-      <li class="nav-item">
-        <a class="nav-link active text-white" id="book-poker-tab" data-bs-toggle="tab"
-           data-bs-target="#book-poker" role="tab" aria-controls="book-poker" aria-selected="true">
-          Book Poker
+    <div class="row w-100 text-center">
+      <div class="col-4">
+        <a class="nav-tab active" id="book-poker-tab" href="#" onclick="switchTab('book-poker', this); return false;" role="tab" aria-controls="book-poker" aria-selected="true">
+          <i class="fas fa-dice"></i>
+          <span>{% trans "Book Day" %}</span>
         </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-white" id="my-bookings-tab" data-bs-toggle="tab"
-           data-bs-target="#my-bookings" role="tab" aria-controls="my-bookings" aria-selected="false">
-          My Bookings
+      </div>
+      <div class="col-4">
+        <a class="nav-tab" id="my-bookings-tab" href="#" onclick="switchTab('my-bookings', this); return false;" role="tab" aria-controls="my-bookings" aria-selected="false">
+          <i class="fas fa-calendar-check"></i>
+          <span>{% trans "My Bookings" %}</span>
         </a>
-      </li>
-    </ul>
+      </div>
+      <div class="col-4">
+        <a class="nav-tab" id="profile-tab" href="#" onclick="switchTab('profile', this); return false;" role="tab" aria-controls="profile" aria-selected="false">
+          <i class="fas fa-user-circle"></i>
+          <span>{% trans "Profile" %}</span>
+        </a>
+      </div>
+    </div>
   </div>
 </nav>
+
 
 <!-- Include Braintree Drop-in Library -->
 <script src="https://js.braintreegateway.com/web/dropin/1.38.0/js/dropin.min.js"></script>
 
 <!-- Consolidated JavaScript for both New & Edit Booking Forms -->
 <script>
-document.addEventListener('DOMContentLoaded', async function() {
-  // Ensure you have a container element in your HTML where the drop-in UI will render.
-  var dropinContainer = document.getElementById('dropin-container');
-  if (!dropinContainer) {
-    console.error('Dropin container element not found.');
-    return;
+
+
+// Step management function
+window.showStep = function(stepNumber) {
+  // Hide all steps
+  const allSteps = document.querySelectorAll('.form-step');
+  allSteps.forEach(step => step.classList.remove('active'));
+  
+  // Show target step
+  const targetStep = document.querySelector(`.form-step[data-step="${stepNumber}"]`);
+  if (targetStep) {
+    targetStep.classList.add('active');
+    window.currentStep = stepNumber;
+    
+  }
+};
+
+// Custom tab switching function to replace Bootstrap (defined globally)
+window.switchTab = function(tabId, clickedTab) {
+  // Hide all tab panes
+  const allPanes = document.querySelectorAll('.tab-pane');
+  allPanes.forEach(pane => {
+    pane.classList.remove('show', 'active');
+    pane.classList.add('fade');
+  });
+  
+  // Remove active class from all nav tabs
+  const allTabs = document.querySelectorAll('.nav-tab');
+  allTabs.forEach(tab => {
+    tab.classList.remove('active');
+    tab.setAttribute('aria-selected', 'false');
+  });
+  
+  // Show selected tab pane
+  const targetPane = document.getElementById(tabId);
+  if (targetPane) {
+    targetPane.classList.remove('fade');
+    targetPane.classList.add('show', 'active');
   }
   
-  // Fetch the client token from your endpoint
-  fetch('/payments/braintree/client-token/')
-    .then(response => {
+  // Make clicked tab active (if provided)
+  if (clickedTab) {
+    clickedTab.classList.add('active');
+    clickedTab.setAttribute('aria-selected', 'true');
+  }
+  
+  // Load bookings when My Bookings tab is clicked
+  if (tabId === 'my-bookings') {
+    // Make sure loadMyBookings is available
+    if (typeof window.loadMyBookings === 'function') {
+      window.loadMyBookings();
+    }
+  }
+  
+  // Load profile when Profile tab is clicked
+  if (tabId === 'profile') {
+    if (typeof window.loadProfile === 'function') {
+      window.loadProfile();
+    }
+  }
+  
+  // Handle booking tab - check mobile verification and reset form
+  if (tabId === 'book-poker') {
+    // Reset booking form to step 1
+    resetBookingFormToStep1();
+
+    // Check mobile verification status when switching to booking tab
+    if (typeof window.checkMobileVerification === 'function') {
+      window.checkMobileVerification();
+    }
+    console.log('Switched to booking tab and reset to step 1');
+  }
+};
+
+// Function to reset booking form to step 1
+function resetBookingFormToStep1() {
+  // Reset to first step
+  window.currentStep = 1;
+
+  // Show only the first step
+  const steps = document.querySelectorAll('.form-step');
+  steps.forEach((step, index) => {
+    if (index === 0) {
+      step.classList.add('active');
+    } else {
+      step.classList.remove('active');
+    }
+  });
+
+  // Update step indicators
+  const stepIndicators = document.querySelectorAll('.step');
+  stepIndicators.forEach((indicator, index) => {
+    if (index === 0) {
+      indicator.className = 'step active';
+    } else {
+      indicator.className = 'step pending';
+    }
+  });
+
+  // Update navigation buttons visibility
+  const navButtonContainers = document.querySelectorAll('[class*="nav-buttons-step"]');
+  navButtonContainers.forEach((container, index) => {
+    container.style.display = index === 0 ? 'block' : 'none';
+  });
+
+  // Reset form fields for a fresh start
+  const bookingForm = document.getElementById('bookingForm');
+  if (bookingForm) {
+    // Reset date and time fields
+    const dateInput = document.getElementById('bookingDate');
+    const timeSelect = document.getElementById('bookingTime');
+    const durationSelect = document.getElementById('bookingDuration');
+    const peopleInput = document.getElementById('numberOfPeople');
+
+    if (dateInput) dateInput.value = '';
+    if (timeSelect) timeSelect.innerHTML = '<option value="">Select Date First</option>';
+    if (durationSelect) durationSelect.innerHTML = '<option value="">Select Time First</option>';
+    if (peopleInput) peopleInput.value = '';
+
+    // Uncheck service checkboxes
+    const dealerCheckbox = document.getElementById('dealerService');
+    const serviceCheckbox = document.getElementById('servicePersonal');
+    const drinksCheckbox = document.getElementById('drinksFlatrate');
+
+    if (dealerCheckbox) dealerCheckbox.checked = false;
+    if (serviceCheckbox) serviceCheckbox.checked = false;
+    if (drinksCheckbox) drinksCheckbox.checked = false;
+
+    // Reset any validation states
+    const inputs = bookingForm.querySelectorAll('input, select');
+    inputs.forEach(input => {
+      input.classList.remove('is-invalid');
+      const errorMessage = input.parentNode.querySelector('.error-message');
+      if (errorMessage) {
+        errorMessage.remove();
+      }
+    });
+  }
+
+  console.log('Booking form reset to step 1 - ready for new booking');
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+  let braintreeInitialized = false;
+  
+  // Initialize current step variable
+  window.currentStep = 1;
+  
+  
+  // Check mobile verification on page load
+  setTimeout(() => {
+    if (typeof window.checkMobileVerification === 'function') {
+      window.checkMobileVerification();
+    }
+  }, 2000);
+  
+  // Function to initialize Braintree when step 3 becomes visible
+  async function initializeBraintree() {
+    console.log('initializeBraintree called, initialized:', braintreeInitialized);
+    
+    if (braintreeInitialized) return;
+    
+    var dropinContainer = document.getElementById('dropin-container');
+    console.log('Dropin container found:', dropinContainer);
+    
+    if (!dropinContainer) {
+      console.error('Dropin container element not found.');
+      return;
+    }
+    
+    try {
+      // Fetch the client token from your endpoint
+      const response = await fetch('/payments/braintree/client-token/');
       if (!response.ok) {
         throw new Error('Network response was not ok.');
       }
-      return response.text();  // The server returns plain text
-    })
-    .then(clientToken => {
+      const clientToken = await response.text();
+      
+      console.log('About to create Braintree dropin with token:', clientToken.substring(0, 20) + '...');
       // Initialize the Braintree drop-in UI with the retrieved client token.
       braintree.dropin.create({
         authorization: clientToken,
@@ -177,15 +2077,39 @@ document.addEventListener('DOMContentLoaded', async function() {
           console.error('Error creating dropin UI:', createErr);
           return;
         }
-        window.braintreeInstance = instance; // Save instance globally so you can use it later in your payment submission
-        console.log('Braintree dropin UI initialized successfully.');
+        window.braintreeInstance = instance;
+        braintreeInitialized = true;
+        console.log('Braintree dropin UI initialized successfully, instance:', instance);
+        
+        // Debug: Check if UI was injected
+        setTimeout(() => {
+          const container = document.getElementById('dropin-container');
+          console.log('Dropin container after init:', container);
+          console.log('Container innerHTML:', container.innerHTML);
+          console.log('Container children count:', container.children.length);
+        }, 1000);
       });
-    })
-    .catch(error => {
+    } catch (error) {
       console.error('Error fetching client token:', error);
-    });
-  const user_id = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
+    }
+  }
+  const user_id = "{{ request.session.user_id|default:'' }}";
   let allBookings = []; // Global variable for bookings
+  
+  // Initialize Braintree when step 3 is reached
+  window.initializeBraintreeOnStep3 = initializeBraintree;
+  
+  // Check if braintree library is loaded
+  console.log('Braintree library available:', typeof braintree);
+  
+  // Try to initialize immediately if step 3 is already visible
+  setTimeout(() => {
+    const step3 = document.querySelector('.form-step[data-step="3"]');
+    if (step3 && step3.classList.contains('active')) {
+      console.log('Step 3 already active, initializing Braintree');
+      initializeBraintree();
+    }
+  }, 1000);
 
   // --- Helper Functions ---
   function formatHour(hour) {
@@ -205,72 +2129,112 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
       document.getElementById('no-bookings-message').style.display = 'none';
     }
+    
     bookings.forEach(booking => {
+      // Parse and format the date
+      const bookingDate = new Date(booking.start_time.replace(' ', 'T'));
+      const formattedDate = bookingDate.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      const formattedTime = bookingDate.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true
+      });
+      
+      const statusClass = booking.is_cancelled ? 'status-cancelled' : 'status-active';
+      const statusText = booking.is_cancelled ? 'Cancelled' : 'Active';
+      const statusIcon = booking.is_cancelled ? 'fas fa-times-circle' : 'fas fa-check-circle';
+      
       const card = `
-        <div class="col-md-6 col-lg-4 mb-4">
-          <div class="card booking-card"
-               data-booking-id="${booking.id}"
-               data-booking-date="${booking.start_time}"
-               data-booking-time="${booking.start_time}"
-               data-total-people="${booking.total_people}"
-               data-hours="${booking.hours_booked}"
-               data-drinks="${booking.drinks.join(',')}"
-               style="background-color: #fff; border: 2px solid #333; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-            <div class="card-header d-flex justify-content-between align-items-center"
-                 style="background-color: #f8f8f8; border-bottom: 2px solid #333;">
-              <h5 class="card-title mb-0" style="font-weight: bold; color: #333;">
-                <i class="fas fa-calendar-alt me-2"></i>Booking #${booking.id}
-              </h5>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary edit-booking" data-booking-id="${booking.id}">
-                  <i class="fas fa-edit me-1"></i>Edit
-                </button>
-                <button class="btn btn-sm btn-outline-danger cancel-booking" data-booking-id="${booking.id}">
-                  <i class="fas fa-trash-alt me-1"></i>Cancel
-                </button>
+        <div class="booking-card-modern"
+             data-booking-id="${booking.id}"
+             data-booking-date="${booking.start_time}"
+             data-booking-time="${booking.start_time}"
+             data-total-people="${booking.total_people}"
+             data-hours="${booking.hours_booked}"
+             data-drinks="${booking.drinks.join(',')}">
+          
+          <div class="booking-card-header">
+            <div class="booking-date-info">
+              <div class="booking-date">${formattedDate}</div>
+              <div class="booking-time">${formattedTime}</div>
+            </div>
+            <div class="booking-status ${statusClass}">
+              <i class="${statusIcon}"></i>
+              <span>${statusText}</span>
+            </div>
+          </div>
+          
+          <div class="booking-card-body">
+            <div class="booking-details-row">
+              <div class="booking-detail">
+                <div class="detail-label">
+                  <i class="fas fa-users"></i>
+                  People
+                </div>
+                <div class="detail-value">${booking.total_people}</div>
+              </div>
+              
+              <div class="booking-detail">
+                <div class="detail-label">
+                  <i class="fas fa-clock"></i>
+                  Duration
+                </div>
+                <div class="detail-value">Until end of day</div>
+              </div>
+              
+              <div class="booking-detail">
+                <div class="detail-label">
+                  <i class="fas fa-euro-sign"></i>
+                  Total
+                </div>
+                <div class="detail-value">€${booking.total_amount.toFixed(2)}</div>
               </div>
             </div>
-            <div class="card-body" style="color: #333;">
-              <p class="card-text mb-2">
-                <i class="fas fa-clock me-2"></i>
-                <strong>Date & Time:</strong> ${booking.start_time}
-              </p>
-              <p class="card-text mb-2">
-                <i class="fas fa-users me-2"></i>
-                <strong>People:</strong> ${booking.total_people}
-              </p>
-              <p class="card-text mb-2">
-                <i class="fas fa-hourglass me-2"></i>
-                <strong>Hours:</strong> ${booking.hours_booked}
-              </p>
-              <p class="card-text mb-2">
-                <i class="fas fa-coins me-2"></i>
-                <strong>Total:</strong> €${booking.total_amount.toFixed(2)}
-              </p>
-              <p class="card-text mb-2">
-                <i class="fas fa-tags me-2"></i>
-                <strong>Drinks:</strong> ${booking.drinks.join(', ') || 'None'}
-              </p>
-              <p class="card-text mb-0">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>Status:</strong> ${ booking.is_cancelled 
-                  ? '<span class="text-danger fw-bold">Cancelled</span>' 
-                  : '<span class="text-success fw-bold">Active</span>' }
-              </p>
+            
+            ${booking.drinks.length > 0 ? `
+            <div class="booking-drinks">
+              <div class="drinks-label">
+                <i class="fas fa-cocktail"></i>
+                Drinks
+              </div>
+              <div class="drinks-list">
+                ${booking.drinks.map(drink => `<span class="drink-tag">${drink}</span>`).join('')}
+              </div>
             </div>
-            <div class="card-footer text-center"
-                 style="background-color: #f8f8f8; border-top: 2px solid #333;">
-              <small style="color: #555;">Thank you for choosing <strong>Poka Lawn</strong>!</small>
-            </div>
+            ` : ''}
+          </div>
+          
+          <div class="booking-card-actions">
+            ${!booking.is_cancelled ? (() => {
+              const cancellationInfo = checkCancellationPolicy(booking.booking_date);
+              const buttonClass = cancellationInfo.isWithin24Hours ? 'btn-cancel-warning' : 'btn-cancel';
+              const warningIcon = cancellationInfo.isWithin24Hours ? 'fa-exclamation-triangle' : 'fa-times';
+
+              return `<button class="btn-action ${buttonClass} cancel-booking"
+                              data-booking-id="${booking.id}"
+                              data-booking-date="${booking.booking_date}"
+                              title="${cancellationInfo.isWithin24Hours ? 'Warning: Cancellation fee applies' : 'Free cancellation available'}">
+                        <i class="fas ${warningIcon}"></i>
+                        <span>${cancellationInfo.isWithin24Hours ? 'Cancel*' : 'Cancel'}</span>
+                      </button>`;
+            })() : `<button class="btn-action btn-cancelled cancel-booking" disabled>
+                      <i class="fas fa-ban"></i>
+                      <span>Cancelled</span>
+                    </button>`}
           </div>
         </div>
       `;
       container.innerHTML += card;
     });
-    container.style.display = 'flex';
+    container.style.display = 'block';
   }
   
-  function loadMyBookings() {
+  window.loadMyBookings = function() {
     document.getElementById('my-bookings-loading').style.display = 'block';
     document.getElementById('my-bookings-container').style.display = 'none';
     document.getElementById('no-bookings-message').style.display = 'none';
@@ -308,14 +2272,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       return;
     }
     const filtered = allBookings.filter(booking => {
-      const bDate = new Date(booking.created_at.replace(' ', 'T'));
+      const bDate = new Date(booking.start_time.replace(' ', 'T'));
       const bDateString = bDate.toISOString().split('T')[0];
       return bDateString === selectedDate;
     });
     renderBookings(filtered);
   });
-  
-  document.getElementById('my-bookings-tab').addEventListener('click', loadMyBookings);
   
   // --- Back Button for Edit Form ---
   document.getElementById('back-to-bookings').addEventListener('click', function(e) {
@@ -323,65 +2285,208 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('edit-booking-container').classList.add('d-none');
     document.getElementById('bookings-list-container').classList.remove('d-none');
   });
+
+  // --- Cancel Booking Functionality ---
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.cancel-booking')) {
+      const button = e.target.closest('.cancel-booking');
+      const bookingId = button.getAttribute('data-booking-id');
+      const bookingDate = button.getAttribute('data-booking-date');
+
+      // Check if this is within 24 hours of booking time
+      const cancellationInfo = checkCancellationPolicy(bookingDate);
+
+      if (cancellationInfo.isWithin24Hours) {
+        // Show warning message for late cancellation
+        const confirmMessage = `⚠️ CANCELLATION POLICY WARNING ⚠️\n\n` +
+          `You are cancelling within 24 hours of your booking time.\n\n` +
+          `According to our policy:\n` +
+          `• A cancellation fee will be charged\n` +
+          `• ${cancellationInfo.feePercentage}% of the booking amount will be debited\n` +
+          `• Remaining amount will be refunded\n\n` +
+          `Time remaining: ${cancellationInfo.timeRemaining}\n\n` +
+          `Do you still want to proceed with cancellation?`;
+
+        const confirmed = confirm(confirmMessage);
+        if (confirmed) {
+          cancelBooking(bookingId, button, true); // true = late cancellation
+        }
+      } else {
+        // Normal cancellation
+        const confirmMessage = `Are you sure you want to cancel this booking?\n\n` +
+          `✅ No cancellation fee applies (more than 24 hours remaining)\n` +
+          `✅ Full refund will be processed\n\n` +
+          `This action cannot be undone.`;
+
+        const confirmed = confirm(confirmMessage);
+        if (confirmed) {
+          cancelBooking(bookingId, button, false); // false = normal cancellation
+        }
+      }
+    }
+  });
+
+  // Function to check cancellation policy
+  function checkCancellationPolicy(bookingDateString) {
+    const bookingDateTime = new Date(bookingDateString);
+    const currentTime = new Date();
+    const timeDifference = bookingDateTime.getTime() - currentTime.getTime();
+    const hoursRemaining = timeDifference / (1000 * 3600);
+
+    const isWithin24Hours = hoursRemaining <= 24 && hoursRemaining > 0;
+
+    let timeRemaining = '';
+    if (hoursRemaining > 0) {
+      if (hoursRemaining >= 24) {
+        const daysRemaining = Math.floor(hoursRemaining / 24);
+        const remainingHours = Math.floor(hoursRemaining % 24);
+        timeRemaining = `${daysRemaining} day(s) ${remainingHours} hour(s)`;
+      } else {
+        timeRemaining = `${Math.floor(hoursRemaining)} hour(s) ${Math.floor((hoursRemaining % 1) * 60)} minute(s)`;
+      }
+    } else {
+      timeRemaining = 'Booking time has passed';
+    }
+
+    return {
+      isWithin24Hours: isWithin24Hours,
+      hoursRemaining: hoursRemaining,
+      timeRemaining: timeRemaining,
+      feePercentage: 30 // 30% cancellation fee for late cancellations
+    };
+  }
+
+  function cancelBooking(bookingId, button, isLateCancellation = false) {
+    // Disable button and show loading state
+    button.disabled = true;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Cancelling...</span>';
+
+    fetch('/bookings/cancel-booking/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({
+        'booking_id': bookingId,
+        'customer_id': user_id,
+        'is_late_cancellation': isLateCancellation
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        let message = 'Booking cancelled successfully!';
+
+        if (isLateCancellation) {
+          message += `\n\n📋 CANCELLATION DETAILS:\n` +
+            `• Cancellation fee: ${data.cancellation_fee || '30%'}\n` +
+            `• Refund amount: €${data.refund_amount || 'TBD'}\n` +
+            `• Refund will be processed within 3-5 business days`;
+        } else {
+          message += '\n\n✅ Full refund will be processed within 3-5 business days.';
+        }
+
+        alert(message);
+
+        // Refresh the bookings list
+        window.loadMyBookings();
+      } else {
+        alert('Error cancelling booking: ' + (data.message || 'Unknown error'));
+
+        // Re-enable button
+        button.disabled = false;
+        button.innerHTML = originalText;
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Network error. Please try again.');
+
+      // Re-enable button
+      button.disabled = false;
+      button.innerHTML = originalText;
+    });
+  }
   
   const bookingDateInput = document.getElementById('bookingDate');
-  const bookingTimeSelect = document.getElementById('bookingTime');
+  const bookingTimeSelectSubmit = document.getElementById('bookingTime');
   const numberOfPeopleInput = document.getElementById('numberOfPeople');
-  const numberOfHoursInput = document.getElementById('numberOfHours');
-console.log('bookingDate',bookingDateInput.value);
-console.log('bookingTime',bookingTimeSelect.value);
-console.log('hours',numberOfHoursInput.value);
+  const numberOfHoursInput = document.getElementById('bookingDuration');
+console.log('bookingDate', bookingDateInput?.value || 'null');
+console.log('bookingTime', bookingTimeSelectSubmit?.value || 'null');
+console.log('hours', numberOfHoursInput?.value || 'null');
 
   // --- Booking Form Submission ---
   document.getElementById('bookingForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-// Call the availability check API
-  const availabilityResponse = await fetch('/bookings/check_availability/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-    },
-    body: JSON.stringify({
-      user_id: user_id,
-      date: bookingDateInput.value,
-      total_people: numberOfPeopleInput.value,
-      start_time: bookingTimeSelect.value,
-      hours_booked: numberOfHoursInput.value
-    })
-  });
+    
+    // Validate all required fields
+    const bookingDate = document.getElementById('bookingDate').value;
+    const bookingTime = document.getElementById('bookingTime').value;
+    const bookingDuration = document.getElementById('bookingDuration').value;
+    const numberOfPeople = document.getElementById('numberOfPeople').value;
+
+    console.log('Form validation:', { bookingDate, bookingTime, bookingDuration, numberOfPeople });
+
+    if (!bookingDate || !bookingTime || !bookingDuration || !numberOfPeople) {
+      alert('Please fill in all required fields (Date, Start Time, Number of Hours, Number of People)');
+      return;
+    }
+
+    // Double-check date availability before proceeding
+    const dateCheckResponse = await fetch('/bookings/get_unavailable_slots?date=' + bookingDateInput.value);
+    const dateCheckData = await dateCheckResponse.json();
+    
+    if (dateCheckData.unavailable_slots && dateCheckData.unavailable_slots.length > 0) {
+      alert('This date is no longer available for booking. Please select a different date.');
+      return; // Prevent form submission
+    }
+
+    // Call the availability check API (this should not be needed anymore, but keeping as backup)
+    const availabilityResponse = await fetch('/bookings/check_availability/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+      },
+      body: JSON.stringify({
+        user_id: user_id,
+        date: bookingDateInput.value,
+        total_people: numberOfPeopleInput.value,
+        start_time: bookingTimeSelectSubmit.value,
+        hours_booked: numberOfHoursInput.value
+      })
+    });
     const availabilityData = await availabilityResponse.json();
     console.log('availabilityData',availabilityData);
     if (!availabilityData.available) {
       alert(availabilityData.message || "Selected time slot is unavailable.");
       return; // Prevent form submission
     }
-    const costSummaryDiv = document.getElementById('costSummary');
-  const computedColor = window.getComputedStyle(costSummaryDiv).color;
+    // Cost summary was removed from step 2, so no need to check it
 
-  // Compare to red (may vary slightly depending on browser; safest to match RGB)
-  if (computedColor === 'rgb(255, 0, 0)') {
-    return; // ❌ Stop submission
-  }
-    const submitButton = this.querySelector('button[type="submit"]');
+    const submitButton = document.querySelector('button[type="submit"][form="bookingForm"]');
     submitButton.disabled = true;
     submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+    console.log('window.braintreeInstance',window.braintreeInstance)
     if (!window.braintreeInstance) {
       alert("Payment interface not loaded yet.");
       submitButton.disabled = false;
-      submitButton.innerHTML = 'Confirm Booking';
+      submitButton.innerHTML = '<i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}';
       return;
     }
     window.braintreeInstance.requestPaymentMethod(async (err, payload) => {
       if (err) {
         alert("Payment error. Please check card details.");
         submitButton.disabled = false;
-        submitButton.innerHTML = 'Confirm Booking';
+        submitButton.innerHTML = '<i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}';
         return;
       }
 
       const formData = {
-        booking_date: bookingDateInput.value + "T" + bookingTimeSelect.value,
+        booking_date: bookingDateInput.value + "T" + bookingTimeSelectSubmit.value,
         number_of_people: numberOfPeopleInput.value,
         number_of_hours: numberOfHoursInput.value,
         drinks: Array.from(document.querySelectorAll('input[name="drinks"]:checked')).map(o => parseInt(o.value)),
@@ -399,9 +2504,33 @@ console.log('hours',numberOfHoursInput.value);
         });
         const data = await response.json();
         if (response.ok && data.success) {
-          document.getElementById('my-bookings-tab').click();
-          loadMyBookings(); 
+          alert('Booking successful! Your reservation has been confirmed.');
+          
+          // Clear saved form progress
+          // Form progress functionality removed
+          
+          // Reset form
           document.getElementById('bookingForm').reset();
+          
+          // Switch to My Bookings tab and refresh data
+          setTimeout(() => {
+            console.log('Switching to My Bookings tab after successful booking');
+            const myBookingsTab = document.getElementById('my-bookings-tab');
+            console.log('My Bookings tab element:', myBookingsTab);
+            
+            // Switch to the tab first
+            window.switchTab('my-bookings', myBookingsTab);
+            
+            // Then load the bookings data with a small delay
+            setTimeout(() => {
+              if (typeof window.loadMyBookings === 'function') {
+                console.log('Loading My Bookings data');
+                window.loadMyBookings();
+              } else {
+                console.error('loadMyBookings function not found');
+              }
+            }, 200);
+          }, 500);
         } else {
           alert('Error: ' + (data.message || 'Payment failed'));
         }
@@ -409,10 +2538,505 @@ console.log('hours',numberOfHoursInput.value);
         alert('Network error. Please try again.');
       } finally {
         submitButton.disabled = false;
-        submitButton.innerHTML = 'Confirm Booking';
+        submitButton.innerHTML = '<i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}';
       }
     });
   });
+
+  // Profile Management Functions
+  window.loadProfile = function() {
+    document.getElementById('profile-loading').style.display = 'block';
+    document.getElementById('profile-info').style.display = 'none';
+    document.getElementById('profile-error').style.display = 'none';
+    
+    fetch('/customers/api/profile/')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('profile-loading').style.display = 'none';
+        
+        if (data.success) {
+          const customer = data.customer;
+
+          // Populate profile information
+          document.getElementById('profile-first-name').textContent = customer.first_name;
+          document.getElementById('profile-last-name').textContent = customer.last_name;
+          document.getElementById('profile-email').textContent = customer.email_id;
+          document.getElementById('profile-member-since').textContent = customer.created_at;
+
+          // Update profile display name
+          const displayName = `${customer.first_name} ${customer.last_name}`;
+          document.getElementById('profile-display-name').textContent = displayName;
+          
+          // Show verification status
+          if (customer.is_email_verified) {
+            document.getElementById('email-verified').style.display = 'inline-block';
+          }
+          
+          // Handle mobile number display/input
+          if (customer.phone_number && customer.phone_number.trim() !== '') {
+            // User has a phone number - show display section
+            document.getElementById('profile-phone').textContent = customer.phone_number;
+            document.getElementById('mobile-input-section').style.display = 'none';
+            document.getElementById('mobile-display-section').style.display = 'flex';
+            
+            if (customer.is_phone_verified) {
+              document.getElementById('phone-verified').style.display = 'inline-block';
+              document.getElementById('phone-unverified').style.display = 'none';
+              document.getElementById('verify-phone-btn').style.display = 'none';
+            } else {
+              document.getElementById('phone-unverified').style.display = 'inline-block';
+              document.getElementById('verify-phone-btn').style.display = 'inline-block';
+              document.getElementById('phone-verified').style.display = 'none';
+            }
+          } else {
+            // User has no phone number - show input section
+            document.getElementById('mobile-input-section').style.display = 'block';
+            document.getElementById('mobile-display-section').style.display = 'none';
+          }
+          
+          document.getElementById('profile-info').style.display = 'block';
+          
+          // Store customer data for verification
+          window.currentCustomer = customer;
+          
+        } else {
+          document.getElementById('profile-error').style.display = 'block';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading profile:', error);
+        document.getElementById('profile-loading').style.display = 'none';
+        document.getElementById('profile-error').style.display = 'block';
+      });
+  };
+
+  // Mobile Number Management Functions
+  window.saveMobileNumber = function() {
+    const phoneInput = document.getElementById('profile-phone-input');
+    const phoneNumber = phoneInput.value.trim();
+    
+    if (!phoneNumber) {
+      alert('Please enter a mobile number');
+      return;
+    }
+    
+    // Basic phone validation
+    const phoneRegex = /^\+?[\d\s\-\(\)]{8,}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      alert('Please enter a valid mobile number with country code (e.g., +49 123 456 789)');
+      return;
+    }
+    
+    const saveBtn = document.getElementById('save-mobile-btn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    
+    fetch('/customers/api/update-phone/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({
+        phone_number: phoneNumber
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Refresh the profile to show the updated phone number
+        loadProfile();
+        alert('Mobile number saved successfully!');
+      } else {
+        alert(data.message || 'Failed to save mobile number');
+      }
+    })
+    .catch(error => {
+      console.error('Error saving mobile number:', error);
+      alert('Error saving mobile number. Please try again.');
+    })
+    .finally(() => {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalText;
+    });
+  };
+  
+  window.editMobileNumber = function() {
+    const currentPhone = document.getElementById('profile-phone').textContent;
+    document.getElementById('profile-phone-input').value = currentPhone;
+    document.getElementById('mobile-input-section').style.display = 'block';
+    document.getElementById('mobile-display-section').style.display = 'none';
+  };
+
+  // Mobile Verification Functions
+  window.openMobileVerification = function() {
+    if (!window.currentCustomer) {
+      alert('Please refresh the profile first');
+      return;
+    }
+    
+    document.getElementById('modal-phone-display').textContent = window.currentCustomer.phone_number;
+    document.getElementById('verification-step-1').style.display = 'block';
+    document.getElementById('verification-step-2').style.display = 'none';
+    document.getElementById('mobileVerificationModal').style.display = 'block';
+  };
+
+  window.closeMobileModal = function() {
+    document.getElementById('mobileVerificationModal').style.display = 'none';
+    document.getElementById('otp-input').value = '';
+  };
+
+  window.sendMobileOTP = function() {
+    const sendBtn = document.getElementById('send-otp-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+    
+    fetch('/customers/api/send-mobile-otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({
+        phone_number: window.currentCustomer.phone_number,
+        customer_id: window.currentCustomer.id
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Verification Code';
+      
+      if (data.success) {
+        document.getElementById('verification-step-1').style.display = 'none';
+        document.getElementById('verification-step-2').style.display = 'block';
+        
+        // Show OTP in console for testing (remove in production)
+        console.log('OTP sent:', data.otp);
+        alert(`OTP sent! For testing: ${data.otp}`); // Remove in production
+      } else {
+        alert('Error: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error sending OTP:', error);
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Verification Code';
+      alert('Network error. Please try again.');
+    });
+  };
+
+  window.verifyMobileOTP = function() {
+    const otp = document.getElementById('otp-input').value;
+    if (!otp || otp.length !== 6) {
+      alert('Please enter a valid 6-digit code');
+      return;
+    }
+    
+    const verifyBtn = document.getElementById('verify-otp-btn');
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+    
+    fetch('/customers/api/verify-mobile-otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({
+        phone_number: window.currentCustomer.phone_number,
+        customer_id: window.currentCustomer.id,
+        otp: otp
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      verifyBtn.disabled = false;
+      verifyBtn.innerHTML = '<i class="fas fa-check me-2"></i>Verify Code';
+      
+      if (data.success) {
+        alert('Mobile number verified successfully!');
+        window.closeMobileModal();
+        window.loadProfile(); // Reload profile to show updated status
+      } else {
+        alert('Error: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error verifying OTP:', error);
+      verifyBtn.disabled = false;
+      verifyBtn.innerHTML = '<i class="fas fa-check me-2"></i>Verify Code';
+      alert('Network error. Please try again.');
+    });
+  };
+
+  // Event listeners for mobile verification (Profile tab only)
+  const verifyPhoneBtn = document.getElementById('verify-phone-btn');
+  if (verifyPhoneBtn) {
+    verifyPhoneBtn.addEventListener('click', window.openMobileVerification);
+  }
+  
+  const sendOtpBtn = document.getElementById('send-otp-btn');
+  if (sendOtpBtn) {
+    sendOtpBtn.addEventListener('click', window.sendMobileOTP);
+  }
+  
+  const verifyOtpBtn = document.getElementById('verify-otp-btn');
+  if (verifyOtpBtn) {
+    verifyOtpBtn.addEventListener('click', window.verifyMobileOTP);
+  }
+  
+  const resendOtpBtn = document.getElementById('resend-otp-btn');
+  if (resendOtpBtn) {
+    resendOtpBtn.addEventListener('click', window.sendMobileOTP);
+  }
+  
+  const otpInput = document.getElementById('otp-input');
+  if (otpInput) {
+    otpInput.addEventListener('input', function(e) {
+      e.target.value = e.target.value.replace(/\D/g, ''); // Only allow digits
+    });
+    
+    otpInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        window.verifyMobileOTP();
+      }
+    });
+  }
+  
+  // Dynamic Booking Time Slots and Duration Management - with null checks
+  const dynamicBookingDate = document.getElementById('bookingDate');
+  const bookingTimeSelect = document.getElementById('bookingTime');
+  const bookingDurationSelect = document.getElementById('bookingDuration');
+  const timeSlotMessage = document.getElementById('timeSlotMessage');
+  const durationMessage = document.getElementById('durationMessage');
+
+  // Only proceed if the booking form elements exist
+  if (!dynamicBookingDate || !bookingTimeSelect || !bookingDurationSelect) {
+    console.log('Booking form elements not found - skipping dynamic booking setup');
+    return;
+  }
+
+  // Set minimum date to today
+  if (dynamicBookingDate) {
+    const today = new Date().toISOString().split('T')[0];
+    dynamicBookingDate.min = today;
+  }
+
+  // Store combined time-hours data for instant access
+  let timeHoursData = {};
+
+  // Base hourly rate (can be adjusted)
+  const HOURLY_RATE = 50; // €50 per hour
+
+
+
+  // Load available time slots when date changes
+  if (dynamicBookingDate) {
+    dynamicBookingDate.addEventListener('change', function() {
+      const selectedDate = this.value;
+      if (selectedDate) {
+        loadAvailableTimeSlots(selectedDate);
+        // Reset selections
+        bookingTimeSelect.innerHTML = '<option value="">Loading...</option>';
+        bookingDurationSelect.innerHTML = '<option value="">Select Time First</option>';
+        updatePricing();
+      }
+    });
+  }
+
+  // Load available hours when time is selected (instant from pre-loaded data)
+  if (bookingTimeSelect) {
+    bookingTimeSelect.addEventListener('change', function() {
+      const selectedDate = dynamicBookingDate.value;
+      const selectedTime = this.value;
+
+      if (selectedTime && timeHoursData[selectedTime]) {
+        // Instantly populate hours from pre-loaded data (super fast!)
+        populateHoursDropdown(timeHoursData[selectedTime]);
+      } else if (selectedDate && selectedTime) {
+        // Fallback: load hours dynamically if not pre-loaded
+        bookingDurationSelect.innerHTML = '<option value="">Loading...</option>';
+        fetch(`/bookings/get-available-durations/?date=${selectedDate}&start_time=${selectedTime}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              populateHoursDropdown(data.available_durations);
+            } else {
+              bookingDurationSelect.innerHTML = '<option value="">No hours available</option>';
+            }
+          })
+          .catch(error => {
+            console.error('Error loading hours:', error);
+            bookingDurationSelect.innerHTML = '<option value="">Error loading hours</option>';
+          });
+      } else {
+        bookingDurationSelect.innerHTML = '<option value="">Select Time First</option>';
+        durationMessage.innerHTML = '<i class="fas fa-info-circle me-1"></i>Available hours based on selected time';
+        durationMessage.className = 'form-text text-muted mt-1 small';
+      }
+      updatePricing();
+    });
+  }
+
+  // Update pricing when duration changes
+  if (bookingDurationSelect) {
+    bookingDurationSelect.addEventListener('change', function() {
+      updatePricing();
+    });
+  }
+  
+  // Function to load ALL time slots and hours data in ONE single API call
+  function loadAvailableTimeSlots(date) {
+    // Reset data
+    timeHoursData = {};
+
+    // ONE single API call that gets everything at once
+    fetch(`/bookings/get-all-booking-data/?date=${date}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          bookingTimeSelect.innerHTML = '<option value="">Select Start Time</option>';
+
+          if (!data.time_slots_with_hours || Object.keys(data.time_slots_with_hours).length === 0) {
+            bookingTimeSelect.innerHTML = '<option value="">No available time slots</option>';
+            timeSlotMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>No available time slots for this date due to MGEN-F24 events';
+            timeSlotMessage.className = 'form-text text-warning mt-1 small';
+          } else {
+            // Store all the hours data (already loaded in one call!)
+            timeHoursData = data.time_slots_with_hours;
+
+            // Add each time slot as an option
+            Object.keys(timeHoursData).forEach(timeSlot => {
+              const option = document.createElement('option');
+              option.value = timeSlot;
+              option.textContent = timeSlot;
+              bookingTimeSelect.appendChild(option);
+            });
+
+            timeSlotMessage.innerHTML = '<i class="fas fa-check me-1"></i>All data loaded instantly - time selection is now super fast!';
+            timeSlotMessage.className = 'form-text text-success mt-1 small';
+          }
+        } else {
+          bookingTimeSelect.innerHTML = '<option value="">Error loading time slots</option>';
+          timeSlotMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error loading available time slots';
+          timeSlotMessage.className = 'form-text text-danger mt-1 small';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading time slots:', error);
+        bookingTimeSelect.innerHTML = '<option value="">Error loading time slots</option>';
+        timeSlotMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Network error loading time slots';
+        timeSlotMessage.className = 'form-text text-danger mt-1 small';
+
+        // Fallback to old method if new endpoint doesn't exist
+        loadAvailableTimeSlotsOldWay(date);
+      });
+  }
+
+  // Fallback function (in case backend endpoint doesn't exist yet)
+  function loadAvailableTimeSlotsOldWay(date) {
+    fetch(`/bookings/get-available-time-slots/?date=${date}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.available_time_slots.length > 0) {
+          bookingTimeSelect.innerHTML = '<option value="">Select Start Time</option>';
+
+          data.available_time_slots.forEach(timeSlot => {
+            const option = document.createElement('option');
+            option.value = timeSlot;
+            option.textContent = timeSlot;
+            bookingTimeSelect.appendChild(option);
+          });
+
+          timeSlotMessage.innerHTML = '<i class="fas fa-info-circle me-1"></i>Using fallback method - hours will load when time is selected';
+          timeSlotMessage.className = 'form-text text-info mt-1 small';
+        }
+      })
+      .catch(error => {
+        console.error('Fallback method also failed:', error);
+      });
+  }
+
+  // Function to instantly populate hours dropdown from pre-loaded data
+  function populateHoursDropdown(availableHours) {
+    bookingDurationSelect.innerHTML = '<option value="">Select Hours</option>';
+
+    if (!availableHours || availableHours.length === 0) {
+      bookingDurationSelect.innerHTML = '<option value="">No hours available</option>';
+      durationMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>No available hours for selected time';
+      durationMessage.className = 'form-text text-warning mt-1 small';
+    } else {
+      // Add each duration as an option
+      availableHours.forEach(duration => {
+        const option = document.createElement('option');
+        option.value = duration;
+        const hourText = duration == 1 ? 'hour' : 'hours';
+        option.textContent = `${duration} ${hourText}`;
+        bookingDurationSelect.appendChild(option);
+      });
+
+      durationMessage.innerHTML = '<i class="fas fa-check me-1"></i>Available hours (instant loading!)';
+      durationMessage.className = 'form-text text-success mt-1 small';
+    }
+  }
+  
+  // Function to update pricing based on selected duration
+  function updatePricing() {
+    if (!bookingDurationSelect) return;
+
+    const selectedDuration = parseInt(bookingDurationSelect.value) || 0;
+    const dealerChecked = document.getElementById('dealerService')?.checked || false;
+    const serviceChecked = document.getElementById('servicePersonal')?.checked || false;
+    
+    // Base rental cost
+    const baseRental = selectedDuration * HOURLY_RATE;
+    
+    // Show/hide base rental cost
+    const baseRentalCost = document.getElementById('baseRentalCost');
+    const rentalLabel = document.getElementById('rentalLabel');
+    const rentalAmount = document.getElementById('rentalAmount');
+    
+    if (selectedDuration > 0) {
+      if (baseRentalCost) baseRentalCost.style.display = 'flex';
+      if (rentalLabel) rentalLabel.textContent = `${selectedDuration} hour${selectedDuration > 1 ? 's' : ''} Rental`;
+      if (rentalAmount) rentalAmount.textContent = `€${baseRental.toFixed(2)}`;
+    } else {
+      if (baseRentalCost) baseRentalCost.style.display = 'none';
+    }
+    
+    // Calculate total
+    let total = baseRental;
+    if (dealerChecked) total += 200;
+    if (serviceChecked) total += 200;
+    
+    // Update total amount
+    const totalAmountEl = document.getElementById('totalAmount');
+    if (totalAmountEl) {
+      totalAmountEl.textContent = `€${total.toFixed(2)}`;
+    }
+  }
+  
+  // Add event listeners for service checkboxes
+  const dealerCheckbox = document.getElementById('dealerService');
+  const serviceCheckbox = document.getElementById('servicePersonal');
+  const dealerCost = document.getElementById('dealerCost');
+  const serviceCost = document.getElementById('serviceCost');
+  
+  if (dealerCheckbox) {
+    dealerCheckbox.addEventListener('change', function() {
+      if (dealerCost) dealerCost.style.display = this.checked ? 'flex' : 'none';
+      updatePricing();
+    });
+  }
+  
+  if (serviceCheckbox) {
+    serviceCheckbox.addEventListener('change', function() {
+      if (serviceCost) serviceCost.style.display = this.checked ? 'flex' : 'none';
+      updatePricing();
+    });
+  }
 });
 </script>
 

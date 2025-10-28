@@ -1,29 +1,111 @@
 <!-- core/templates/contact.html -->
 {% extends 'core/base.html' %}
+{% load i18n %}
 
 {% block content %}
+<style>
+.contact-message {
+  min-height: 120px;
+  resize: vertical;
+}
+
+@media (min-width: 1280px) {
+  .contact-message {
+    min-height: 160px;
+  }
+}
+</style>
 <section id="contact" class="d-flex justify-content-center align-items-center min-vh-100 py-5 bg-light">
-    <div class="container">
+    <div class="container" style="max-width: 900px;">
         <div class="row justify-content-center">
-            <div class="col-md-6">
+            <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                <h1 class="text-center mb-4">{% trans "Contact Us" %}</h1>
+                <!-- Success/Error Message -->
+                <div id="contactAlert" class="alert d-none" role="alert"></div>
+
                 <!-- Contact Form -->
-                <form>
+                <form id="contactForm">
                     <div class="mb-3">
-                        <label for="contactName" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="contactName" required>
+                        <label for="contactName" class="form-label">{% trans "Name" %}</label>
+                        <input type="text" class="form-control" id="contactName" name="name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="contactEmail" class="form-label">Email address</label>
-                        <input type="email" class="form-control" id="contactEmail" required>
+                        <label for="contactEmail" class="form-label">{% trans "Email address" %}</label>
+                        <input type="email" class="form-control" id="contactEmail" name="email" required>
                     </div>
                     <div class="mb-3">
-                        <label for="contactMessage" class="form-label">Message</label>
-                        <textarea class="form-control" id="contactMessage" rows="4" required></textarea>
+                        <label for="contactMessage" class="form-label">{% trans "Message" %}</label>
+                        <textarea class="form-control contact-message" id="contactMessage" name="message" required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 custom-red-button">Send Message</button>
+                    <button type="submit" class="btn btn-primary w-100 custom-red-button" id="submitBtn">
+                        {% trans "Send Message" %}
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+document.getElementById('contactForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submitBtn');
+    const alertBox = document.getElementById('contactAlert');
+    const form = e.target;
+
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '{% trans "Sending..." %}';
+
+    // Get form data
+    const formData = {
+        name: document.getElementById('contactName').value,
+        email: document.getElementById('contactEmail').value,
+        message: document.getElementById('contactMessage').value
+    };
+
+    try {
+        const response = await fetch('/contact/api/submit/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Success
+            alertBox.className = 'alert alert-success';
+            alertBox.textContent = data.message || 'Your message has been sent successfully!';
+            alertBox.classList.remove('d-none');
+
+            // Reset form
+            form.reset();
+
+            // Hide alert after 5 seconds
+            setTimeout(() => {
+                alertBox.classList.add('d-none');
+            }, 5000);
+        } else {
+            // Error
+            alertBox.className = 'alert alert-danger';
+            alertBox.textContent = data.message || 'Failed to send message. Please try again.';
+            alertBox.classList.remove('d-none');
+        }
+    } catch (error) {
+        // Network error
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'Network error. Please check your connection and try again.';
+        alertBox.classList.remove('d-none');
+    } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '{% trans "Send Message" %}';
+    }
+});
+</script>
 {% endblock %}

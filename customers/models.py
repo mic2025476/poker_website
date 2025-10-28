@@ -7,7 +7,7 @@ class CustomerModel(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email_id = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=15, unique=True)
+    phone_number = models.CharField(max_length=15, unique=True,blank=True,null=True)
     password = models.CharField(max_length=128, blank=True)
     last_login = models.DateTimeField(blank=True, null=True)
     is_email_verified = models.BooleanField(default=False)

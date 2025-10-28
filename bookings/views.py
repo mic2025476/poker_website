@@ -23,6 +23,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.utils.dateparse import parse_time, parse_date
+from utils.google_calendar import GoogleCalendarService
 
 
 gateway = braintree.BraintreeGateway(
@@ -105,7 +106,7 @@ def get_user_bookings(request):
             for booking in bookings:
                 booking_list.append({
                     'id': booking.id,
-                    'start_time': datetime.combine(booking.created_at.date(), booking.start_time).strftime('%Y-%m-%d %H:%M'),
+                    'start_time': datetime.combine(booking.booking_date, booking.start_time).strftime('%Y-%m-%d %H:%M'),
                     'total_people': booking.total_people,
                     'hours_booked': booking.hours_booked,
                     'total_amount': float(booking.total_amount),
@@ -139,27 +140,51 @@ def get_unavailable_slots(request):
     slots_data = UnavailableTimeSlotSerializer(slots_queryset, many=True).data
 
     # Also, get booking slots (only active and not cancelled)
-    booking_slots = BookingModel.objects.filter(created_at__date=date_val, is_cancelled=False, is_active=True)
+    booking_slots = BookingModel.objects.filter(booking_date=date_val, is_cancelled=False, is_active=True)
     booking_slots_data = []
     print(f'booking_slots {booking_slots}')
     for booking in booking_slots:
         start_time = booking.start_time  # TimeField
         hours = booking.hours_booked
         start_datetime = datetime.combine(date_val, start_time)
+        # Calculate actual end time based on booking duration
         end_datetime = start_datetime + timedelta(hours=hours)
+        end_time_str = end_datetime.time().strftime("%H:%M:%S")
+            
         booking_slots_data.append({
             "date": date_str,
             "start_time": start_time.strftime("%H:%M:%S"),
-            "end_time": end_datetime.time().strftime("%H:%M:%S")
+            "end_time": end_time_str
         })
 
-    # Combine both lists and return the result
-    combined_slots = slots_data + booking_slots_data
+    # Get Google Calendar busy times
+    calendar_slots_data = []
+    try:
+        calendar_service = GoogleCalendarService()
+        busy_times = calendar_service.get_busy_times(date_val)
+        print(f'busy_timesbusy_times {busy_times}')
+        for busy_time in busy_times:
+            calendar_slots_data.append({
+                "date": date_str,
+                "start_time": busy_time['start_time'],
+                "end_time": busy_time['end_time'],
+                "source": "google_calendar",
+                "title": busy_time.get('title', 'HOANG Event')
+            })
+    except Exception as e:
+        print(f"Google Calendar fetch failed: {e}")
+        # Continue without calendar data if service is unavailable
+
+    # Combine all lists and return the result
+    combined_slots = slots_data + booking_slots_data + calendar_slots_data
     print(f'slots_data {slots_data}')
     print(f'booking_slots_data {booking_slots_data}')
+    print(f'calendar_slots_data {calendar_slots_data}')
     print(f'combined_slots {combined_slots}')
     return Response({"unavailable_slots": combined_slots}, status=status.HTTP_200_OK)
 
+def edit_booking(request, booking_id):
+    """Edit an existing booking"""
     # Get the booking instance or return a 404 if not found
     booking = get_object_or_404(BookingModel, id=booking_id)
     # Get all available drinks for the form
@@ -222,18 +247,24 @@ def check_availability(request):
         if not booking_date or not start_time:
             return Response({"available": False, "message": "Invalid date or time format."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Debug logging
+        print(f'check_availability: date_str={date_str}, time_str={time_str}')
+        print(f'check_availability: parsed booking_date={booking_date}, start_time={start_time}')
+
         start_dt = datetime.combine(booking_date, start_time)
+        # Calculate actual end time based on booking duration
         end_dt = start_dt + timedelta(hours=hours_booked)
 
         # Check existing active bookings (not cancelled)
         existing_bookings = BookingModel.objects.filter(
-            created_at__date=booking_date,
+            booking_date=booking_date,
             is_cancelled=False
         )
 
         for booking in existing_bookings:
             b_start = datetime.combine(booking_date, booking.start_time)
-            b_end = b_start + timedelta(hours=booking.hours_booked)
+            # Calculate actual end time based on booking duration
+            b_end = b_start + timedelta(hours=booking.number_of_hours)
             if start_dt < b_end and end_dt > b_start:
                 return Response({"available": False, "message": "Selected time overlaps with an existing booking."}, status=status.HTTP_200_OK)
 
@@ -244,6 +275,15 @@ def check_availability(request):
             s_end = datetime.combine(booking_date, slot.end_time)
             if start_dt < s_end and end_dt > s_start:
                 return Response({"available": False, "message": "Selected time overlaps with an unavailable slot."}, status=status.HTTP_200_OK)
+
+        # Check Google Calendar events
+        try:
+            calendar_service = GoogleCalendarService()
+            if not calendar_service.is_time_available(booking_date, start_time, end_dt.time()):
+                return Response({"available": False, "message": "Selected time conflicts with a HOANG event."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Google Calendar check failed: {e}")
+            # Continue without calendar check if service is unavailable
         rate = 2
         try:
             total_people = int(float(total_people))
@@ -256,6 +296,7 @@ def check_availability(request):
         customer = CustomerModel.objects.get(id=user_id, is_active=True)
         BookingModel.objects.create(
             customer=customer,
+            booking_date=booking_date,
             start_time=start_time,
             total_amount=total,
             deposit_amount=deposit,
@@ -268,3 +309,304 @@ def check_availability(request):
 
     except Exception as e:
         return Response({"available": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["GET"])
+def test_google_calendar(request):
+    """Test endpoint to show all Google Calendar events for debugging"""
+    try:
+        date_str = request.GET.get("date")
+        if not date_str:
+            return Response({"error": "Missing 'date' parameter."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        date_val = parse_date(date_str)
+        if not date_val:
+            return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+        calendar_service = GoogleCalendarService()
+        events = calendar_service.get_events(date_val)
+        
+        event_titles = []
+        for event in events:
+            event_title = event.get('summary', '').strip()
+            event_titles.append({
+                'title': event_title,
+                'start': event['start'],
+                'end': event['end']
+            })
+        
+        return Response({
+            "date": date_str,
+            "total_events": len(events),
+            "event_titles": event_titles
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+def cancel_booking(request):
+    try:
+        booking_id = request.data.get('booking_id')
+        customer_id = request.data.get('customer_id')
+        
+        if not booking_id or not customer_id:
+            return Response({"success": False, "message": "Missing booking_id or customer_id"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the booking
+        booking = get_object_or_404(BookingModel, id=booking_id, customer_id=customer_id, is_active=True)
+        
+        # Check if already cancelled
+        if booking.is_cancelled:
+            return Response({"success": False, "message": "Booking is already cancelled"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Cancel the booking
+        booking.is_cancelled = True
+        booking.save()
+        
+        # Remove event from Google Calendar
+        try:
+            calendar_service = GoogleCalendarService()
+            
+            booking_data = {
+                'customer_name': f"{booking.customer.first_name} {booking.customer.last_name}",
+                'booking_date': booking.booking_date,
+                'start_time': booking.start_time,
+                'booking_id': booking.id
+            }
+            
+            calendar_deleted = calendar_service.delete_booking_event(booking_data)
+            if calendar_deleted:
+                print(f"Successfully deleted calendar event for cancelled booking {booking.id}")
+            else:
+                print(f"Could not find calendar event to delete for booking {booking.id}")
+                
+        except Exception as e:
+            print(f"Error deleting calendar event for booking {booking.id}: {e}")
+            # Don't fail the cancellation if calendar deletion fails
+        
+        return Response({"success": True, "message": "Booking cancelled successfully"}, status=status.HTTP_200_OK)
+        
+    except BookingModel.DoesNotExist:
+        return Response({"success": False, "message": "Booking not found or you don't have permission to cancel it"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def get_available_time_slots(request):
+    """
+    Get available time slots for a specific date considering MGEN-F24 calendar events
+    """
+    try:
+        date_str = request.GET.get('date')
+        if not date_str:
+            return Response({"success": False, "message": "Date parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            booking_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"success": False, "message": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Initialize Google Calendar service
+        calendar_service = GoogleCalendarService()
+        
+        # Get available time slots (full day: 00:00 to 23:00)
+        available_slots = calendar_service.get_available_time_slots(
+            date=booking_date,
+            business_start='00:00',
+            business_end='23:00'
+        )
+        
+        return Response({
+            "success": True,
+            "date": date_str,
+            "available_time_slots": available_slots
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        print(f"Error getting available time slots: {e}")
+        return Response({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def get_available_durations(request):
+    """
+    Get available booking durations for a specific date and start time considering MGEN-F24 calendar events
+    """
+    try:
+        date_str = request.GET.get('date')
+        start_time_str = request.GET.get('start_time')
+        
+        if not date_str or not start_time_str:
+            return Response({"success": False, "message": "Both date and start_time parameters are required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            booking_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            # Validate start time format
+            datetime.strptime(start_time_str, '%H:%M')
+        except ValueError:
+            return Response({"success": False, "message": "Invalid date format (use YYYY-MM-DD) or time format (use HH:MM)"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Initialize Google Calendar service
+        calendar_service = GoogleCalendarService()
+        
+        # Get available durations (max 12 hours, full day until 23:59)
+        available_durations = calendar_service.get_available_durations(
+            date=booking_date,
+            start_time=start_time_str,
+            max_duration=12,
+            business_end='23:59'
+        )
+        
+        return Response({
+            "success": True,
+            "date": date_str,
+            "start_time": start_time_str,
+            "available_durations": available_durations
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        print(f"Error getting available durations: {e}")
+        return Response({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_all_booking_data(request):
+    """
+    Get ALL available time slots with their durations in ONE API call for super fast loading
+    """
+    try:
+        date_str = request.GET.get('date')
+        if not date_str:
+            return Response({"success": False, "message": "Date parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            booking_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"success": False, "message": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Initialize Google Calendar service
+        calendar_service = GoogleCalendarService()
+
+        # Authenticate with Google Calendar
+        try:
+            calendar_service.authenticate()
+        except Exception as auth_error:
+            print(f"Google Calendar authentication failed: {auth_error}")
+            return Response({
+                "success": False,
+                "message": "Calendar service authentication failed",
+                "time_slots_with_hours": {},
+                "total_time_slots": 0
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Get available time slots (full day: 00:00 to 23:00)
+        available_slots = calendar_service.get_available_time_slots(
+            date=booking_date,
+            business_start='00:00',
+            business_end='23:00'
+        )
+
+        # Get durations for each time slot in one go
+        time_slots_with_hours = {}
+
+        for time_slot in available_slots:
+            # Get available durations for this specific time slot
+            available_durations = calendar_service.get_available_durations(
+                date=booking_date,
+                start_time=time_slot,
+                max_duration=24  # Maximum possible duration
+            )
+
+            # Only include time slots that have available durations
+            if available_durations:
+                time_slots_with_hours[time_slot] = available_durations
+
+        return Response({
+            "success": True,
+            "date": date_str,
+            "time_slots_with_hours": time_slots_with_hours,
+            "total_time_slots": len(time_slots_with_hours)
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"Error getting all booking data: {e}")
+        return Response({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def get_unavailable_dates_range(request):
+    """
+    Get all fully booked dates within a date range to block them in the calendar picker
+    """
+    try:
+        start_date_str = request.GET.get('start_date')
+        end_date_str = request.GET.get('end_date')
+
+        if not start_date_str or not end_date_str:
+            return Response({"success": False, "message": "Both start_date and end_date parameters are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"success": False, "message": "Invalid date format. Use YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Initialize Google Calendar service
+        calendar_service = GoogleCalendarService()
+
+        # Authenticate with Google Calendar
+        try:
+            calendar_service.authenticate()
+        except Exception as auth_error:
+            print(f"Google Calendar authentication failed: {auth_error}")
+            # Return empty unavailable dates if calendar is not available
+            return Response({
+                "success": True,
+                "start_date": start_date_str,
+                "end_date": end_date_str,
+                "unavailable_dates": [],
+                "total_unavailable": 0,
+                "note": "Calendar service unavailable - all dates shown as available"
+            }, status=status.HTTP_200_OK)
+
+        unavailable_dates = []
+        current_date = start_date
+
+        # Check each date in the range (limit to 30 days to avoid timeout)
+        days_checked = 0
+        max_days = 30
+
+        while current_date <= end_date and days_checked < max_days:
+            try:
+                # Get available time slots for this date (remove invalid parameter)
+                available_slots = calendar_service.get_available_time_slots(
+                    date=current_date,
+                    business_start='00:00',
+                    business_end='23:00'
+                )
+
+                # If no available slots, this date is fully booked
+                if not available_slots or len(available_slots) == 0:
+                    unavailable_dates.append(current_date.strftime('%Y-%m-%d'))
+                    print(f"Date {current_date} is fully booked - added to unavailable dates")
+
+            except Exception as slot_error:
+                print(f"Error checking slots for {current_date}: {slot_error}")
+                # Continue checking other dates
+
+            # Move to next day
+            current_date += timedelta(days=1)
+            days_checked += 1
+
+        return Response({
+            "success": True,
+            "start_date": start_date_str,
+            "end_date": end_date_str,
+            "unavailable_dates": unavailable_dates,
+            "total_unavailable": len(unavailable_dates),
+            "days_checked": days_checked
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"Error getting unavailable dates range: {e}")
+        return Response({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

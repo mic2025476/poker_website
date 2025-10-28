@@ -1,46 +1,618 @@
-<!-- booking_form_snippet.html -->
-<form id="bookingForm" method="POST">
-    {% csrf_token %}
-    <!-- Date Field -->
+{% load i18n %}
+
+<!-- Step indicators now in sticky header -->
+
+<form id="bookingForm" method="POST" novalidate>
+  {% csrf_token %}
+
+  <!-- Step 1: Booking Date and Time -->
+  <div class="form-step active" data-step="1">
+    
     <div class="mb-3">
-      <label for="bookingDate" class="form-label">Booking Date</label>
-      <input type="date" class="form-control" id="bookingDate" name="booking_date" required />
-    </div>
-    <!-- Time Dropdown Field -->
-    <div class="mb-3">
-      <label for="bookingTime" class="form-label">Booking Time</label>
-      <select class="form-select" id="bookingTime" name="booking_time" required>
-        <option value="">Select Time</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label for="numberOfPeople" class="form-label">Number of People</label>
-      <input type="number" class="form-control" id="numberOfPeople" name="number_of_people" min="1" required />
-    </div>
-    <div class="mb-3">
-      <label for="numberOfHours" class="form-label">Number of Hours</label>
-      <input type="number" class="form-control" id="numberOfHours" name="number_of_hours" min="1" required />
-    </div>
-    <!-- Cost Summary Message -->
-    <div id="costSummary" class="mb-3"></div>
-    <div class="mb-3">
-      <label for="drinks" class="form-label">Select Drinks</label>
-      <div class="border rounded p-2">
-        {% for drink in drinks %}
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="drink{{ drink.id }}" name="drinks" value="{{ drink.id }}">
-            <label class="form-check-label" for="drink{{ drink.id }}">
-              {{ drink.name }}
-            </label>
+      <p class="fw-bold text-dark mb-2 small">
+        <i class="fas fa-calendar-day text-danger me-1"></i>
+        {% trans "Select Your Day" %}
+      </p>
+      
+      <div class="mb-2">
+        <label for="bookingDate" class="form-label fw-semibold small">
+          <i class="fas fa-calendar-alt me-1"></i>{% trans "Booking Date" %}
+        </label>
+        <input type="date" class="form-control" id="bookingDate" name="booking_date" required />
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="bookingTime" class="form-label fw-semibold small">
+            <i class="fas fa-clock me-1"></i>{% trans "Start Time" %}
+          </label>
+          <select class="form-select" id="bookingTime" name="booking_time" required>
+            <option value="">{% trans "Select Date First" %}</option>
+          </select>
+          <div class="form-text text-muted mt-1 small" id="timeSlotMessage">
+            <i class="fas fa-info-circle me-1"></i>
+            {% trans "Available start times based on MGEN-F24 calendar" %}
           </div>
-        {% endfor %}
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label for="bookingDuration" class="form-label fw-semibold small">
+            <i class="fas fa-hourglass-half me-1"></i>{% trans "Number of Hours" %}
+          </label>
+          <select class="form-select" id="bookingDuration" name="number_of_hours" required>
+            <option value="">{% trans "Select Time First" %}</option>
+          </select>
+          <div class="form-text text-muted mt-1 small" id="durationMessage">
+            <i class="fas fa-info-circle me-1"></i>
+            {% trans "Available hours based on selected time" %}
+          </div>
+        </div>
       </div>
     </div>
-    <!-- Payment Message -->
-    <div id="paymentMessage" class="mb-3 text-muted"></div>
-    <!-- Braintree Drop-in Container -->
-    <div id="dropin-container" class="mb-3"></div>
-    
-    <button type="submit" class="btn btn-danger w-100 py-2">Confirm Booking</button>
-  </form>
+    <!-- Navigation buttons moved to sticky footer -->
+  </div>
+
+  <!-- Step 2: Number of People and Services -->
+  <div class="form-step" data-step="2">
+    <div class="mb-3">
+      <p class="fw-bold text-dark mb-2 small">
+        <i class="fas fa-users text-danger me-1"></i>
+        {% trans "People & Services" %}
+      </p>
+      
+      <div class="mb-3">
+        <label for="numberOfPeople" class="form-label fw-semibold small">
+          <i class="fas fa-user-friends me-1"></i>{% trans "Number of People" %}
+        </label>
+        <input type="number" class="form-control" id="numberOfPeople" name="number_of_people" min="1" max="50" required />
+        <div class="form-text text-muted small">
+          {% trans "Maximum capacity: 50 people" %}
+        </div>
+      </div>
+
+      
+      <!-- Service Options -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold small mb-2">
+          <i class="fas fa-concierge-bell me-1"></i>{% trans "Additional Services" %}
+        </label>
+        
+        <div class="row g-2">
+          <div class="col-12">
+            <div class="form-check p-2 border rounded">
+              <input class="form-check-input" type="checkbox" id="dealerService" name="services" value="dealer">
+              <label class="form-check-label fw-semibold small" for="dealerService">
+                <i class="fas fa-user-tie me-1"></i>{% trans "Professional Dealer" %}
+                <div class="text-muted small">{% trans "+€200 - Expert poker dealer for your session" %}</div>
+              </label>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="form-check p-2 border rounded">
+              <input class="form-check-input" type="checkbox" id="servicePersonal" name="services" value="service">
+              <label class="form-check-label fw-semibold small" for="servicePersonal">
+                <i class="fas fa-user-cog me-1"></i>{% trans "Service Personal" %}
+                <div class="text-muted small">{% trans "+€200 - Dedicated service staff for your event" %}</div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation buttons moved to sticky footer -->
+  </div>
+
+  <!-- Step 3: Drinks and Payment -->
+  <div class="form-step" data-step="3">
+    <div class="mb-3">
+      <p class="fw-bold text-dark mb-2 small">
+        <i class="fas fa-cocktail text-danger me-1"></i>
+        {% trans "Drinks & Payment" %}
+      </p>
+      
+      <!-- Drinks Section -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold small mb-2">
+          <i class="fas fa-glass-cheers me-1"></i>{% trans "Beverage Options" %}
+        </label>
+        
+        <div class="mb-3">
+          <div class="form-check p-2 border rounded">
+            <input class="form-check-input" type="checkbox" id="drinksFlatrate" name="drinks_flatrate" value="flatrate">
+            <label class="form-check-label fw-semibold small" for="drinksFlatrate">
+              <i class="fas fa-wine-bottle me-1"></i>{% trans "Drinks Flatrate" %}
+              <div class="text-muted small">{% trans "+€200 - Unlimited beverages for your group" %}</div>
+            </label>
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>{% trans "Individual Drinks:" %}</strong> {% trans "Available for purchase separately during your event" %}
+        </div>
+
+        <!-- Individual drinks list -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">
+            <i class="fas fa-list me-1"></i>{% trans "Individual Drink Selection" %}
+          </label>
+          <div class="border rounded p-2" style="max-height: 150px; overflow-y: auto;">
+            {% for drink in drinks %}
+              <div class="form-check mb-1">
+                <input class="form-check-input" type="checkbox" id="drink{{ drink.id }}" name="drinks" value="{{ drink.id }}">
+                <label class="form-check-label small" for="drink{{ drink.id }}">
+                  <i class="fas fa-glass me-1"></i>{{ drink.name }}
+                </label>
+              </div>
+            {% empty %}
+              <p class="text-muted mb-0 small">{% trans "Drink menu will be available during your booking." %}</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Summary -->
+      <div class="pricing-card mb-3">
+        <p class="fw-bold mb-2 small">
+          <i class="fas fa-receipt me-1"></i>{% trans "Final Summary" %}
+        </p>
+        <div id="finalCostSummary">
+          <div class="price-item">
+            <span>{% trans "Whole Day Rental" %}</span>
+            <span class="fw-semibold">€400.00</span>
+          </div>
+          <div class="price-item" id="finalDealerCost" style="display: none;">
+            <span>{% trans "Professional Dealer" %}</span>
+            <span class="fw-semibold">€200.00</span>
+          </div>
+          <div class="price-item" id="finalServiceCost" style="display: none;">
+            <span>{% trans "Service Personal" %}</span>
+            <span class="fw-semibold">€200.00</span>
+          </div>
+          <div class="price-item" id="finalDrinksCost" style="display: none;">
+            <span>{% trans "Drinks Flatrate" %}</span>
+            <span class="fw-semibold">€200.00</span>
+          </div>
+          <div class="price-item">
+            <span>{% trans "Total Amount" %}</span>
+            <span id="finalTotalAmount">€400.00</span>
+          </div>
+        </div>
+        
+        <div class="mt-3 pt-3 border-top">
+          <small class="text-muted">
+            <i class="fas fa-envelope me-1"></i>
+            {% trans "For special requests, email:" %} <strong>mgen@ming-group.de</strong>
+          </small>
+        </div>
+      </div>
+
+      <!-- Payment Section -->
+      <div class="mb-3">
+        <p class="fw-semibold mb-2 small">
+          <i class="fas fa-credit-card me-1"></i>{% trans "Payment Information" %}
+        </p>
+        <div id="paymentMessage" class="mb-2 text-muted small">
+          {% trans "Please enter your payment details below to confirm your booking." %}
+        </div>
+        <div id="dropin-container" class="border rounded p-3" style="min-height: 350px; background: white; width: 100%; max-width: none; margin-bottom: 2rem;"></div>
+      </div>
+    </div>
+
+    <!-- Navigation buttons moved to sticky footer -->
+  </div>
+</form>
+<style>
+  .form-step {
+      display: none; /* Hide all steps by default */
+      padding: 0;
+      margin: 0;
+  }
+
+  .form-step.active {
+      display: block; /* Show only the active step */
+      animation: fadeInStep 0.3s ease-in-out;
+  }
+
+  /* Smooth transitions between steps */
+  @keyframes fadeInStep {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
   
+  /* Braintree UI styling */
+  #dropin-container {
+    position: relative;
+    z-index: 1;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: clamp(300px, 40vh, 400px);
+    padding: var(--space-5);
+    background: white;
+    border-radius: 0.5rem;
+    margin-bottom: var(--space-6);
+  }
+
+  @media (min-width: 1280px) {
+    #dropin-container {
+      max-width: 600px;
+      margin-left: 0;
+    }
+  }
+
+  /* Ensure Braintree form elements are visible and properly sized */
+  #dropin-container .braintree-form,
+  #dropin-container .braintree-form__field,
+  #dropin-container .braintree-form__label {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  #dropin-container .braintree-dropin {
+    font-family: inherit !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  #dropin-container .braintree-form__field {
+    margin-bottom: 10px !important;
+  }
+
+  #dropin-container .braintree-form__hosted-field {
+    border: 2px solid var(--gray-200) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem !important;
+    font-size: var(--font-size-base) !important;
+    min-height: 44px !important;
+    transition: border-color 0.2s !important;
+  }
+
+  #dropin-container .braintree-form__hosted-field:focus {
+    border-color: var(--theme-red) !important;
+    box-shadow: 0 0 0 3px var(--theme-red-light) !important;
+    outline: none !important;
+  }
+
+  #dropin-container .braintree-methods-list {
+    width: 100% !important;
+  }
+</style>
+<style>
+  /* Button styles are now handled by the main CSS in book.html */
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const steps = document.querySelectorAll('.form-step');
+    const stepIndicators = document.querySelectorAll('.step');
+    const nextButtons = document.querySelectorAll('.next-step');
+    const prevButtons = document.querySelectorAll('.prev-step');
+    const navButtonContainers = document.querySelectorAll('[class^="nav-buttons-step"]');
+    let currentStep = 0;
+
+    // Service checkboxes
+    const dealerCheckbox = document.getElementById('dealerService');
+    const serviceCheckbox = document.getElementById('servicePersonal');
+    const drinksCheckbox = document.getElementById('drinksFlatrate');
+
+    function updateStepIndicators() {
+        stepIndicators.forEach((indicator, index) => {
+            if (index < currentStep) {
+                indicator.className = 'step completed';
+            } else if (index === currentStep) {
+                indicator.className = 'step active';
+            } else {
+                indicator.className = 'step pending';
+            }
+        });
+        
+        // Update sticky navigation buttons
+        navButtonContainers.forEach((container, index) => {
+            container.style.display = index === currentStep ? 'block' : 'none';
+        });
+    }
+
+    function updatePricing() {
+        let total = 400; // Base price for whole day
+        
+        // Show/hide dealer cost
+        const dealerCost = document.getElementById('dealerCost');
+        const finalDealerCost = document.getElementById('finalDealerCost');
+        if (dealerCheckbox && dealerCheckbox.checked) {
+            total += 200;
+            if (dealerCost) dealerCost.style.display = 'flex';
+            if (finalDealerCost) finalDealerCost.style.display = 'flex';
+        } else {
+            if (dealerCost) dealerCost.style.display = 'none';
+            if (finalDealerCost) finalDealerCost.style.display = 'none';
+        }
+
+        // Show/hide service cost
+        const serviceCost = document.getElementById('serviceCost');
+        const finalServiceCost = document.getElementById('finalServiceCost');
+        if (serviceCheckbox && serviceCheckbox.checked) {
+            total += 200;
+            if (serviceCost) serviceCost.style.display = 'flex';
+            if (finalServiceCost) finalServiceCost.style.display = 'flex';
+        } else {
+            if (serviceCost) serviceCost.style.display = 'none';
+            if (finalServiceCost) finalServiceCost.style.display = 'none';
+        }
+
+        // Show/hide drinks cost
+        const finalDrinksCost = document.getElementById('finalDrinksCost');
+        if (drinksCheckbox && drinksCheckbox.checked) {
+            total += 200;
+            if (finalDrinksCost) finalDrinksCost.style.display = 'flex';
+        } else {
+            if (finalDrinksCost) finalDrinksCost.style.display = 'none';
+        }
+
+        // Update totals
+        const totalAmountEl = document.getElementById('totalAmount');
+        const finalTotalAmountEl = document.getElementById('finalTotalAmount');
+        if (totalAmountEl) totalAmountEl.textContent = `€${total.toFixed(2)}`;
+        if (finalTotalAmountEl) finalTotalAmountEl.textContent = `€${total.toFixed(2)}`;
+    }
+
+    function showStep(stepIndex) {
+        // Hide all steps first
+        steps.forEach((step, index) => {
+            if (index !== stepIndex) {
+                step.classList.remove('active');
+            }
+        });
+        
+        // Show the target step after a brief delay to ensure smooth transition
+        setTimeout(() => {
+            steps[stepIndex].classList.add('active');
+            
+            // Initialize Braintree when reaching step 3 (payment step)
+            if (stepIndex === 2) {
+                console.log('Reached step 3, initializing Braintree');
+                if (window.initializeBraintreeOnStep3) {
+                    console.log('Calling initializeBraintreeOnStep3');
+                    window.initializeBraintreeOnStep3();
+                } else {
+                    console.error('initializeBraintreeOnStep3 not available');
+                }
+            }
+        }, 50);
+        
+        updateStepIndicators();
+    }
+
+    async function validateStep(stepIndex) {
+        const step = steps[stepIndex];
+        const inputs = step.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), select');
+        let isValid = true;
+
+        // First, check basic field validation
+        inputs.forEach(input => {
+            const errorMessage = input.parentNode.querySelector('.error-message');
+            if (input.hasAttribute('required') && !input.value.trim()) {
+                isValid = false;
+                if (!errorMessage) {
+                    const error = document.createElement('div');
+                    error.className = 'error-message text-danger mt-1 small';
+                    error.textContent = 'This field is required.';
+                    input.parentNode.appendChild(error);
+                }
+                input.classList.add('is-invalid');
+            } else {
+                if (errorMessage) {
+                    errorMessage.remove();
+                }
+                input.classList.remove('is-invalid');
+            }
+        });
+
+        // Special validation for Step 1: Check date availability
+        if (stepIndex === 0 && isValid) {
+            const bookingDateInput = document.getElementById('bookingDate');
+            const bookingTimeInput = document.getElementById('bookingTime');
+
+            if (bookingDateInput && bookingDateInput.value) {
+                try {
+                    // Check if selected date is still available
+                    const response = await fetch('/bookings/get_unavailable_slots?date=' + bookingDateInput.value);
+                    const data = await response.json();
+
+                    if (data.unavailable_slots && data.unavailable_slots.length > 0) {
+                        // If there are unavailable slots, check if selected time conflicts
+                        const selectedTime = bookingTimeInput.value;
+                        if (selectedTime) {
+                            const selectedHour = parseInt(selectedTime.split(':')[0]);
+
+                            // Check if selected time conflicts with unavailable slots
+                            let hasConflict = data.unavailable_slots.some(slot => {
+                                const startHour = parseInt(slot.start_time.split(':')[0]);
+                                const endHour = parseInt(slot.end_time.split(':')[0]) || 24;
+                                return selectedHour >= startHour && selectedHour < endHour;
+                            });
+
+                            if (hasConflict) {
+                                isValid = false;
+                                // Show error message
+                                let errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
+                                if (!errorMessage) {
+                                    errorMessage = document.createElement('div');
+                                    errorMessage.className = 'availability-error text-danger mt-1 small';
+                                    bookingDateInput.parentNode.appendChild(errorMessage);
+                                }
+                                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This date and time is no longer available. Please select a different time slot.';
+                                bookingDateInput.classList.add('is-invalid');
+                                bookingTimeInput.classList.add('is-invalid');
+                            } else {
+                                // Remove any existing error messages
+                                const errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
+                                if (errorMessage) {
+                                    errorMessage.remove();
+                                }
+                                bookingDateInput.classList.remove('is-invalid');
+                                bookingTimeInput.classList.remove('is-invalid');
+                            }
+                        } else {
+                            // Check if entire date is unavailable (all day booked)
+                            const allDayBooked = data.unavailable_slots.some(slot => {
+                                const startHour = parseInt(slot.start_time.split(':')[0]);
+                                const endHour = parseInt(slot.end_time.split(':')[0]) || 24;
+                                return startHour === 0 && endHour >= 23;
+                            });
+
+                            if (allDayBooked) {
+                                isValid = false;
+                                let errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
+                                if (!errorMessage) {
+                                    errorMessage = document.createElement('div');
+                                    errorMessage.className = 'availability-error text-danger mt-1 small';
+                                    bookingDateInput.parentNode.appendChild(errorMessage);
+                                }
+                                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This date is fully booked. Please select a different date.';
+                                bookingDateInput.classList.add('is-invalid');
+                            }
+                        }
+                    } else {
+                        // Date is available, remove any error messages
+                        const errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
+                        if (errorMessage) {
+                            errorMessage.remove();
+                        }
+                        bookingDateInput.classList.remove('is-invalid');
+                        bookingTimeInput.classList.remove('is-invalid');
+                    }
+                } catch (error) {
+                    console.error('Error checking date availability:', error);
+                    // On error, allow progression but log the issue
+                }
+            }
+        }
+
+        return isValid;
+    }
+
+    // Event listeners for pricing updates
+    if (dealerCheckbox) {
+        dealerCheckbox.addEventListener('change', updatePricing);
+    }
+    if (serviceCheckbox) {
+        serviceCheckbox.addEventListener('change', updatePricing);
+    }
+    if (drinksCheckbox) {
+        drinksCheckbox.addEventListener('change', updatePricing);
+    }
+
+    nextButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            // Disable button while validating
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
+
+            try {
+                const isValid = await validateStep(currentStep);
+                if (isValid) {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        showStep(currentStep);
+                        updatePricing(); // Update pricing when moving to next step
+                    }
+                }
+            } catch (error) {
+                console.error('Error during step validation:', error);
+            } finally {
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        });
+    });
+
+    prevButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+    });
+
+    // Add real-time date/time availability checking
+    const bookingDateInput = document.getElementById('bookingDate');
+    const bookingTimeInput = document.getElementById('bookingTime');
+
+    if (bookingDateInput) {
+        bookingDateInput.addEventListener('change', async () => {
+            // Clear any existing availability errors when date changes
+            const errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+            bookingDateInput.classList.remove('is-invalid');
+            if (bookingTimeInput) {
+                bookingTimeInput.classList.remove('is-invalid');
+            }
+        });
+    }
+
+    if (bookingTimeInput) {
+        bookingTimeInput.addEventListener('change', async () => {
+            // Validate availability when time changes
+            if (bookingDateInput && bookingDateInput.value && bookingTimeInput.value) {
+                try {
+                    const response = await fetch('/bookings/get_unavailable_slots?date=' + bookingDateInput.value);
+                    const data = await response.json();
+
+                    if (data.unavailable_slots && data.unavailable_slots.length > 0) {
+                        const selectedHour = parseInt(bookingTimeInput.value.split(':')[0]);
+
+                        let hasConflict = data.unavailable_slots.some(slot => {
+                            const startHour = parseInt(slot.start_time.split(':')[0]);
+                            const endHour = parseInt(slot.end_time.split(':')[0]) || 24;
+                            return selectedHour >= startHour && selectedHour < endHour;
+                        });
+
+                        if (hasConflict) {
+                            // Show immediate warning
+                            let errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
+                            if (!errorMessage) {
+                                errorMessage = document.createElement('div');
+                                errorMessage.className = 'availability-error text-danger mt-1 small';
+                                bookingDateInput.parentNode.appendChild(errorMessage);
+                            }
+                            errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This time slot is no longer available. Please select a different time.';
+                            bookingTimeInput.classList.add('is-invalid');
+                        } else {
+                            // Clear any existing error messages
+                            const errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
+                            if (errorMessage) {
+                                errorMessage.remove();
+                            }
+                            bookingTimeInput.classList.remove('is-invalid');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking time availability:', error);
+                }
+            }
+        });
+    }
+
+    // Initialize
+    showStep(currentStep);
+    updatePricing();
+
+    // Initialize sticky navigation buttons
+    updateStepIndicators();
+});
+</script>

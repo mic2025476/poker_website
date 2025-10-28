@@ -50,7 +50,3 @@ sqlparse==0.5.3
 typing_extensions==4.12.2
 uritemplate==4.1.1
 urllib3==2.3.0
-google-auth-oauthlib==1.2.1
-django-cors-headers==4.4.0
-boto3==1.40.50
-python-dotenv==1.0.0

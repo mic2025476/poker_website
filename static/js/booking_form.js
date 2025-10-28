@@ -1,14 +1,44 @@
 document.addEventListener('DOMContentLoaded', function () {
     var bookingDateInput = document.getElementById('bookingDate');
     var bookingTimeSelect = document.getElementById('bookingTime');
-    var numberOfHoursInput = document.getElementById('numberOfHours');
+    var numberOfHoursInput = document.getElementById('bookingDuration'); // Changed from numberOfHours to bookingDuration
     var numberOfPeopleInput = document.getElementById('numberOfPeople');
     var costSummaryDiv = document.getElementById('costSummary');
     var paymentMessageDiv = document.getElementById('paymentMessage');
+    
+    // Add null checks to prevent errors
+    if (!bookingDateInput || !bookingTimeSelect || !numberOfHoursInput) {
+        console.log('Required booking form elements not found - skipping legacy booking_form.js setup');
+        return;
+    }
 
     // Set minimum date for booking input (today)
     var today = new Date().toISOString().split("T")[0];
     bookingDateInput.min = today;
+
+    function checkDateAvailability(dateInput, timeSelect) {
+        var selectedDate = dateInput.value;
+        if (!selectedDate) {
+            timeSelect.innerHTML = '<option value="">Select Time</option>';
+            return;
+        }
+
+        fetch('/bookings/get_unavailable_slots?date=' + selectedDate)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Date availability check:', data);
+                
+                // Always proceed with normal time population (let the smart booking logic handle conflicts)
+                timeSelect.disabled = false;
+                populateTimeOptions(dateInput, timeSelect);
+            })
+            .catch(err => {
+                console.error('Error checking date availability:', err);
+                // On error, proceed with normal time population
+                timeSelect.disabled = false;
+                populateTimeOptions(dateInput, timeSelect);
+            });
+    }
 
     function populateTimeOptions(dateInput, timeSelect, defaultTime = null) {
         timeSelect.innerHTML = '<option value="">Select Time</option>';
@@ -87,6 +117,12 @@ document.addEventListener('DOMContentLoaded', function () {
   
     // Helper function to update the cost summary
     function updateCostSummary(dateInput, timeSelect, hoursInput, peopleInput, costSummaryDiv) {
+        // Skip if costSummaryDiv doesn't exist (pricing summary was removed)
+        if (!costSummaryDiv) {
+            console.log('Cost summary div not found - skipping pricing update');
+            return;
+        }
+
         console.log('called')
         var hours = parseFloat(hoursInput.value) || 0;
         var people = parseFloat(peopleInput.value) || 0;
@@ -143,20 +179,31 @@ document.addEventListener('DOMContentLoaded', function () {
         var ampm = hour < 12 ? "AM" : "PM";
         return displayHour + ":00 " + ampm;
     }
-    bookingDateInput.addEventListener('change', function () {
-        populateTimeOptions(bookingDateInput, bookingTimeSelect);
-        paymentMessageDiv.innerText = "Note: Payment is made online (30% deposit). The remainder is due at the venue.";
-        updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
-    });
+    if (bookingDateInput) {
+        bookingDateInput.addEventListener('change', function () {
+            checkDateAvailability(bookingDateInput, bookingTimeSelect);
+            if (paymentMessageDiv) {
+                paymentMessageDiv.innerText = "Note: Payment is made online (30% deposit). The remainder is due at the venue.";
+            }
+            updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
+        });
+    }
 
-    numberOfHoursInput.addEventListener('input', function () {
-        updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
-    });
+    if (numberOfHoursInput) {
+        numberOfHoursInput.addEventListener('change', function () { // Changed from 'input' to 'change' for dropdown
+            updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
+        });
+    }
 
-    bookingTimeSelect.addEventListener('input', function () {
-        updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
-    });
-    numberOfPeopleInput.addEventListener('input', function () {
-        updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
-    });
+    if (bookingTimeSelect) {
+        bookingTimeSelect.addEventListener('change', function () { // Changed from 'input' to 'change' for dropdown
+            updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
+        });
+    }
+    
+    if (numberOfPeopleInput) {
+        numberOfPeopleInput.addEventListener('input', function () {
+            updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
+        });
+    }
 });

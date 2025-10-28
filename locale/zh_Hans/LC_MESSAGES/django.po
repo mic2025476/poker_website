@@ -1,0 +1,484 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-04 11:12+0200\n"
+"PO-Revision-Date: 2025-09-04 11:12+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Chinese (Simplified) <zh@li.org>\n"
+"Language: zh-hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: templates/about/about.html:7 templates/about/about.html:10
+msgid "About Poka Lawn"
+msgstr "关于扑克草坪"
+
+#: templates/about/about.html:13
+msgid ""
+"\n"
+"                    Located in the heart of Berlin, Poka Lawn offers an "
+"exclusive and upscale environment for poker enthusiasts. Whether you're "
+"planning a casual game night or a high-stakes event, our lounge provides the "
+"perfect setting with top-notch amenities and professional dealers to enhance "
+"your experience.\n"
+"                    "
+msgstr ""
+"\n"
+"                    扑克草坪位于柏林市中心，为扑克爱好者提供独特高端的环境。无论您是计划休闲游戏之夜还是高额赌注活动，我们的休息室都提供完美的场所，配备顶级设施和专业荷官，提升您的体验。\n"
+"                    "
+
+#: templates/about/about.html:19
+msgid ""
+"\n"
+"                    Under the esteemed brand of MG Entertainment UG, we "
+"ensure a secure, private, and luxurious atmosphere tailored to meet your "
+"poker needs.\n"
+"                    "
+msgstr ""
+"\n"
+"                    在MG娱乐有限责任公司这一尊贵品牌的保障下，我们确保提供安全、私密和奢华的氛围，满足您的扑克需求。\n"
+"                    "
+
+#: templates/bookings/book.html:152
+msgid "Book Poker"
+msgstr "预订扑克"
+
+#: templates/bookings/book.html:160
+msgid "My Bookings"
+msgstr "我的预订"
+
+#: templates/bookings/book.html:1471
+msgid "Book Your Day at Poka Lawn"
+msgstr "在扑克草坪预订您的一天"
+
+#: templates/bookings/book.html:1582
+msgid "Back to Bookings"
+msgstr "返回预订"
+
+#: templates/bookings/book.html:1588
+msgid "Edit My Bookings"
+msgstr "编辑我的预订"
+
+#: templates/bookings/booking_edit_form.html:46
+msgid "Update Booking"
+msgstr "更新预订"
+
+#: templates/bookings/booking_form.html:14
+msgid "Select Your Day"
+msgstr "选择您的日期"
+
+#: templates/bookings/booking_form.html:27
+msgid "Start Time"
+msgstr "开始时间"
+
+#: templates/bookings/booking_form.html:30
+msgid "Select Date First"
+msgstr "请先选择日期"
+
+#: templates/bookings/booking_form.html:34
+msgid "Available start times based on MGEN-F24 calendar"
+msgstr "基于MGEN-F24日历的可用开始时间"
+
+#: templates/bookings/booking_form.html:43
+msgid "Select Time First"
+msgstr "请先选择时间"
+
+#: templates/bookings/booking_form.html:47
+msgid "Available hours based on selected time"
+msgstr "基于所选时间的可用小时数"
+
+#: templates/bookings/booking_form.html:60
+msgid "People & Services"
+msgstr "人数和服务"
+
+#: templates/bookings/booking_form.html:69
+msgid "Maximum capacity: 50 people"
+msgstr "最大容量：50人"
+
+#: templates/bookings/booking_form.html:77
+msgid "Additional Services"
+msgstr "额外服务"
+
+#: templates/bookings/booking_form.html:85
+msgid "Professional Dealer"
+msgstr "专业荷官"
+
+#: templates/bookings/booking_form.html:86
+msgid "+€200 - Expert poker dealer for your session"
+msgstr "+€200 - 为您的活动提供专业扑克荷官"
+
+#: templates/bookings/booking_form.html:94
+msgid "Service Personal"
+msgstr "服务人员"
+
+#: templates/bookings/booking_form.html:95
+msgid "+€200 - Dedicated service staff for your event"
+msgstr "+€200 - 为您的活动提供专属服务人员"
+
+#: templates/bookings/booking_form.html:111
+msgid "Drinks & Payment"
+msgstr "饮品和付款"
+
+#: templates/bookings/booking_form.html:117
+msgid "Beverage Options"
+msgstr "饮品选项"
+
+#: templates/bookings/booking_form.html:124
+msgid "Drinks Flatrate"
+msgstr "饮品套餐"
+
+#: templates/bookings/booking_form.html:125
+msgid "+€200 - Unlimited beverages for your group"
+msgstr "+€200 - 为您的团体提供无限饮品"
+
+#: templates/bookings/booking_form.html:132
+msgid "Individual Drinks:"
+msgstr "单点饮品："
+
+#: templates/bookings/booking_form.html:132
+msgid "Available for purchase separately during your event"
+msgstr "活动期间可单独购买"
+
+#: templates/bookings/booking_form.html:138
+msgid "Individual Drink Selection"
+msgstr "单点饮品选择"
+
+#: templates/bookings/booking_form.html:149
+msgid "Drink menu will be available during your booking."
+msgstr "饮品菜单将在您预订期间提供。"
+
+#: templates/bookings/booking_form.html:158
+msgid "Final Summary"
+msgstr "最终摘要"
+
+#: templates/bookings/booking_form.html:162
+msgid "Whole Day Rental"
+msgstr "全天租赁"
+
+#: templates/bookings/booking_form.html:178
+msgid "Total Amount"
+msgstr "总金额"
+
+#: templates/bookings/booking_form.html:186
+msgid "For special requests, email:"
+msgstr "如有特殊要求，请发邮件至："
+
+#: templates/bookings/booking_form.html:194
+msgid "Payment Information"
+msgstr "付款信息"
+
+#: templates/bookings/booking_form.html:197
+msgid "Please enter your payment details below to confirm your booking."
+msgstr "请在下方输入您的付款详情以确认预订。"
+
+#: templates/bookings/booking_form.html:8
+msgid "Step 1: Booking Date and Time"
+msgstr "第一步：预订日期和时间"
+
+#: templates/bookings/booking_form.html:10
+msgid "Booking Date"
+msgstr "预订日期"
+
+#: templates/bookings/booking_form.html:14
+msgid "Booking Time"
+msgstr "预订时间"
+
+#: templates/bookings/booking_form.html:16
+msgid "Select Time"
+msgstr "选择时间"
+
+#: templates/bookings/booking_form.html:19
+#: templates/bookings/booking_form.html:35
+msgid "Next"
+msgstr "下一步"
+
+#: templates/bookings/booking_form.html:24
+msgid "Step 2: Number of People and Hours"
+msgstr "第二步：人数和小时数"
+
+#: templates/bookings/booking_form.html:26
+msgid "Number of People"
+msgstr "人数"
+
+#: templates/bookings/booking_form.html:30
+msgid "Number of Hours"
+msgstr "小时数"
+
+#: templates/bookings/booking_form.html:34
+#: templates/bookings/booking_form.html:56
+msgid "Previous"
+msgstr "上一步"
+
+#: templates/bookings/booking_form.html:40
+msgid "Step 3: Drinks and Payment"
+msgstr "第三步：饮品和付款"
+
+#: templates/bookings/booking_form.html:42
+msgid "Select Drinks"
+msgstr "选择饮品"
+
+#: templates/bookings/booking_form.html:54
+msgid "Please review your payment details below."
+msgstr "请在下方查看您的付款详情。"
+
+#: templates/bookings/booking_form.html:57
+msgid "Confirm Booking"
+msgstr "确认预订"
+
+#: templates/contact/contact.html:13
+msgid "Name"
+msgstr "姓名"
+
+#: templates/contact/contact.html:17
+msgid "Email address"
+msgstr "电子邮箱地址"
+
+#: templates/contact/contact.html:21
+msgid "Message"
+msgstr "留言"
+
+#: templates/contact/contact.html:25
+msgid "Send Message"
+msgstr "发送留言"
+
+#: templates/core/base.html:8
+msgid "MG Entertainment UG | Poker Lounge Berlin"
+msgstr "MG娱乐有限责任公司 | 柏林扑克休息室"
+
+#: templates/core/base.html:117
+msgid "MG Entertainment UG"
+msgstr "MG娱乐有限责任公司"
+
+#: templates/core/base.html:124
+msgid "Toggle navigation"
+msgstr "切换导航"
+
+#: templates/core/base.html:163
+msgid "Home"
+msgstr "首页"
+
+#: templates/core/base.html:166
+msgid "Gallery"
+msgstr "图库"
+
+#: templates/core/base.html:169
+msgid "Pricing"
+msgstr "价格"
+
+#: templates/core/base.html:172
+msgid "Contact"
+msgstr "联系我们"
+
+#: templates/core/base.html:210
+msgid "My Account"
+msgstr "我的账户"
+
+#: templates/core/base.html:214
+msgid "Logout"
+msgstr "登出"
+
+#: templates/core/base.html:219 templates/price/pricing.html:21
+#: templates/price/pricing.html:39 templates/price/pricing.html:57
+msgid "Book Now"
+msgstr "立即预订"
+
+#: templates/core/base.html:241
+msgid "MG Entertainment UG. All rights reserved."
+msgstr "MG娱乐有限责任公司。版权所有。"
+
+#: templates/core/base.html:279 templates/home/home.html:485
+msgid "Are you sure you want to log out?"
+msgstr "您确定要登出吗？"
+
+#: templates/core/base.html:293 templates/home/home.html:500
+msgid "Logout failed."
+msgstr "登出失败。"
+
+#: templates/core/base.html:296
+msgid "Error logging out:"
+msgstr "登出错误："
+
+#: templates/home/home.html:196 templates/home/home.html:320
+msgid "Sign Up"
+msgstr "注册"
+
+#: templates/home/home.html:210 templates/home/home.html:403
+msgid "Login"
+msgstr "登录"
+
+#: templates/home/home.html:226
+msgid "First Name"
+msgstr "名字"
+
+#: templates/home/home.html:233
+msgid "Enter your first name"
+msgstr "输入您的名字"
+
+#: templates/home/home.html:239
+msgid "Last Name"
+msgstr "姓氏"
+
+#: templates/home/home.html:246
+msgid "Enter your last name"
+msgstr "输入您的姓氏"
+
+#: templates/home/home.html:252
+msgid "Email ID"
+msgstr "电子邮箱"
+
+#: templates/home/home.html:265
+msgid "Phone Number"
+msgstr "电话号码"
+
+#: templates/home/home.html:280
+msgid "10-digit phone number"
+msgstr "10位电话号码"
+
+#: templates/home/home.html:286
+msgid "We'll send OTPs to both your phone and email."
+msgstr "我们将向您的手机和电子邮箱发送验证码。"
+
+#: templates/home/home.html:291 templates/home/home.html:382
+msgid "Password"
+msgstr "密码"
+
+#: templates/home/home.html:298 templates/home/home.html:393
+msgid "Enter your password"
+msgstr "输入您的密码"
+
+#: templates/home/home.html:304
+msgid "Confirm Password"
+msgstr "确认密码"
+
+#: templates/home/home.html:311
+msgid "Re-enter your password"
+msgstr "重新输入您的密码"
+
+#: templates/home/home.html:328
+msgid "Phone OTP"
+msgstr "手机验证码"
+
+#: templates/home/home.html:334
+msgid "Enter phone OTP"
+msgstr "输入手机验证码"
+
+#: templates/home/home.html:340
+msgid "Email OTP"
+msgstr "邮箱验证码"
+
+#: templates/home/home.html:346
+msgid "Enter email OTP"
+msgstr "输入邮箱验证码"
+
+#: templates/home/home.html:355
+msgid "Verify OTP"
+msgstr "验证验证码"
+
+#: templates/home/home.html:364
+msgid "Email"
+msgstr "电子邮箱"
+
+#: templates/home/home.html:421
+msgid "Welcome to Poka Lawn"
+msgstr "欢迎来到扑克草坪"
+
+#: templates/home/home.html:423
+msgid "Berlin's Premier Poker Lounge by MG Entertainment UG"
+msgstr "MG娱乐有限责任公司呈现柏林顶级扑克休息室"
+
+#: templates/home/home.html:429
+msgid "Book Your Table Now"
+msgstr "立即预订您的桌位"
+
+#: templates/home/home.html:560
+msgid "OTP has been sent to"
+msgstr "验证码已发送至"
+
+#: templates/home/home.html:567
+msgid "OTP verified successfully. Firebase user:"
+msgstr "验证码验证成功。Firebase用户："
+
+#: templates/home/home.html:618
+msgid "OTP verification error:"
+msgstr "验证码验证错误："
+
+#: templates/home/home.html:619
+msgid "Invalid OTP or verification failed. Please try again."
+msgstr "验证码无效或验证失败。请重试。"
+
+#: templates/home/home.html:623
+msgid "Phone auth error:"
+msgstr "手机验证错误："
+
+#: templates/home/home.html:624
+msgid "Error sending verification code:"
+msgstr "发送验证码错误："
+
+#: templates/home/home.html:641
+msgid "Loading..."
+msgstr "加载中..."
+
+#: templates/home/home.html:663
+msgid "Logged-in User ID:"
+msgstr "已登录用户ID："
+
+#: templates/home/home.html:674
+msgid "Error:"
+msgstr "错误："
+
+#: templates/home/home.html:675
+msgid "An error occurred during login."
+msgstr "登录过程中发生错误。"
+
+#: templates/price/pricing.html:12
+msgid "Basic Package"
+msgstr "基础套餐"
+
+#: templates/price/pricing.html:16 templates/price/pricing.html:34
+#: templates/price/pricing.html:52
+msgid "Table Booking:"
+msgstr "桌位预订："
+
+#: templates/price/pricing.html:16 templates/price/pricing.html:34
+#: templates/price/pricing.html:52
+msgid "Hours"
+msgstr "小时"
+
+#: templates/price/pricing.html:17 templates/price/pricing.html:35
+#: templates/price/pricing.html:53
+msgid "Price:"
+msgstr "价格："
+
+#: templates/price/pricing.html:18 templates/price/pricing.html:36
+#: templates/price/pricing.html:54
+msgid "Includes:"
+msgstr "包含："
+
+#: templates/price/pricing.html:18
+msgid "Standard Chips & Cards"
+msgstr "标准筹码和扑克牌"
+
+#: templates/price/pricing.html:30
+msgid "Premium Package"
+msgstr "高级套餐"
+
+#: templates/price/pricing.html:36
+msgid "Premium Chips, Cards & Complimentary Drinks"
+msgstr "高级筹码、扑克牌和免费饮品"
+
+#: templates/price/pricing.html:48
+msgid "Deluxe Package"
+msgstr "豪华套餐"
+
+#: templates/price/pricing.html:54
+msgid "Deluxe Chips, Cards, Complimentary Drinks & Professional Dealer"
+msgstr "豪华筹码、扑克牌、免费饮品和专业荷官"

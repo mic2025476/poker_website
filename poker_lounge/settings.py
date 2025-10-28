@@ -17,7 +17,18 @@ from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+from dotenv import load_dotenv
 
+load_dotenv()
+
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_REGION = os.getenv('AWS_REGION', 'eu-central-1')
+AWS_SNS_TOPIC_ARN = os.getenv('AWS_SNS_TOPIC_ARN')
+GOOGLE_CALENDAR_ID = os.getenv('GOOGLE_CALENDAR_ID')
+# Google OAuth Settings
+GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
+GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -41,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     'home',
     'gallery',
     'about',
@@ -54,8 +66,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    'django.middleware.locale.LocaleMiddleware', 
+    'django.middleware.locale.LocaleMiddleware',
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -157,6 +170,19 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 SESSION_COOKIE_AGE = 86400  # 1 day in seconds
+
+# Google Calendar Settings
+GOOGLE_CALENDAR_CREDENTIALS_FILE = 'credentials.json'
+GOOGLE_CALENDAR_TOKEN_FILE = 'token.json'
+GOOGLE_CALENDAR_ID = 'primary'
+
+# Calendar events to block booking times
+# Can be exact titles or partial matches
+CALENDAR_BLOCKING_EVENTS = [
+    'HOANG',
+    'Home',  # Example: Block "Home" events
+    'College time',  # Example: Block "College time" events
+]
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_EXPIRE_AT_BROWSER_OPEN = False
@@ -180,8 +206,69 @@ USE_I18N = True
 LANGUAGES = [
     ('en', 'English'),
     ('de', 'German'),
+    ("zh-hans", "简体中文"),
 ]
 
 LOCALE_PATHS = [
     BASE_DIR / 'locale',  # or os.path.join(BASE_DIR, 'locale') for older versions
 ]
+
+# Google Calendar Settings
+GOOGLE_CALENDAR_CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credentials.json')
+GOOGLE_CALENDAR_TOKEN_FILE = os.path.join(BASE_DIR, 'token.json')
+
+# CORS Settings for Google OAuth
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:8002",
+    "http://127.0.0.1:8002",
+    "https://accounts.google.com",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_ALL_ORIGINS = True  # Only for development
+
+# For Google OAuth
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'utils.sns_utils': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

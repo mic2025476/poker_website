@@ -5,6 +5,7 @@ from django.utils import timezone
 
 class BookingModel(models.Model):
     customer = models.ForeignKey(CustomerModel, on_delete=models.CASCADE, related_name="customer")
+    booking_date = models.DateField()  # Add booking date field - no default
     start_time = models.TimeField()
     total_people = models.PositiveIntegerField()
     hours_booked = models.PositiveIntegerField()

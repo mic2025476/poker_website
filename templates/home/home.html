@@ -3,320 +3,963 @@
 {% load i18n %}
 {% block content %}
 <style>
-    /* Custom CSS for authForm */
+  #authForm {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050;
+    width: clamp(320px, 90vw, 420px);
+    max-height: 90vh;
+    background-color: white;
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+    animation: slideInModal 0.3s ease-out;
+    transition: all 0.2s ease;
+  }
+
+  @media (min-width: 1280px) {
     #authForm {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 1050;
-      width: 600px;
-      max-width: 90%;
-      max-height: 80vh;
-      background-color: white;
+      width: 480px;
+      max-width: 90vw;
       padding: 2rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-      overflow-y: auto;
     }
-    
+  }
+
+  #authForm.d-none {
+    animation: slideOutModal 0.2s ease-in;
+    pointer-events: none;
+  }
+
+  #authForm .nav-tabs {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 10;
+    padding: 0.5rem 0;
+    border-bottom: none;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  #authForm .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  #authForm .sticky-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: white;
+    z-index: 10;
+    padding: 0.5rem 0;
+    border-top: 1px solid #ddd;
+  }
+
+  .nav-tabs .nav-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 2rem;
+    margin: 0 0.25rem;
+    transition: all 0.3s ease;
+    color: #6c757d;
+    background: transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-tabs .nav-link:hover {
+    color: var(--theme-red);
+    background: rgba(255, 0, 34, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .nav-tabs .nav-link.active {
+    color: white;
+    background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red-hover) 100%);
+    box-shadow: 0 4px 15px rgba(255, 0, 34, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .nav-tabs .nav-link.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .form-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+    color: #333;
+  }
+
+  #authForm .form-control {
+    font-size: var(--font-size-sm);
+    padding: 0.75rem;
+    min-height: 44px;
+    border: 2px solid var(--gray-200);
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease-in-out;
+    background-color: var(--gray-50);
+  }
+
+  @media (min-width: 1280px) {
+    #authForm .form-control {
+      font-size: var(--font-size-base);
+      padding: 0.875rem 1rem;
+    }
+  }
+
+  #authForm .form-control:focus {
+    border-color: var(--theme-red);
+    box-shadow: 0 0 0 3px var(--theme-red-light);
+    background-color: white;
+    outline: none;
+  }
+
+  .input-group {
+    margin-bottom: 0.5rem;
+    border-radius: 0.4rem;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  }
+
+  .input-group-text {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-right: none;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.2rem;
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Enhanced form field styling */
+  #authForm .form-control {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+    height: 2.2rem;
+    border: 1px solid #e9ecef;
+    border-left: none;
+    border-radius: 0;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    background-color: #f8f9fa;
+  }
+
+  #authForm .input-group:focus-within .input-group-text {
+    border-color: var(--theme-red);
+    background-color: white;
+    color: var(--theme-red);
+  }
+
+  #authForm .input-group:focus-within .form-control {
+    border-color: var(--theme-red);
+    background-color: white;
+  }
+
+  /* Enhanced button styles for mobile */
+  .btn-auth {
+    background-color: var(--theme-red);
+    border: none;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.6rem;
+    width: 100%;
+    border-radius: 0.4rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 0, 34, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    min-height: 38px;
+    touch-action: manipulation;
+  }
+
+  .btn-google {
+    font-size: 0.75rem; /* Slightly smaller font size */
+    padding: 0.4rem; /* Reduce padding inside buttons */
+  }
+
+  .btn-auth:hover {
+    background-color: var(--theme-red-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 0, 34, 0.4);
+  }
+
+  .btn-auth:active {
+    transform: translateY(0px);
+    transition: all 0.1s ease;
+  }
+
+  .btn-google {
+    background-color: white;
+    border: 1px solid #e9ecef;
+    color: #333;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.55rem;
+    width: 100%;
+    border-radius: 0.4rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 38px;
+    touch-action: manipulation;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .btn-google:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    border-color: #dee2e6;
+  }
+
+  .btn-google:active {
+    transform: translateY(0px);
+    transition: all 0.1s ease;
+  }
+
+  .divider {
+    text-align: center;
+    margin: 0.75rem 0;
+    position: relative;
+    color: #999;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #ddd;
+    z-index: 1;
+  }
+
+  .divider span {
+    background: white;
+    padding: 0 0.75rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #f8f9fa;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    z-index: 11;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+  }
+
+  .close-btn:hover {
+    background: #e9ecef;
+    color: #333;
+    transform: scale(1.1);
+  }
+
+  .text-muted-small {
+    font-size: 0.7rem;
+    color: #666;
+  }
+
+  .otp-error {
+    color: #b00020;
+    font-size: 0.7rem;
+    margin-top: 0.2rem;
+  }
+
+  .otp-success {
+    color: #198754;
+    font-size: 0.7rem;
+    margin-top: 0.2rem;
+  }
+
+  .is-invalid {
+    border-color: #b00020 !important;
+  }
+
+  .is-valid {
+    border-color: #198754 !important;
+  }
+
+  @media (max-width: 576px) {
+    #authForm {
+      width: 88%;
+      max-width: 350px;
+      margin: 0 auto;
+      max-height: 90vh;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      top: 50%;
+      bottom: auto;
+      transform: translate(-50%, -50%);
+    }
+
+    #authForm .form-control {
+      font-size: 16px; /* iOS requirement to prevent zoom */
+      padding: 0.4rem;
+      height: 2.2rem;
+    }
+
+    .input-group-text {
+      font-size: 12px;
+      height: 2.2rem;
+      padding: 0.4rem 0.5rem;
+    }
+
+    .btn-auth {
+      font-size: 0.8rem;
+      padding: 0.5rem;
+      min-height: 36px;
+    }
+
+    .btn-google {
+      font-size: 0.75rem;
+      padding: 0.45rem;
+      min-height: 36px;
+    }
+
+    #authForm .nav-tabs .nav-link {
+      font-size: 0.8rem;
+      padding: 0.5rem 1rem;
+      margin: 0 0.15rem;
+    }
+
+    .close-btn {
+      top: 0.3rem;
+      right: 0.3rem;
+      width: 28px;
+      height: 28px;
+      font-size: 1.1rem;
+    }
+  }
+
+  #hero {
+    background-size: cover;
+    background-position: center;
+    padding: clamp(3rem, 8vh, 10rem) var(--container-gutter);
+    text-align: center;
+    min-height: 100vh;
+    background-attachment: fixed;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+  }
+
+  #hero > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  #hero .text-center {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  #hero h1 {
+    font-size: var(--font-h1);
+    font-weight: 700;
+    margin-bottom: var(--space-6);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    line-height: var(--line-height-tight);
+  }
+
+  #hero p {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-7);
+    font-weight: 300;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+    max-width: 60ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #hero .btn {
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.25rem);
+    padding: clamp(0.875rem, 1vw, 1.25rem) clamp(2rem, 3vw, 3.5rem);
+    font-weight: 600;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 0, 34, 0.4);
+  }
+
+  #hero .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 0, 34, 0.5);
+  }
+
+  #hero .btn:focus {
+    outline: 3px solid #fff;
+    outline-offset: 4px;
+  }
+
+  @media (max-width: 576px) {
+    #hero {
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      background-attachment: scroll;
+    }
+
+    #hero h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    #hero p {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    #hero .btn {
+      font-size: 1rem;
+      padding: 0.75rem 2rem;
+      width: auto;
+      min-width: 200px;
+    }
+  }
+
+  .custom-red-button {
+    background-color: var(--theme-red) !important;
+    border-color: var(--theme-red) !important;
+    color: white !important;
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+
+  .custom-red-button:hover {
+    background-color: var(--theme-red-hover) !important;
+    border-color: var(--theme-red-hover) !important;
+  }
+
+  :root {
+    --theme-red: #ff0022;
+    --theme-red-hover: #cc001a;
+  }
+
+  /* Mobile-specific animations */
+  @keyframes slideInModal {
+    from {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutModal {
+    from {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 4px 15px rgba(255, 0, 34, 0.3);
+    }
+    50% {
+      box-shadow: 0 6px 20px rgba(255, 0, 34, 0.5);
+    }
+    100% {
+      box-shadow: 0 4px 15px rgba(255, 0, 34, 0.3);
+    }
+  }
+
+  /* Smooth scrolling for the entire page */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* iPhone thumb-friendly optimizations */
+  @media (max-width: 576px) and (max-height: 896px) {
+    #authForm {
+      top: 60%;
+      max-height: 70vh;
+    }
+  }
+
+  /* Extra small iPhones (iPhone SE, etc.) */
+  @media (max-width: 375px) {
+    #authForm {
+      width: 90%;
+      max-width: 270px;
+      padding: 0.4rem;
+      max-height: 65vh;
+    }
+
+    #authForm .form-control,
+    .input-group-text {
+      height: 2rem;
+      padding: 0.35rem;
+      font-size: 14px;
+    }
+
+    .btn-auth,
+    .btn-google {
+      min-height: 34px;
+      padding: 0.45rem;
+      font-size: 0.75rem;
+    }
+
+    .nav-tabs .nav-link {
+      font-size: 0.7rem;
+      padding: 0.4rem 0.8rem;
+      margin: 0 0.1rem;
+    }
+
+    .close-btn {
+      width: 26px;
+      height: 26px;
+      font-size: 1rem;
+    }
+  }
+
+  /* Password toggle styles */
+  .password-toggle {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa !important;
+    border-left: none !important;
+  }
+
+  .password-toggle:hover {
+    background-color: #e9ecef !important;
+    color: var(--theme-red) !important;
+  }
+
+  .password-toggle i {
+    font-size: 0.9rem;
+  }
+
+  /* Add animation to form inputs */
+  .form-control,
+  .input-group-text {
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  .form-control:nth-child(1) { animation-delay: 0.1s; }
+  .form-control:nth-child(2) { animation-delay: 0.2s; }
+  .form-control:nth-child(3) { animation-delay: 0.3s; }
+  .form-control:nth-child(4) { animation-delay: 0.4s; }
+
+  /* Pulse animation for CTA button */
+  #hero .btn {
+    animation: pulse 3s infinite;
+  }
+
+  @media (max-width: 576px) {
+    #authForm {
+      animation: slideInModal 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    #authForm.d-none {
+      animation: slideOutModal 0.2s cubic-bezier(0.55, 0.06, 0.68, 0.19);
+    }
+
+    /* Faster animations on mobile */
+    .form-control,
+    .input-group-text,
+    .btn-auth,
+    .btn-google {
+      transition: all 0.2s ease;
+    }
+
+    /* Reduce motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  }
 </style>
+
 <!-- Auth Form -->
-<div id="authForm" class="d-none">
-  <ul class="nav nav-tabs mb-4" id="authTab" role="tablist">
+<div id="authForm" class="d-none" data-is-authenticated="{% if request.session.user_id %}true{% else %}false{% endif %}">
+  <button class="close-btn" onclick="document.getElementById('authForm').classList.add('d-none')">&times;</button>
+  
+  <ul class="nav nav-tabs" id="authTab" role="tablist">
     <li class="nav-item" role="presentation">
-      <button
-        class="nav-link active fw-semibold"
-        id="signup-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#signup"
-        type="button"
-        role="tab"
-        aria-controls="signup"
-        aria-selected="true"
-      >
+      <button class="nav-link active fw-semibold" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button" role="tab" aria-controls="signup" aria-selected="true">
         {% trans "Sign Up" %}
       </button>
     </li>
     <li class="nav-item" role="presentation">
-      <button
-        class="nav-link fw-semibold"
-        id="login-tab"
-        data-bs-toggle="tab"
-        data-bs-target="#login"
-        type="button"
-        role="tab"
-        aria-controls="login"
-        aria-selected="false"
-      >
+      <button class="nav-link fw-semibold" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="false">
         {% trans "Login" %}
       </button>
     </li>
   </ul>
+
   <div class="tab-content" id="authTabContent">
     <!-- Sign Up Tab -->
-    <div
-      class="tab-pane fade show active"
-      id="signup"
-      role="tabpanel"
-      aria-labelledby="signup-tab"
-    >
-      <div id="recaptcha-container"></div>
+    <div class="tab-pane fade show active" id="signup" role="tabpanel" aria-labelledby="signup-tab">
       <form id="signupForm">
-        <div class="mb-3">
-          <label for="signupFirstName" class="form-label fw-semibold">
-            {% trans "First Name" %}
-          </label>
-          <input
-            type="text"
-            class="form-control form-control-lg"
-            id="signupFirstName"
-            name="first_name"
-            placeholder="{% trans 'Enter your first name' %}"
-            required
-          />
+        <div class="mb-2">
+          <label for="signupFirstName" class="form-label">{% trans "First Name" %}</label>
+          <input type="text" class="form-control" id="signupFirstName" name="first_name" placeholder="{% trans 'Enter your first name' %}" required />
         </div>
-        <div class="mb-3">
-          <label for="signupLastName" class="form-label fw-semibold">
-            {% trans "Last Name" %}
-          </label>
-          <input
-            type="text"
-            class="form-control form-control-lg"
-            id="signupLastName"
-            name="last_name"
-            placeholder="{% trans 'Enter your last name' %}"
-            required
-          />
+        <div class="mb-2">
+          <label for="signupLastName" class="form-label">{% trans "Last Name" %}</label>
+          <input type="text" class="form-control" id="signupLastName" name="last_name" placeholder="{% trans 'Enter your last name' %}" required />
         </div>
-        <div class="mb-3">
-          <label for="signupEmail" class="form-label fw-semibold">
-            {% trans "Email ID" %}
-          </label>
-          <input
-            type="email"
-            class="form-control form-control-lg"
-            id="signupEmail"
-            name="email_id"
-            placeholder="yourname@example.com"
-            required
-          />
-        </div>
-        <div class="mb-3">
-          <label for="signupPhone" class="form-label fw-semibold">
-            {% trans "Phone Number" %}
-          </label>
-          <div class="input-group input-group-lg">
-            <span class="input-group-text">
-              <i class="bi bi-telephone-forward-fill"></i>
-            </span>
-            <select class="form-select" style="max-width: 100px;" id="countryCode">
-              <option value="+49">DE +49</option>
-              <!-- Add other country codes if needed -->
-            </select>
-            <input
-              type="tel"
-              class="form-control"
-              id="signupPhone"
-              name="phone_number"
-              placeholder="{% trans '10-digit phone number' %}"
-              required
-              pattern="[0-9]{10}"
-            />
+        <div class="mb-2">
+          <label for="signupEmail" class="form-label">{% trans "Email" %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" class="form-control" id="signupEmail" name="email_id" placeholder="yourname@example.com" required />
           </div>
-          <small class="text-muted">
-            {% trans "We'll send OTPs to both your phone and email." %}
-          </small>
+        </div>
+        <div class="mb-2">
+          <label for="signupPassword" class="form-label">{% trans "Password" %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" class="form-control" id="signupPassword" name="password" placeholder="{% trans 'Enter your password' %}" required />
+            <span class="input-group-text password-toggle" onclick="togglePassword('signupPassword')">
+              <i class="bi bi-eye" id="signupPasswordIcon"></i>
+            </span>
+          </div>
         </div>
         <div class="mb-3">
-          <label for="signupPassword" class="form-label fw-semibold">
-            {% trans "Password" %}
-          </label>
-          <input
-            type="password"
-            class="form-control form-control-lg"
-            id="signupPassword"
-            name="password"
-            placeholder="{% trans 'Enter your password' %}"
-            required
-          />
+          <label for="signupConfirmPassword" class="form-label">{% trans "Confirm Password" %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input type="password" class="form-control" id="signupConfirmPassword" name="confirm_password" placeholder="{% trans 'Re-enter your password' %}" required />
+            <span class="input-group-text password-toggle" onclick="togglePassword('signupConfirmPassword')">
+              <i class="bi bi-eye" id="signupConfirmPasswordIcon"></i>
+            </span>
+          </div>
         </div>
-        <div class="mb-4">
-          <label for="signupConfirmPassword" class="form-label fw-semibold">
-            {% trans "Confirm Password" %}
-          </label>
-          <input
-            type="password"
-            class="form-control form-control-lg"
-            id="signupConfirmPassword"
-            name="confirm_password"
-            placeholder="{% trans 'Re-enter your password' %}"
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          class="btn btn-primary w-100 py-2 fw-semibold custom-red-button"
-        >
-          {% trans "Sign Up" %}
-        </button>
       </form>
+
       <!-- OTP Verification Section (Hidden initially) -->
-      <div id="signupOtpSection" class="d-none mt-4">
-        <div class="mb-3">
-          <label for="phoneOtp" class="form-label fw-semibold">
-            {% trans "Phone OTP" %}
-          </label>
-          <input
-            type="text"
-            class="form-control form-control-lg"
-            id="phoneOtp"
-            placeholder="{% trans 'Enter phone OTP' %}"
-            required
-          />
+      <div id="signupOtpSection" class="d-none">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0" style="font-size: 0.9rem;">{% trans "Verify your account" %}</h6>
+          <button type="button" id="backToSignupBtn" class="btn btn-link p-0" style="font-size: 0.8rem;">{% trans "Back" %}</button>
         </div>
-        <div class="mb-3">
-          <label for="emailOtp" class="form-label fw-semibold">
-            {% trans "Email OTP" %}
-          </label>
-          <input
-            type="text"
-            class="form-control form-control-lg"
-            id="emailOtp"
-            placeholder="{% trans 'Enter email OTP' %}"
-            required
-          />
+        <p class="text-muted-small mb-2" id="otpHint"></p>
+
+        <div class="mb-2">
+          <label for="emailOtp" class="form-label">{% trans "Email OTP" %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
+            <input type="text" class="form-control" id="emailOtp" placeholder="{% trans 'Enter email OTP' %}" />
+          </div>
+          <div id="emailOtpError" class="otp-error d-none">{% trans "Please enter the email OTP." %}</div>
         </div>
-        <button
-          type="button"
-          id="verifyOtpBtn"
-          class="btn btn-success w-100 py-2 fw-semibold custom-red-button"
-        >
-          {% trans "Verify OTP" %}
-        </button>
+
+        <div class="d-grid gap-2">
+          <button type="button" id="verifyOtpBtn" class="btn-auth">
+            {% trans "Verify OTP" %}
+          </button>
+          <button type="button" id="resendEmailOtpBtn" class="btn btn-outline-secondary btn-sm">
+            {% trans "Resend Email OTP" %}
+          </button>
+        </div>
+        <div id="otpStatus" class="mt-2"></div>
       </div>
     </div>
+
     <!-- Login Tab -->
     <div class="tab-pane fade" id="login" role="tabpanel" aria-labelledby="login-tab">
       <form id="loginForm">
+        <div class="mb-2">
+          <label for="loginEmail" class="form-label">{% trans "Email" %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" class="form-control" id="loginEmail" name="email_id" placeholder="yourname@example.com" required />
+          </div>
+        </div>
         <div class="mb-3">
-          <label for="loginEmail" class="form-label fw-semibold">
-            {% trans "Email" %}
-          </label>
-          <div class="input-group input-group-lg">
-            <span class="input-group-text">
-              <i class="bi bi-envelope-fill"></i>
+          <label for="loginPassword" class="form-label">{% trans "Password" %}</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" class="form-control" id="loginPassword" name="password" placeholder="{% trans 'Enter your password' %}" required />
+            <span class="input-group-text password-toggle" onclick="togglePassword('loginPassword')">
+              <i class="bi bi-eye" id="loginPasswordIcon"></i>
             </span>
-            <input
-              type="email"
-              class="form-control"
-              id="loginEmail"
-              name="email_id"
-              placeholder="yourname@example.com"
-              required
-            />
           </div>
         </div>
-        <div class="mb-4">
-          <label for="loginPassword" class="form-label fw-semibold">
-            {% trans "Password" %}
-          </label>
-          <div class="input-group input-group-lg">
-            <span class="input-group-text">
-              <i class="bi bi-lock-fill"></i>
-            </span>
-            <input
-              type="password"
-              class="form-control"
-              id="loginPassword"
-              name="password"
-              placeholder="{% trans 'Enter your password' %}"
-              required
-            />
-          </div>
-        </div>
-        <div id="loginMessage" style="color: red; margin-bottom: 1rem;"></div>
-        <button
-          type="submit"
-          class="btn btn-success w-100 py-2 fw-semibold custom-red-button"
-        >
-          {% trans "Login" %}
-        </button>
+        <div id="loginMessage" style="color: #b00020; margin-bottom: 0.75rem; font-size: 0.8rem;"></div>
       </form>
+    </div>
+  </div>
+
+  <!-- Sticky Footer with Buttons -->
+  <div class="sticky-footer">
+    <div id="signupButtons">
+      <button type="submit" form="signupForm" class="btn-auth">
+        {% trans "Sign Up" %}
+      </button>
+      <div class="divider"><span>{% trans "or" %}</span></div>
+      <button type="button" class="btn-google" onclick="signInWithGoogle('signup')">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        {% trans "Continue with Google" %}
+      </button>
+      <div id="signupStatus" class="text-muted-small mt-2"></div>
+    </div>
+
+    <div id="loginButtons" class="d-none">
+      <button type="submit" form="loginForm" class="btn-auth">
+        {% trans "Login" %}
+      </button>
+      <div class="divider"><span>{% trans "or" %}</span></div>
+      <button type="button" class="btn-google" onclick="signInWithGoogle('login')">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        {% trans "Login with Google" %}
+      </button>
+    </div>
+
+    <div id="otpButtons" class="d-none">
+      <!-- OTP buttons are already handled in the OTP section above -->
     </div>
   </div>
 </div>
 
 <!-- Main Hero Section -->
-<section
-  id="hero"
-  class="d-flex flex-column justify-content-center align-items-center"
-  style="
-    background-image: url('{% static 'images/poker_1.avif' %}');
-    background-size: cover;
-    background-position: center;
-  "
->
+<section id="hero" class="d-flex flex-column justify-content-center align-items-center"
+  style="background-image: url('{% static "images/poker_1.avif" %}'); background-size: cover; background-position: center;">
   <div class="text-center text-white mb-4">
     <h1 class="display-4 fw-bold">{% trans "Welcome to Poka Lawn" %}</h1>
-    <p class="lead">
-      {% trans "Berlin's Premier Poker Lounge by MG Entertainment UG" %}
-    </p>
-    <button
-      type="button"
-      class="btn btn-lg mt-3 custom-red-button toggleAuthForm"
-    >
+    <p class="lead">{% trans "Berlin's Premier Poker Lounge by MG Entertainment" %}</p>
+    <button type="button" class="btn btn-lg mt-3 custom-red-button toggleAuthForm">
       {% trans "Book Your Table Now" %}
     </button>
   </div>
 </section>
 
-<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 <script>
-  // Your Firebase config (same as in Flutter)
-  const firebaseConfig = {
-    apiKey: "AIzaSyA0R-xN9wPPgmorZ88MZocTscqYMk00Azg",
-    authDomain: "pokerwebsite-96259.firebaseapp.com",
-    projectId: "pokerwebsite-96259",
-    storageBucket: "pokerwebsite-96259.firebasestorage.app",
-    messagingSenderId: "559302370986",
-    appId: "1:559302370986:web:2a5d5506635149dcb892d3",
-    measurementId: "G-C1V5K6VBWF"
+  const scriptUrl = "https://script.google.com/macros/s/AKfycbzjgFhr_1tSuMUTWMutUCpyOYWUcWpOGpY-GO-t_nz75S-13QQt0Wpd3xrFZMeae7OcJw/exec";
+  const state = { signupData: null };
+
+  function getCSRFToken() {
+    return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+  }
+
+  function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const iconElement = document.getElementById(fieldId + 'Icon');
+
+    if (passwordField.type === 'password') {
+      passwordField.type = 'text';
+      iconElement.className = 'bi bi-eye-slash';
+    } else {
+      passwordField.type = 'password';
+      iconElement.className = 'bi bi-eye';
+    }
+  }
+
+  // Initialize Google Sign-In (make it global so base template can call it)
+  window.initializeGoogleSignIn = function() {
+    console.log('initGoogleSignIn: google object?', typeof google !== 'undefined');
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      google.accounts.id.initialize({
+        client_id: "537820281123-84i1o0sobdnlt4speooifv0bthqdbnma.apps.googleusercontent.com",
+        callback: (resp) => {
+          console.log('GSI callback raw:', resp);
+          try {
+            handleGoogleSignIn(resp);
+          } catch (e) {
+            console.error('handleGoogleSignIn error', e);
+            alert('Google sign-in failed (client). Check console.');
+          }
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+      // optional: render visual button for debug
+      // google.accounts.id.renderButton(document.getElementById('gsiDebug') || document.body, { theme: 'outline', size: 'medium' });
+      console.log('GSI initialized');
+    } else {
+      console.warn('Google script not loaded yet, retrying...');
+      setTimeout(window.initializeGoogleSignIn, 150);
+    }
   };
 
-  // Initialize Firebase
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  const auth = firebase.auth();
-</script>
-<script>
-  function getCSRFToken() {
-    return document.cookie.split('; ')
-      .find(row => row.startsWith('csrftoken='))
-      ?.split('=')[1];
-  }
-  document.addEventListener('DOMContentLoaded', function () {
-    const isAuthenticated = {% if request.session.user_id %}true{% else %}false{% endif %};
-    console.log('isAuthenticated');
-    console.log(isAuthenticated);
-    // Check the localStorage flag
-    // Call your simulateLogin function or update UI
-    if (window.simulateLogin) {
-      window.simulateLogin();
+  function handleGoogleSignIn(response) {
+    console.log('handleGoogleSignIn received:', response);
+    if (!response || !response.credential) {
+      console.error('No credential in response:', response);
+      alert('Google returned no credential. See console.');
+      return;
     }
+    const token = response.credential;
+    console.log('sending token to backend (first 40 chars):', token.slice(0,40) + '...');
+    fetch('/customers/api/google-auth/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: JSON.stringify({ google_token: token })
+    })
+    .then(async res => {
+      console.log('Backend status', res.status, res.statusText);
+      const text = await res.text();
+      console.log('Backend raw response:', text);
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error('Invalid JSON from backend: ' + e.message);
+      }
+    })
+    .then(result => {
+      console.log('Backend parsed result:', result);
+      if (result.success) {
+        document.getElementById('authForm').classList.add('d-none');
+        window.simulateLogin && window.simulateLogin();
+        window.location.href = "/bookings/book";
+      } else {
+        alert(result.message || 'Google authentication failed.');
+      }
+    })
+    .catch(err => {
+      console.error('Error in google auth flow:', err);
+      alert('An error occurred during Google authentication. See console/network tab.');
+    });
+  }
+
+  // Trigger Google Sign-In
+  function signInWithGoogle(type) {
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      google.accounts.id.prompt();
+    } else {
+      alert("Google Sign-In is loading. Please try again in a moment.");
+      // Try to initialize again
+      window.initializeGoogleSignIn();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const authForm = document.getElementById('authForm');
+    const isAuthenticated = authForm.dataset.isAuthenticated === 'true';
     const profileNavItem = document.getElementById('profileNavItem');
     const bookNowItem = document.getElementById('bookNowItem');
     const logoutBtn = document.getElementById('logoutBtn');
-    const authForm = document.getElementById('authForm');
     const signupForm = document.getElementById('signupForm');
     const signupOtpSection = document.getElementById('signupOtpSection');
     const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const resendEmailOtpBtn = document.getElementById('resendEmailOtpBtn');
+    const backToSignupBtn = document.getElementById('backToSignupBtn');
+    const otpStatus = document.getElementById('otpStatus');
+    const signupStatus = document.getElementById('signupStatus');
+    const otpHint = document.getElementById('otpHint');
+
+    // Button sections
+    const signupButtons = document.getElementById('signupButtons');
+    const loginButtons = document.getElementById('loginButtons');
+    const otpButtons = document.getElementById('otpButtons');
+
+    // Tab switching functionality
+    const signupTab = document.getElementById('signup-tab');
+    const loginTab = document.getElementById('login-tab');
+
+    signupTab.addEventListener('click', function() {
+      signupButtons.classList.remove('d-none');
+      loginButtons.classList.add('d-none');
+      otpButtons.classList.add('d-none');
+    });
+
+    loginTab.addEventListener('click', function() {
+      signupButtons.classList.add('d-none');
+      loginButtons.classList.remove('d-none');
+      otpButtons.classList.add('d-none');
+    });
 
     window.simulateLogin = function() {
       if (bookNowItem) bookNowItem.classList.add('d-none');
       if (profileNavItem) profileNavItem.classList.remove('d-none');
+    }
+
+    if (isAuthenticated) {
+      if (profileNavItem) profileNavItem.classList.remove('d-none');
+      if (bookNowItem) bookNowItem.classList.add('d-none');
+    } else {
+      if (profileNavItem) profileNavItem.classList.add('d-none');
+      if (bookNowItem) bookNowItem.classList.remove('d-none');
     }
 
     if (logoutBtn) {
@@ -325,14 +968,10 @@
         if (confirm('{% trans "Are you sure you want to log out?" %}')) {
           fetch("/customers/api/logout/", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": "{{ csrf_token }}"
-            },
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
           })
           .then(response => {
             if (response.ok) {
-              // Update UI elements accordingly
               profileNavItem.classList.add('d-none');
               bookNowItem.classList.remove('d-none');
               window.location.href = "{% url 'home' %}";
@@ -345,10 +984,8 @@
       });
     }
 
-    const toggleAuthFormButtons = document.querySelectorAll('.toggleAuthForm');
-    toggleAuthFormButtons.forEach(button => {
+    document.querySelectorAll('.toggleAuthForm').forEach(button => {
       button.addEventListener('click', function () {
-        console.log('called');
         if (isAuthenticated) {
           window.location.href = "/bookings/book";
         } else {
@@ -357,123 +994,197 @@
       });
     });
 
+    // ====== SIGNUP SUBMIT ======
     if (signupForm) {
       signupForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        
-        const countryCode = document.getElementById('countryCode').value;
-        const phoneNumber = countryCode + document.getElementById('signupPhone').value;
+
         const signupData = {
-          first_name: document.getElementById('signupFirstName').value,
-          last_name: document.getElementById('signupLastName').value,
-          email_id: document.getElementById('signupEmail').value,
-          phone_number: countryCode + document.getElementById('signupPhone').value,
+          first_name: document.getElementById('signupFirstName').value.trim(),
+          last_name: document.getElementById('signupLastName').value.trim(),
+          email_id: document.getElementById('signupEmail').value.trim(),
           password: document.getElementById('signupPassword').value,
           confirm_password: document.getElementById('signupConfirmPassword').value,
         };
 
-        const signupResponse = await fetch('/customers/api/signup/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken()
-          },
-          body: JSON.stringify(signupData)
-        });
-        const signupResult = await signupResponse.json();
-        console.log('signupResult',signupResult);
-        if (signupResult.success) {
-          try {
-            // First send phone verification
-            const recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-              'size': 'invisible',
-              'callback': (response) => {
-                console.log('proceed');
-              }
-            });
-            
-            const confirmation = await auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier);
-            
-            // Show OTP input
-            signupForm.classList.add('d-none');
-            signupOtpSection.classList.remove('d-none');
-            console.log("{% trans 'OTP has been sent to' %} " + phoneNumber);
-            // Handle OTP verification
-            verifyOtpBtn.addEventListener('click', async function () {
-              const otp = document.getElementById('phoneOtp').value;
-              try {
-                const verifyMobileOtp = await confirmation.confirm(otp);
-                const firebaseUser = verifyMobileOtp.user;
-                console.log("{% trans 'OTP verified successfully. Firebase user:' %}", firebaseUser.uid);
+        // Basic client validation
+        if (!signupData.first_name || !signupData.last_name || !signupData.email_id) {
+          signupStatus.textContent = "{% trans 'Please fill all required fields.' %}";
+          return;
+        }
+        if (signupData.password !== signupData.confirm_password) {
+          signupStatus.textContent = "{% trans 'Passwords do not match.' %}";
+          return;
+        }
 
-                // Prepare data for backend OTP verification
-                const phoneOtp = document.getElementById('phoneOtp').value;
-                const emailOtp = document.getElementById('emailOtp').value;
-                const verifyData = {
-                  phone_number: document.getElementById('signupPhone').value,
-                  phone_otp: phoneOtp,
-                  email_id: document.getElementById('signupEmail').value,
-                  email_otp: emailOtp
-                };
+        const submitBtn = signupButtons.querySelector('.btn-auth');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Loading..." %}`;
+        signupStatus.textContent = "";
 
-                const verifyResponse = await fetch('/customers/api/verify-otp/', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken()
-                  },
-                  body: JSON.stringify(verifyData)
-                });
-                const verifyResult = await verifyResponse.json();
-                alert(verifyResult.message);
+        try {
+          // Create pending user in backend
+          const signupResp = await fetch('/customers/api/signup/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+            body: JSON.stringify(signupData)
+          });
+          const signupJson = await signupResp.json();
 
-                if (verifyResult.success) {
-                  const signupData = {
-                    first_name: document.getElementById('signupFirstName').value,
-                    last_name: document.getElementById('signupLastName').value,
-                    email_id: document.getElementById('signupEmail').value,
-                    phone_number: countryCode + document.getElementById('signupPhone').value,
-                    password: document.getElementById('signupPassword').value,
-                    confirm_password: document.getElementById('signupConfirmPassword').value,
-                    firebase_uid: firebaseUser.uid
-                  };
-
-                  const signupResponse = await fetch('/customers/api/signup/', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'X-CSRFToken': getCSRFToken()
-                    },
-                    body: JSON.stringify(signupData)
-                  });
-                  const signupResult = await signupResponse.json();
-                  if (signupResult.success) {
-                    window.simulateLogin();
-                    authForm.classList.add('d-none');
-                  } else {
-                    alert(signupResult.message);
-                  }
-                }
-              } catch (error) {
-                console.error('{% trans "OTP verification error:" %}', error);
-                alert("{% trans 'Invalid OTP or verification failed. Please try again.' %}");
-              }
-            });
-          } catch (error) {
-            console.error('{% trans "Phone auth error:" %}', error);
-            alert("{% trans 'Error sending verification code:' %} " + error.message);
+          if (!signupJson.success) {
+            signupStatus.textContent = signupJson.message || "{% trans 'Signup failed.' %}";
+            return;
           }
-        } else {
-          alert(signupResult.message);
+
+          // Save for OTP verify step
+          state.signupData = signupData;
+
+          // Send Email OTP via Apps Script
+          signupStatus.textContent = "{% trans 'Sending OTP to your email…' %}";
+          const otpResponse = await fetch(`${scriptUrl}?email=${encodeURIComponent(signupData.email_id)}`);
+          const otpResult = await otpResponse.json();
+
+          if (!otpResult.success) {
+            signupStatus.textContent = "{% trans 'Failed to send email OTP.' %}";
+            return;
+          }
+
+          // Switch UI to OTP section
+          signupForm.classList.add('d-none');
+          signupOtpSection.classList.remove('d-none');
+          signupButtons.classList.add('d-none');
+          otpButtons.classList.remove('d-none');
+          otpStatus.innerHTML = `<span class="otp-success">{% trans 'Email OTP sent. Please check your inbox.' %}</span>`;
+          otpHint.textContent = `{% trans 'We sent a verification code to' %} ${signupData.email_id}.`;
+        } catch (err) {
+          console.error(err);
+          signupStatus.textContent = "{% trans 'Something went wrong. Please try again.' %}";
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
         }
       });
     }
 
+    // ====== BACK TO SIGNUP ======
+    if (backToSignupBtn) {
+      backToSignupBtn.addEventListener('click', function () {
+        // reset OTP fields & messages
+        document.getElementById('emailOtp').value = '';
+        document.getElementById('emailOtp').classList.remove('is-invalid', 'is-valid');
+        document.getElementById('emailOtpError').classList.add('d-none');
+        otpStatus.textContent = '';
+        // show signup form again
+        document.getElementById('signupForm').classList.remove('d-none');
+        document.getElementById('signupOtpSection').classList.add('d-none');
+        signupButtons.classList.remove('d-none');
+        otpButtons.classList.add('d-none');
+      });
+    }
+
+    // helpers
+    function showFieldError(inputEl, errorEl, show) {
+      if (show) {
+        inputEl.classList.add('is-invalid');
+        errorEl.classList.remove('d-none');
+      } else {
+        inputEl.classList.remove('is-invalid');
+        errorEl.classList.add('d-none');
+        inputEl.classList.add('is-valid');
+      }
+    }
+
+    // ====== VERIFY OTP ======
+    if (verifyOtpBtn) {
+      verifyOtpBtn.addEventListener('click', async function () {
+        const emailOtpInput = document.getElementById('emailOtp');
+        const emailErr = document.getElementById('emailOtpError');
+
+        // Require email OTP
+        let valid = true;
+        if (!emailOtpInput.value.trim()) { 
+          showFieldError(emailOtpInput, emailErr, true); 
+          valid = false; 
+        } else { 
+          showFieldError(emailOtpInput, emailErr, false); 
+        }
+        
+        if (!valid) {
+          otpStatus.innerHTML = `<span class="otp-error">{% trans "Please enter the email OTP." %}</span>`;
+          return;
+        }
+
+        // Disable button with spinner
+        const original = verifyOtpBtn.innerHTML;
+        verifyOtpBtn.disabled = true;
+        verifyOtpBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Verifying..." %}`;
+        otpStatus.textContent = "";
+
+        try {
+          const response = await fetch("/customers/api/verify-otp/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCSRFToken(),
+            },
+            body: JSON.stringify({
+              email_id: state.signupData.email_id,
+              email_otp: emailOtpInput.value.trim()
+            })
+          });
+          const result = await response.json();
+
+          if (!result.success) {
+            otpStatus.innerHTML = `<span class="otp-error">{% trans "Invalid OTP. Please try again." %}</span>`;
+            return;
+          }
+
+          // Success
+          otpStatus.innerHTML = `<span class="otp-success">{% trans "Verification successful! Signing you in…" %}</span>`;
+          document.getElementById('authForm').classList.add('d-none');
+          window.location.href = "/bookings/book";
+        } catch (err) {
+          console.error(err);
+          otpStatus.innerHTML = `<span class="otp-error">{% trans "Verification failed. Please try again." %}</span>`;
+        } finally {
+          verifyOtpBtn.disabled = false;
+          verifyOtpBtn.innerHTML = original;
+        }
+      });
+    }
+
+    // ====== RESEND EMAIL OTP ======
+    if (resendEmailOtpBtn) {
+      resendEmailOtpBtn.addEventListener('click', async function () {
+        if (!state.signupData?.email_id) return;
+        resendEmailOtpBtn.disabled = true;
+        const original = resendEmailOtpBtn.innerText;
+        resendEmailOtpBtn.innerHTML = `{% trans "Sending…" %}`;
+
+        try {
+          const otpResponse = await fetch(`${scriptUrl}?email=${encodeURIComponent(state.signupData.email_id)}`);
+          const otpResult = await otpResponse.json();
+          if (otpResult.success) {
+            otpStatus.innerHTML = `<span class="otp-success">{% trans "Email OTP resent." %}</span>`;
+          } else {
+            otpStatus.innerHTML = `<span class="otp-error">{% trans "Failed to resend email OTP." %}</span>`;
+          }
+        } catch (e) {
+          otpStatus.innerHTML = `<span class="otp-error">{% trans "Network error. Please try again." %}</span>`;
+        } finally {
+          resendEmailOtpBtn.disabled = false;
+          resendEmailOtpBtn.innerText = original;
+        }
+      });
+    }
+
+    // ====== LOGIN ======
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
       loginForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        const loginButton = loginForm.querySelector('button[type="submit"]');
+        const loginButton = loginButtons.querySelector('.btn-auth');
         const originalButtonText = loginButton.innerHTML;
         const loginMessageDiv = document.getElementById('loginMessage');
         loginMessageDiv.innerText = '';
@@ -486,45 +1197,40 @@
         };
         fetch('/customers/api/login/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken()
-          },
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
           credentials: 'include',
           body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(result => {
           if (result.success) {
-            if (window.simulateLogin) {
-              window.simulateLogin();
-            }
-            authForm.classList.add('d-none');
-            console.log("{% trans 'Logged-in User ID:' %}", result.data);
+            window.simulateLogin && window.simulateLogin();
+            document.getElementById('authForm').classList.add('d-none');
             window.location.href = "/bookings/book";
           } else {
-            loginMessageDiv.style.backgroundColor = 'red';
-            loginMessageDiv.style.color = 'white';
+            loginMessageDiv.style.backgroundColor = '#ffe6e6';
+            loginMessageDiv.style.color = '#b00020';
+            loginMessageDiv.style.padding = '0.5rem';
+            loginMessageDiv.style.borderRadius = '0.25rem';
             loginMessageDiv.innerText = result.message;
             loginButton.disabled = false;
             loginButton.innerHTML = originalButtonText;
           }
         })
         .catch(error => {
-          console.error('{% trans "Error:" %}', error);
+          console.error('Error:', error);
           alert("{% trans 'An error occurred during login.' %}");
+          loginButton.disabled = false;
+          loginButton.innerHTML = originalButtonText;
         });
       });
     }
 
+    // highlight current nav link
     const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.nav-link-toggle');
-    navLinks.forEach(link => {
-      if (link.getAttribute('href') === currentPath) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
+    document.querySelectorAll('.nav-link-toggle').forEach(link => {
+      if (link.getAttribute('href') === currentPath) link.classList.add('active');
+      else link.classList.remove('active');
     });
   });
 </script>
