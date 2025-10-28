@@ -189,7 +189,7 @@ SESSION_EXPIRE_AT_BROWSER_OPEN = False
 
 CSRF_TRUSTED_ORIGINS = [
     'https://728f-2a03-fc82-218-1700-2825-9ebf-4f15-8ca9.ngrok-free.app',
-    'https://51.21.201.248'
+    'http://51.21.201.248'
 ]
 
 BRAINTREE_MERCHANT_ID = "dhp5r7gd5bhrvvm7"
