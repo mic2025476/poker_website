@@ -286,8 +286,9 @@ LOGGING = {
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Cookie/security settings (set True only if you serve HTTPS)
-SESSION_COOKIE_SECURE = False   # only send session cookie over HTTPS
-CSRF_COOKIE_SECURE = False      # only send CSRF cookie over HTTPS
+SESSION_COOKIE_SECURE = True   # only send session cookie over HTTPS
+CSRF_COOKIE_SECURE = True      # only send CSRF cookie over HTTPS
+SECURE_SSL_REDIRECT = True  # (set True after cert is working)
 DJANGO_USE_HTTPS = False
 # SameSite: 'Lax' is a good default; use 'None' + Secure if cross-site flows required
 SESSION_COOKIE_SAMESITE = 'Lax'
