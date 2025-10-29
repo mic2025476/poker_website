@@ -45,6 +45,8 @@ ALLOWED_HOSTS = [
     "13.61.115.3",
     "localhost",
     "127.0.0.1",
+    "mgen-poker.com",
+     "www.mgen-poker.com"
 ]
 #STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
