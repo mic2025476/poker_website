@@ -2439,10 +2439,10 @@ console.log('hours', numberOfHoursInput?.value || 'null');
     const dateCheckResponse = await fetch('/bookings/get_unavailable_slots?date=' + bookingDateInput.value);
     const dateCheckData = await dateCheckResponse.json();
     
-    if (dateCheckData.unavailable_slots && dateCheckData.unavailable_slots.length > 0) {
+    /*if (dateCheckData.unavailable_slots && dateCheckData.unavailable_slots.length > 0) {
       alert('This date is no longer available for booking. Please select a different date.');
       return; // Prevent form submission
-    }
+    }*/
 
     // Call the availability check API (this should not be needed anymore, but keeping as backup)
     const availabilityResponse = await fetch('/bookings/check_availability/', {
