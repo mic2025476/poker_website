@@ -2144,7 +2144,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         minute: '2-digit',
         hour12: true
       });
-      
+    // Compute end time from start_time + hours_booked
+    const startDt = new Date(booking.start_time.replace(' ', 'T'));
+    const hoursBooked = Number(booking.hours_booked || booking.duration_hours || 0);
+    const endDt = new Date(startDt.getTime() + hoursBooked * 60 * 60 * 1000);
+
+    const formattedStart = startDt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const formattedEnd   = endDt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    // What to show for “Duration”
+    const durationText = hoursBooked
+      ? `${formattedStart} – ${formattedEnd} (${hoursBooked} ${hoursBooked === 1 ? 'hour' : 'hours'})`
+      : `${formattedStart}`;
+
       const statusClass = booking.is_cancelled ? 'status-cancelled' : 'status-active';
       const statusText = booking.is_cancelled ? 'Cancelled' : 'Active';
       const statusIcon = booking.is_cancelled ? 'fas fa-times-circle' : 'fas fa-check-circle';
@@ -2184,7 +2196,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                   <i class="fas fa-clock"></i>
                   Duration
                 </div>
-                <div class="detail-value">Until end of day</div>
+                <div class="detail-value">${durationText}</div>
               </div>
               
               <div class="booking-detail">
