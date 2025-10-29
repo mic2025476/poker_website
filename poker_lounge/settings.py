@@ -39,9 +39,13 @@ SECRET_KEY = "django-insecure-fekli8m2u-gup7&b4=bh1g8!4_dfpw^+-+2(1e^f+&*py(pipn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if os.getenv("DJANGO_ALLOWED_HOSTS") else []
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS","").split(",") if o.strip()]
-STATIC_ROOT = BASE_DIR / "staticfiles"
+ALLOWED_HOSTS = [
+    "*",
+    "728f-2a03-fc82-218-1700-2825-9ebf-4f15-8ca9.ngrok-free.app",
+    "13.61.115.3",
+    "localhost",
+    "127.0.0.1",
+]
 #STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 # Application definition
@@ -190,6 +194,10 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_EXPIRE_AT_BROWSER_OPEN = False
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://728f-2a03-fc82-218-1700-2825-9ebf-4f15-8ca9.ngrok-free.app",
+    "http://13.61.115.3:8000",
+]
 
 BRAINTREE_MERCHANT_ID = "dhp5r7gd5bhrvvm7"
 BRAINTREE_PUBLIC_KEY = "xcf8hntvh4m2v6nt"
@@ -224,7 +232,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8002",
     "http://127.0.0.1:8002",
     "https://accounts.google.com",
-    "http://51.21.201.248:8000"
+    "http://13.61.115.3:8000"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
