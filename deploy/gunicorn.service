@@ -1,0 +1,15 @@
+[Unit]
+Description=Gunicorn for Poker Django site
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/poker_website
+EnvironmentFile=/etc/poker_website.env
+ExecStart=/home/ubuntu/poker_website/env/bin/gunicorn poker_lounge.wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 120
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
