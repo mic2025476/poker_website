@@ -348,6 +348,7 @@ class GoogleCalendarService:
             }
             
             # Insert the event
+            print(f"Inserting event into calendar: {calendar_id}")
             created_event = self.service.events().insert(
                 calendarId=calendar_id,
                 body=event_body
