@@ -264,7 +264,7 @@ def check_availability(request):
         for booking in existing_bookings:
             b_start = datetime.combine(booking_date, booking.start_time)
             # Calculate actual end time based on booking duration
-            b_end = b_start + timedelta(hours=booking.number_of_hours)
+            b_end = b_start + timedelta(hours=booking.hours_booked)
             if start_dt < b_end and end_dt > b_start:
                 return Response({"available": False, "message": "Selected time overlaps with an existing booking."}, status=status.HTTP_200_OK)
 
