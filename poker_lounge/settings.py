@@ -26,6 +26,7 @@ AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_REGION = os.getenv('AWS_REGION', 'eu-central-1')
 AWS_SNS_TOPIC_ARN = os.getenv('AWS_SNS_TOPIC_ARN')
 GOOGLE_CALENDAR_ID = os.getenv('GOOGLE_CALENDAR_ID')
+GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL")
 # Google OAuth Settings
 GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
 GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
@@ -41,7 +42,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = [
     "*",
-    "728f-2a03-fc82-218-1700-2825-9ebf-4f15-8ca9.ngrok-free.app",
+    "832b8387883c.ngrok-free.app",
     "13.61.115.3",
     "localhost",
     "127.0.0.1",

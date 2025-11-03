@@ -1,3 +1,4 @@
+import os
 from django.http import JsonResponse
 from django.shortcuts import render
 import braintree
@@ -7,6 +8,8 @@ from rest_framework import status
 from rest_framework.response import Response as DRFResponse
 from django.shortcuts import get_object_or_404
 from bookings.models import BookingModel
+import requests
+import threading
 from menu.models import DrinkModel
 from customers.models import CustomerModel
 from .serializers import BookingSerializer
@@ -83,10 +86,12 @@ def create_booking(request):
             # Add drinks
             booking.drinks.set(drinks)
 
+            # Return success
             return DRFResponse(
                 ResponseData.success({"booking_id": booking.id}, "Booking created successfully."),
                 status=status.HTTP_201_CREATED
             )
+
         else:
             error_message = " ".join([f"{key}: {', '.join(value)}" for key, value in serializer.errors.items()])
             return DRFResponse(ResponseData.error(error_message), status=status.HTTP_400_BAD_REQUEST)
@@ -222,6 +227,15 @@ def edit_booking(request, booking_id):
         "booking_drink_ids": booking_drink_ids
     })
 
+def notify_google_apps_script(payload):
+    GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL")
+    try:
+        response = requests.post(GAS_WEBHOOK_URL, json=payload, timeout=5)
+        response.raise_for_status()
+        print("✅ Google Apps Script notified successfully.")
+    except Exception as e:
+        print(f"⚠️ Failed to notify Google Apps Script: {e}")
+        
 @api_view(["POST"])
 def check_availability(request):
     try:
@@ -304,6 +318,25 @@ def check_availability(request):
             hours_booked=hours_booked,
             is_active=False  # Hold the slot, but don't activate yet
         )
+        # === NEW: Notify Google Apps Script ===
+        GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxR89GkT6BqEsR17KQSNNqLYKY0CRMCvrtxL1wKiBIjP0JTvPRsT5ITTrclkg2VeHSEsg/exec"
+        
+        # Prepare payload for Google Apps Script
+        payload = {
+            "name": f"{customer.first_name} {customer.last_name}",
+            "email": customer.email_id,
+            "phone": getattr(customer, "phone_number", "Not provided"),
+            "date": booking_date.strftime("%Y-%m-%d"),
+            "start_time": start_time.strftime("%H:%M"),
+            "total_people": total_people,
+            "hours_booked": hours_booked,
+            "total_amount": float(total),
+            "deposit_amount": float(deposit),
+            "auth_key": "MY_SECRET_KEY_123"
+        }
+
+
+        threading.Thread(target=notify_google_apps_script, args=(payload,), daemon=True).start()
 
         return Response({"available": True, "message": "Time slot is available."}, status=status.HTTP_200_OK)
 
@@ -376,13 +409,38 @@ def cancel_booking(request):
             
             calendar_deleted = calendar_service.delete_booking_event(booking_data)
             if calendar_deleted:
-                print(f"Successfully deleted calendar event for cancelled booking {booking.id}")
+                print(f"✅ Successfully deleted calendar event for cancelled booking {booking.id}")
             else:
-                print(f"Could not find calendar event to delete for booking {booking.id}")
-                
+                print(f"⚠️ Could not find calendar event to delete for booking {booking.id}")
         except Exception as e:
-            print(f"Error deleting calendar event for booking {booking.id}: {e}")
-            # Don't fail the cancellation if calendar deletion fails
+            print(f"⚠️ Error deleting calendar event for booking {booking.id}: {e}")
+
+        # === NEW: Notify Google Apps Script in background ===
+        def notify_google_apps_script_cancel(payload):
+            GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL")
+            try:
+                response = requests.post(GAS_WEBHOOK_URL, json=payload, timeout=5)
+                response.raise_for_status()
+                print(f"✅ Google Apps Script notified for cancellation of booking {payload.get('booking_id')}")
+            except Exception as e:
+                print(f"⚠️ Failed to notify Google Apps Script (cancel): {e}")
+
+        # Prepare payload for cancellation
+        payload = {
+            "event_type": "cancel",
+            "booking_id": booking.id,
+            "name": f"{booking.customer.first_name} {booking.customer.last_name}",
+            "email": booking.customer.email_id,
+            "phone": getattr(booking.customer, "phone_number", "Not provided"),
+            "date": booking.booking_date.strftime("%Y-%m-%d"),
+            "start_time": booking.start_time.strftime("%H:%M"),
+            "total_people": booking.total_people,
+            "hours_booked": booking.hours_booked,
+            "auth_key": "MY_SECRET_KEY_123"
+        }
+
+
+        threading.Thread(target=notify_google_apps_script_cancel, args=(payload,), daemon=True).start()
         
         return Response({"success": True, "message": "Booking cancelled successfully"}, status=status.HTTP_200_OK)
         
