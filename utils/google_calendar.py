@@ -115,7 +115,7 @@ class GoogleCalendarService:
         busy_times = []
         
         # Get blocking events from settings
-        blocking_events = getattr(settings, 'CALENDAR_BLOCKING_EVENTS', ['MGEN - F24'])
+        blocking_events = getattr(settings, 'CALENDAR_BLOCKING_EVENTS', ['Poker Booking from Website'])
         
         for event in events:
             # Check if event title matches any blocking event

@@ -1,26 +1,23 @@
 {% load i18n %}
 
-<!-- Step indicators now in sticky header -->
-
 <form id="bookingForm" method="POST" novalidate>
   {% csrf_token %}
 
   <!-- Step 1: Booking Date and Time -->
   <div class="form-step active" data-step="1">
-    
     <div class="mb-3">
       <p class="fw-bold text-dark mb-2 small">
         <i class="fas fa-calendar-day text-danger me-1"></i>
         {% trans "Select Your Day" %}
       </p>
-      
+
       <div class="mb-2">
         <label for="bookingDate" class="form-label fw-semibold small">
           <i class="fas fa-calendar-alt me-1"></i>{% trans "Booking Date" %}
         </label>
         <input type="date" class="form-control" id="bookingDate" name="booking_date" required />
       </div>
-      
+
       <div class="row">
         <div class="col-md-6 mb-3">
           <label for="bookingTime" class="form-label fw-semibold small">
@@ -49,7 +46,6 @@
         </div>
       </div>
     </div>
-    <!-- Navigation buttons moved to sticky footer -->
   </div>
 
   <!-- Step 2: Number of People and Services -->
@@ -59,7 +55,7 @@
         <i class="fas fa-users text-danger me-1"></i>
         {% trans "People & Services" %}
       </p>
-      
+
       <div class="mb-3">
         <label for="numberOfPeople" class="form-label fw-semibold small">
           <i class="fas fa-user-friends me-1"></i>{% trans "Number of People" %}
@@ -70,13 +66,10 @@
         </div>
       </div>
 
-      
-      <!-- Service Options -->
       <div class="mb-3">
         <label class="form-label fw-semibold small mb-2">
           <i class="fas fa-concierge-bell me-1"></i>{% trans "Additional Services" %}
         </label>
-        
         <div class="row g-2">
           <div class="col-12">
             <div class="form-check p-2 border rounded">
@@ -98,9 +91,8 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Navigation buttons moved to sticky footer -->
+    </div>
   </div>
 
   <!-- Step 3: Drinks and Payment -->
@@ -110,13 +102,11 @@
         <i class="fas fa-cocktail text-danger me-1"></i>
         {% trans "Drinks & Payment" %}
       </p>
-      
-      <!-- Drinks Section -->
+
       <div class="mb-3">
         <label class="form-label fw-semibold small mb-2">
           <i class="fas fa-glass-cheers me-1"></i>{% trans "Beverage Options" %}
         </label>
-        
         <div class="mb-3">
           <div class="form-check p-2 border rounded">
             <input class="form-check-input" type="checkbox" id="drinksFlatrate" name="drinks_flatrate" value="flatrate">
@@ -132,7 +122,6 @@
           <strong>{% trans "Individual Drinks:" %}</strong> {% trans "Available for purchase separately during your event" %}
         </div>
 
-        <!-- Individual drinks list -->
         <div class="mb-3">
           <label class="form-label fw-semibold small">
             <i class="fas fa-list me-1"></i>{% trans "Individual Drink Selection" %}
@@ -152,7 +141,6 @@
         </div>
       </div>
 
-      <!-- Final Summary -->
       <div class="pricing-card mb-3">
         <p class="fw-bold mb-2 small">
           <i class="fas fa-receipt me-1"></i>{% trans "Final Summary" %}
@@ -179,7 +167,7 @@
             <span id="finalTotalAmount">€400.00</span>
           </div>
         </div>
-        
+
         <div class="mt-3 pt-3 border-top">
           <small class="text-muted">
             <i class="fas fa-envelope me-1"></i>
@@ -188,7 +176,6 @@
         </div>
       </div>
 
-      <!-- Payment Section -->
       <div class="mb-3">
         <p class="fw-semibold mb-2 small">
           <i class="fas fa-credit-card me-1"></i>{% trans "Payment Information" %}
@@ -199,420 +186,477 @@
         <div id="dropin-container" class="border rounded p-3" style="min-height: 350px; background: white; width: 100%; max-width: none; margin-bottom: 2rem;"></div>
       </div>
     </div>
-
-    <!-- Navigation buttons moved to sticky footer -->
   </div>
 </form>
+
 <style>
-  .form-step {
-      display: none; /* Hide all steps by default */
-      padding: 0;
-      margin: 0;
-  }
-
-  .form-step.active {
-      display: block; /* Show only the active step */
-      animation: fadeInStep 0.3s ease-in-out;
-  }
-
-  /* Smooth transitions between steps */
-  @keyframes fadeInStep {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  /* Braintree UI styling */
-  #dropin-container {
-    position: relative;
-    z-index: 1;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: clamp(300px, 40vh, 400px);
-    padding: var(--space-5);
-    background: white;
-    border-radius: 0.5rem;
-    margin-bottom: var(--space-6);
-  }
-
-  @media (min-width: 1280px) {
-    #dropin-container {
-      max-width: 600px;
-      margin-left: 0;
-    }
-  }
-
-  /* Ensure Braintree form elements are visible and properly sized */
+  .form-step{display:none;padding:0;margin:0}
+  .form-step.active{display:block;animation:fadeInStep .3s ease-in-out}
+  @keyframes fadeInStep{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  #dropin-container{position:relative;z-index:1;width:100%!important;max-width:100%!important;min-height:clamp(300px,40vh,400px);padding:var(--space-5);background:#fff;border-radius:.5rem;margin-bottom:var(--space-6)}
+  @media (min-width:1280px){#dropin-container{max-width:600px;margin-left:0}}
   #dropin-container .braintree-form,
   #dropin-container .braintree-form__field,
-  #dropin-container .braintree-form__label {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    width: 100% !important;
-    max-width: none !important;
-  }
-
-  #dropin-container .braintree-dropin {
-    font-family: inherit !important;
-    width: 100% !important;
-    max-width: none !important;
-  }
-
-  #dropin-container .braintree-form__field {
-    margin-bottom: 10px !important;
-  }
-
-  #dropin-container .braintree-form__hosted-field {
-    border: 2px solid var(--gray-200) !important;
-    border-radius: 0.5rem !important;
-    padding: 0.75rem !important;
-    font-size: var(--font-size-base) !important;
-    min-height: 44px !important;
-    transition: border-color 0.2s !important;
-  }
-
-  #dropin-container .braintree-form__hosted-field:focus {
-    border-color: var(--theme-red) !important;
-    box-shadow: 0 0 0 3px var(--theme-red-light) !important;
-    outline: none !important;
-  }
-
-  #dropin-container .braintree-methods-list {
-    width: 100% !important;
-  }
+  #dropin-container .braintree-form__label{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;width:100%!important;max-width:none!important}
+  #dropin-container .braintree-dropin{font-family:inherit!important;width:100%!important;max-width:none!important}
+  #dropin-container .braintree-form__field{margin-bottom:10px!important}
+  #dropin-container .braintree-form__hosted-field{border:2px solid var(--gray-200)!important;border-radius:.5rem!important;padding:.75rem!important;font-size:var(--font-size-base)!important;min-height:44px!important;transition:border-color .2s!important}
+  #dropin-container .braintree-form__hosted-field:focus{border-color:var(--theme-red)!important;box-shadow:0 0 0 3px var(--theme-red-light)!important;outline:none!important}
+  #dropin-container .braintree-methods-list{width:100%!important}
 </style>
-<style>
-  /* Button styles are now handled by the main CSS in book.html */
-</style>
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const steps = document.querySelectorAll('.form-step');
-    const stepIndicators = document.querySelectorAll('.step');
-    const nextButtons = document.querySelectorAll('.next-step');
-    const prevButtons = document.querySelectorAll('.prev-step');
-    const navButtonContainers = document.querySelectorAll('[class^="nav-buttons-step"]');
-    let currentStep = 0;
+document.addEventListener('DOMContentLoaded', () => {
+  // ---- config / globals ----
+  const CLOSE_HOUR = 24;
+  const MAX_LOOKAHEAD_DAYS = 1; // increase if you want to span more days
+  let currentStep = 0;
+  const TIMES_OWNER = 'times-v2';
+  let timeBuildTicket = 0; // SINGLE-FLIGHT TICKET (global)
 
-    // Service checkboxes
-    const dealerCheckbox = document.getElementById('dealerService');
-    const serviceCheckbox = document.getElementById('servicePersonal');
-    const drinksCheckbox = document.getElementById('drinksFlatrate');
+  // ---- dom refs ----
+  const steps = document.querySelectorAll('.form-step');
+  const stepIndicators = document.querySelectorAll('.step');
+  const nextButtons = document.querySelectorAll('.next-step');
+  const prevButtons = document.querySelectorAll('.prev-step');
+  const navButtonContainers = document.querySelectorAll('[class^="nav-buttons-step"]');
+  const dealerCheckbox = document.getElementById('dealerService');
+  const serviceCheckbox = document.getElementById('servicePersonal');
+  const drinksCheckbox  = document.getElementById('drinksFlatrate');
+  const bookingDateInput = document.getElementById('bookingDate');
+  const bookingTimeInput = document.getElementById('bookingTime');
+  const bookingDuration  = document.getElementById('bookingDuration');
 
-    function updateStepIndicators() {
-        stepIndicators.forEach((indicator, index) => {
-            if (index < currentStep) {
-                indicator.className = 'step completed';
-            } else if (index === currentStep) {
-                indicator.className = 'step active';
-            } else {
-                indicator.className = 'step pending';
-            }
-        });
-        
-        // Update sticky navigation buttons
-        navButtonContainers.forEach((container, index) => {
-            container.style.display = index === currentStep ? 'block' : 'none';
-        });
+  // ---- i18n helper ----
+  const _ = (window.gettext || ((s)=>s));
+
+  // ---- time utils ----
+  function timeToMinutes(t){ const [H,M]=t.split(':').map(Number); return H*60+(M||0); }
+  function minutesToHHMM(mins){ const h=Math.floor(mins/60), m=mins%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
+  function prevDateISO(dateStr){ const [y,m,d]=dateStr.split('-').map(Number); const dt=new Date(Date.UTC(y,m-1,d)); dt.setUTCDate(dt.getUTCDate()-1); return dt.toISOString().slice(0,10); }
+  function addDaysISO(dateStr, days){ const [y,m,d]=dateStr.split('-').map(Number); const dt=new Date(Date.UTC(y,m-1,d)); dt.setUTCDate(dt.getUTCDate()+days); return dt.toISOString().slice(0,10); }
+
+  function normalizeUnavailable(list){
+    return (list||[]).map(s=>({ start: timeToMinutes(s.start_time), end: timeToMinutes(s.end_time) }));
+  }
+  function splitOvernightRange(r){
+    if (r.end >= r.start) return [r];
+    return [ {start:r.start, end:1440}, {start:0, end:r.end} ];
+  }
+  function mergeRanges(ranges){
+    if (!ranges || !ranges.length) return [];
+    const sorted = ranges.slice().sort((a,b)=> a.start-b.start || a.end-b.end);
+    const out = [ {...sorted[0]} ];
+    for (let i=1;i<sorted.length;i++){
+      const prev = out[out.length-1], cur = sorted[i];
+      if (cur.start <= prev.end) prev.end = Math.max(prev.end, cur.end);
+      else out.push({...cur});
     }
+    return out;
+  }
 
-    function updatePricing() {
-        let total = 400; // Base price for whole day
-        
-        // Show/hide dealer cost
-        const dealerCost = document.getElementById('dealerCost');
-        const finalDealerCost = document.getElementById('finalDealerCost');
-        if (dealerCheckbox && dealerCheckbox.checked) {
-            total += 200;
-            if (dealerCost) dealerCost.style.display = 'flex';
-            if (finalDealerCost) finalDealerCost.style.display = 'flex';
-        } else {
-            if (dealerCost) dealerCost.style.display = 'none';
-            if (finalDealerCost) finalDealerCost.style.display = 'none';
-        }
+  async function getMergedUnavailableForDate(dateStr){
+    const res = await fetch('/bookings/get_unavailable_slots?date=' + encodeURIComponent(dateStr));
+    const data = await res.json();
+    return mergeRanges(normalizeUnavailable(data.unavailable_slots));
+  }
 
-        // Show/hide service cost
-        const serviceCost = document.getElementById('serviceCost');
-        const finalServiceCost = document.getElementById('finalServiceCost');
-        if (serviceCheckbox && serviceCheckbox.checked) {
-            total += 200;
-            if (serviceCost) serviceCost.style.display = 'flex';
-            if (finalServiceCost) finalServiceCost.style.display = 'flex';
-        } else {
-            if (serviceCost) serviceCost.style.display = 'none';
-            if (finalServiceCost) finalServiceCost.style.display = 'none';
-        }
-
-        // Show/hide drinks cost
-        const finalDrinksCost = document.getElementById('finalDrinksCost');
-        if (drinksCheckbox && drinksCheckbox.checked) {
-            total += 200;
-            if (finalDrinksCost) finalDrinksCost.style.display = 'flex';
-        } else {
-            if (finalDrinksCost) finalDrinksCost.style.display = 'none';
-        }
-
-        // Update totals
-        const totalAmountEl = document.getElementById('totalAmount');
-        const finalTotalAmountEl = document.getElementById('finalTotalAmount');
-        if (totalAmountEl) totalAmountEl.textContent = `€${total.toFixed(2)}`;
-        if (finalTotalAmountEl) finalTotalAmountEl.textContent = `€${total.toFixed(2)}`;
-    }
-
-    function showStep(stepIndex) {
-        // Hide all steps first
-        steps.forEach((step, index) => {
-            if (index !== stepIndex) {
-                step.classList.remove('active');
-            }
-        });
-        
-        // Show the target step after a brief delay to ensure smooth transition
-        setTimeout(() => {
-            steps[stepIndex].classList.add('active');
-            
-            // Initialize Braintree when reaching step 3 (payment step)
-            if (stepIndex === 2) {
-                console.log('Reached step 3, initializing Braintree');
-                if (window.initializeBraintreeOnStep3) {
-                    console.log('Calling initializeBraintreeOnStep3');
-                    window.initializeBraintreeOnStep3();
-                } else {
-                    console.error('initializeBraintreeOnStep3 not available');
-                }
-            }
-        }, 50);
-        
-        updateStepIndicators();
-    }
-
-    async function validateStep(stepIndex) {
-        const step = steps[stepIndex];
-        const inputs = step.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), select');
-        let isValid = true;
-
-        // First, check basic field validation
-        inputs.forEach(input => {
-            const errorMessage = input.parentNode.querySelector('.error-message');
-            if (input.hasAttribute('required') && !input.value.trim()) {
-                isValid = false;
-                if (!errorMessage) {
-                    const error = document.createElement('div');
-                    error.className = 'error-message text-danger mt-1 small';
-                    error.textContent = 'This field is required.';
-                    input.parentNode.appendChild(error);
-                }
-                input.classList.add('is-invalid');
-            } else {
-                if (errorMessage) {
-                    errorMessage.remove();
-                }
-                input.classList.remove('is-invalid');
-            }
-        });
-
-        // Special validation for Step 1: Check date availability
-        if (stepIndex === 0 && isValid) {
-            const bookingDateInput = document.getElementById('bookingDate');
-            const bookingTimeInput = document.getElementById('bookingTime');
-
-            if (bookingDateInput && bookingDateInput.value) {
-                try {
-                    // Check if selected date is still available
-                    const response = await fetch('/bookings/get_unavailable_slots?date=' + bookingDateInput.value);
-                    const data = await response.json();
-
-                    if (data.unavailable_slots && data.unavailable_slots.length > 0) {
-                        // If there are unavailable slots, check if selected time conflicts
-                        const selectedTime = bookingTimeInput.value;
-                        if (selectedTime) {
-                            const selectedHour = parseInt(selectedTime.split(':')[0]);
-
-                            // Check if selected time conflicts with unavailable slots
-                            let hasConflict = data.unavailable_slots.some(slot => {
-                                const startHour = parseInt(slot.start_time.split(':')[0]);
-                                const endHour = parseInt(slot.end_time.split(':')[0]) || 24;
-                                return selectedHour >= startHour && selectedHour < endHour;
-                            });
-
-                            if (hasConflict) {
-                                isValid = false;
-                                // Show error message
-                                let errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
-                                if (!errorMessage) {
-                                    errorMessage = document.createElement('div');
-                                    errorMessage.className = 'availability-error text-danger mt-1 small';
-                                    bookingDateInput.parentNode.appendChild(errorMessage);
-                                }
-                                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This date and time is no longer available. Please select a different time slot.';
-                                bookingDateInput.classList.add('is-invalid');
-                                bookingTimeInput.classList.add('is-invalid');
-                            } else {
-                                // Remove any existing error messages
-                                const errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
-                                if (errorMessage) {
-                                    errorMessage.remove();
-                                }
-                                bookingDateInput.classList.remove('is-invalid');
-                                bookingTimeInput.classList.remove('is-invalid');
-                            }
-                        } else {
-                            // Check if entire date is unavailable (all day booked)
-                            const allDayBooked = data.unavailable_slots.some(slot => {
-                                const startHour = parseInt(slot.start_time.split(':')[0]);
-                                const endHour = parseInt(slot.end_time.split(':')[0]) || 24;
-                                return startHour === 0 && endHour >= 23;
-                            });
-
-                            if (allDayBooked) {
-                                isValid = false;
-                                let errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
-                                if (!errorMessage) {
-                                    errorMessage = document.createElement('div');
-                                    errorMessage.className = 'availability-error text-danger mt-1 small';
-                                    bookingDateInput.parentNode.appendChild(errorMessage);
-                                }
-                                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This date is fully booked. Please select a different date.';
-                                bookingDateInput.classList.add('is-invalid');
-                            }
-                        }
-                    } else {
-                        // Date is available, remove any error messages
-                        const errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
-                        if (errorMessage) {
-                            errorMessage.remove();
-                        }
-                        bookingDateInput.classList.remove('is-invalid');
-                        bookingTimeInput.classList.remove('is-invalid');
-                    }
-                } catch (error) {
-                    console.error('Error checking date availability:', error);
-                    // On error, allow progression but log the issue
-                }
-            }
-        }
-
-        return isValid;
-    }
-
-    // Event listeners for pricing updates
-    if (dealerCheckbox) {
-        dealerCheckbox.addEventListener('change', updatePricing);
-    }
-    if (serviceCheckbox) {
-        serviceCheckbox.addEventListener('change', updatePricing);
-    }
-    if (drinksCheckbox) {
-        drinksCheckbox.addEventListener('change', updatePricing);
-    }
-
-    nextButtons.forEach(button => {
-        button.addEventListener('click', async () => {
-            // Disable button while validating
-            button.disabled = true;
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
-
-            try {
-                const isValid = await validateStep(currentStep);
-                if (isValid) {
-                    if (currentStep < steps.length - 1) {
-                        currentStep++;
-                        showStep(currentStep);
-                        updatePricing(); // Update pricing when moving to next step
-                    }
-                }
-            } catch (error) {
-                console.error('Error during step validation:', error);
-            } finally {
-                // Re-enable button
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }
-        });
+  // ---- ui helpers ----
+  function updateStepIndicators(){
+    stepIndicators.forEach((el,idx)=>{
+      el.className = (idx < currentStep) ? 'step completed' : (idx === currentStep ? 'step active' : 'step pending');
     });
+    navButtonContainers.forEach((c,idx)=> c.style.display = (idx===currentStep?'block':'none'));
+  }
 
-    prevButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            if (currentStep > 0) {
-                currentStep--;
-                showStep(currentStep);
-            }
-        });
-    });
+  function updatePricing(){
+    let total = 400;
+    const dealerCost = document.getElementById('dealerCost');
+    const finalDealerCost = document.getElementById('finalDealerCost');
+    const serviceCost = document.getElementById('serviceCost');
+    const finalServiceCost = document.getElementById('finalServiceCost');
+    const finalDrinksCost = document.getElementById('finalDrinksCost');
 
-    // Add real-time date/time availability checking
-    const bookingDateInput = document.getElementById('bookingDate');
-    const bookingTimeInput = document.getElementById('bookingTime');
+    if (dealerCheckbox?.checked){ total+=200; dealerCost&& (dealerCost.style.display='flex'); finalDealerCost&& (finalDealerCost.style.display='flex'); }
+    else { dealerCost&& (dealerCost.style.display='none'); finalDealerCost&& (finalDealerCost.style.display='none'); }
 
-    if (bookingDateInput) {
-        bookingDateInput.addEventListener('change', async () => {
-            // Clear any existing availability errors when date changes
-            const errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
-            if (errorMessage) {
-                errorMessage.remove();
-            }
-            bookingDateInput.classList.remove('is-invalid');
-            if (bookingTimeInput) {
-                bookingTimeInput.classList.remove('is-invalid');
-            }
-        });
-    }
+    if (serviceCheckbox?.checked){ total+=200; serviceCost&& (serviceCost.style.display='flex'); finalServiceCost&& (finalServiceCost.style.display='flex'); }
+    else { serviceCost&& (serviceCost.style.display='none'); finalServiceCost&& (finalServiceCost.style.display='none'); }
 
-    if (bookingTimeInput) {
-        bookingTimeInput.addEventListener('change', async () => {
-            // Validate availability when time changes
-            if (bookingDateInput && bookingDateInput.value && bookingTimeInput.value) {
-                try {
-                    const response = await fetch('/bookings/get_unavailable_slots?date=' + bookingDateInput.value);
-                    const data = await response.json();
+    if (drinksCheckbox?.checked){ total+=200; finalDrinksCost&&(finalDrinksCost.style.display='flex'); }
+    else { finalDrinksCost&&(finalDrinksCost.style.display='none'); }
 
-                    if (data.unavailable_slots && data.unavailable_slots.length > 0) {
-                        const selectedHour = parseInt(bookingTimeInput.value.split(':')[0]);
+    const totalAmountEl = document.getElementById('totalAmount');
+    const finalTotalAmountEl = document.getElementById('finalTotalAmount');
+    if (totalAmountEl) totalAmountEl.textContent = `€${total.toFixed(2)}`;
+    if (finalTotalAmountEl) finalTotalAmountEl.textContent = `€${total.toFixed(2)}`;
+  }
 
-                        let hasConflict = data.unavailable_slots.some(slot => {
-                            const startHour = parseInt(slot.start_time.split(':')[0]);
-                            const endHour = parseInt(slot.end_time.split(':')[0]) || 24;
-                            return selectedHour >= startHour && selectedHour < endHour;
-                        });
-
-                        if (hasConflict) {
-                            // Show immediate warning
-                            let errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
-                            if (!errorMessage) {
-                                errorMessage = document.createElement('div');
-                                errorMessage.className = 'availability-error text-danger mt-1 small';
-                                bookingDateInput.parentNode.appendChild(errorMessage);
-                            }
-                            errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This time slot is no longer available. Please select a different time.';
-                            bookingTimeInput.classList.add('is-invalid');
-                        } else {
-                            // Clear any existing error messages
-                            const errorMessage = bookingDateInput.parentNode.querySelector('.availability-error');
-                            if (errorMessage) {
-                                errorMessage.remove();
-                            }
-                            bookingTimeInput.classList.remove('is-invalid');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking time availability:', error);
-                }
-            }
-        });
-    }
-
-    // Initialize
-    showStep(currentStep);
-    updatePricing();
-
-    // Initialize sticky navigation buttons
+  function showStep(idx){
+    steps.forEach((s,i)=>{ if(i!==idx) s.classList.remove('active'); });
+    setTimeout(()=>{
+      steps[idx].classList.add('active');
+      if (idx===2 && window.initializeBraintreeOnStep3) window.initializeBraintreeOnStep3();
+    },50);
     updateStepIndicators();
+  }
+
+  async function validateStep(stepIdx){
+    const step = steps[stepIdx];
+    const inputs = step.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), select');
+    let ok = true;
+    inputs.forEach(input=>{
+      const msg = input.parentNode.querySelector('.error-message');
+      if (input.hasAttribute('required') && !String(input.value||'').trim()){
+        ok=false;
+        if(!msg){
+          const err = document.createElement('div');
+          err.className='error-message text-danger mt-1 small';
+          err.textContent='This field is required.';
+          input.parentNode.appendChild(err);
+        }
+        input.classList.add('is-invalid');
+      } else {
+        msg && msg.remove();
+        input.classList.remove('is-invalid');
+      }
+    });
+
+    if (stepIdx===0 && ok){
+      const dateEl = bookingDateInput, timeEl = bookingTimeInput;
+      if (dateEl?.value){
+        try{
+          const response = await fetch('/bookings/get_unavailable_slots?date=' + dateEl.value);
+          const data = await response.json();
+          if ((data.unavailable_slots||[]).length){
+            const selectedTime = timeEl.value;
+            if (selectedTime){
+              const selectedHour = parseInt(selectedTime.split(':')[0],10);
+              const conflict = data.unavailable_slots.some(slot=>{
+                const sh = parseInt(slot.start_time.split(':')[0],10);
+                const eh = parseInt(slot.end_time.split(':')[0],10) || 24;
+                return selectedHour >= sh && selectedHour < eh;
+              });
+              if (conflict){
+                ok = false;
+                let em = dateEl.parentNode.querySelector('.availability-error');
+                if(!em){
+                  em = document.createElement('div');
+                  em.className='availability-error text-danger mt-1 small';
+                  dateEl.parentNode.appendChild(em);
+                }
+                em.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This date and time is no longer available. Please select a different time slot.';
+                dateEl.classList.add('is-invalid'); timeEl.classList.add('is-invalid');
+              }
+            } else {
+              const allDay = data.unavailable_slots.some(slot=>{
+                const sh = parseInt(slot.start_time.split(':')[0],10);
+                const eh = parseInt(slot.end_time.split(':')[0],10) || 24;
+                return sh===0 && eh>=23;
+              });
+              if (allDay){
+                ok=false;
+                let em = dateEl.parentNode.querySelector('.availability-error');
+                if(!em){
+                  em = document.createElement('div');
+                  em.className='availability-error text-danger mt-1 small';
+                  dateEl.parentNode.appendChild(em);
+                }
+                em.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This date is fully booked. Please select a different date.';
+                dateEl.classList.add('is-invalid');
+              }
+            }
+          } else {
+            const em = dateEl.parentNode.querySelector('.availability-error');
+            em && em.remove();
+            dateEl.classList.remove('is-invalid');
+            timeEl.classList.remove('is-invalid');
+          }
+        }catch(e){ console.error('availability check error', e); }
+      }
+    }
+    return ok;
+  }
+
+async function rebuildTimeDropdownForDate(dateStr){
+  const myTicket = ++timeBuildTicket;                // single-flight
+  const stillMine = () => myTicket === timeBuildTicket;
+
+  const tSel = bookingTimeInput;
+  const dSel = bookingDuration;
+  const _ = (window.gettext || (s=>s));
+
+  // reset start-time select
+  tSel.innerHTML = '';
+  const ph = document.createElement('option');
+  ph.value = ''; ph.disabled = true; ph.selected = true;
+  ph.textContent = _('Select Time');
+  ph.dataset.owner = TIMES_OWNER;
+  tSel.appendChild(ph);
+
+  // --- lock to prevent other scripts from repopulating ---
+  let lockActive = true;
+  const snapshotHTML = () => tSel.innerHTML;
+  let lastGood = snapshotHTML();
+
+  const mo = new MutationObserver(() => {
+    if (!lockActive) return;
+    // if anything not owned by us shows up, revert
+    const onlyOurs = Array.from(tSel.options).every(o => o.dataset.owner === TIMES_OWNER);
+    if (!onlyOurs) tSel.innerHTML = lastGood;
+  });
+  mo.observe(tSel, {childList: true, subtree: true});
+  // -------------------------------------------------------
+
+  try {
+    // today
+    const todayRes = await fetch('/bookings/get_unavailable_slots?date=' + encodeURIComponent(dateStr));
+    if (!stillMine()) return;
+    const todayData = await todayRes.json();
+    if (!stillMine()) return;
+    let todayRanges = normalizeUnavailable(todayData.unavailable_slots);
+
+    // carry from yesterday (overnight segments)
+    try {
+      const yday = prevDateISO(dateStr);
+      const yRes = await fetch('/bookings/get_unavailable_slots?date=' + encodeURIComponent(yday));
+      if (!stillMine()) return;
+      const yData = await yRes.json();
+      if (!stillMine()) return;
+    const yRanges = normalizeUnavailable(yData.unavailable_slots);
+    for (const r of yRanges) {
+      // only if it actually wraps past midnight (end < start)
+      if (r.end < r.start) {
+        const parts = splitOvernightRange(r); // [ {start..1440}, {0..end} ]
+        // carry only the second part (00:00..end) into today
+        if (parts[1] && parts[1].end > 0) {
+          todayRanges.push(parts[1]);
+        }
+      }
+    }
+
+    } catch(e) { console.warn('prev-day fetch failed:', e); }
+
+    // split+clip overnight, clean, merge, dedupe
+    const flat = [];
+    for (const r of todayRanges){
+      for (const p of splitOvernightRange(r)){
+        if (p.end > 0 && p.start < 1440){
+          flat.push({start: Math.max(0,p.start), end: Math.min(1440,p.end)});
+        }
+      }
+    }
+const cleaned = flat
+  .filter(r => r.end > r.start)               // drop zero/negative
+  .map(r => ({
+    start: Math.max(0, Math.min(1440, r.start)),
+    end:   Math.max(0, Math.min(1440, r.end))
+  }))
+  .sort((a,b) => a.start - b.start || a.end - b.end);
+
+    let dayUnavailable = mergeRanges(cleaned);
+console.log('[dayUnavailable]',
+  dayUnavailable.map(r => `${minutesToHHMM(r.start)}-${minutesToHHMM(r.end)}`));
+
+    const seen = new Set();
+    dayUnavailable = dayUnavailable.filter(r=>{
+      const key = r.start + ':' + r.end;
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+
+    // render, keeping order
+    const openMin = 0, closeMin = CLOSE_HOUR * 60;
+    let cursor = openMin, i = 0;
+
+    while (cursor < closeMin){
+      const block = dayUnavailable[i];
+
+      if (block && block.start <= cursor && cursor < block.end){
+        // inside booked block -> one disabled line
+  const bookedStart = block.start;
+  const bookedEnd = Math.min(block.end, closeMin);
+        const label = `${minutesToHHMM(bookedStart)} ${_('to')} ${minutesToHHMM(bookedEnd)} (${_('Booked')})`;
+
+        const opt = document.createElement('option');
+        opt.value = ''; opt.disabled = true; opt.textContent = label;
+        opt.dataset.owner = TIMES_OWNER;
+        tSel.appendChild(opt);
+
+  cursor = Math.ceil(bookedEnd / 60) * 60;
+  if (cursor >= block.end) i++;
+  continue;
+      }
+
+      if (block && cursor < block.start){
+        // free hours until next block
+        while (cursor < Math.min(block.start, closeMin)){
+          const opt = document.createElement('option');
+          opt.value = minutesToHHMM(cursor);
+
+          opt.textContent = minutesToHHMM(cursor);
+          opt.dataset.owner = TIMES_OWNER;
+          tSel.appendChild(opt);
+          cursor += 60;
+        }
+        continue;
+      }
+
+      if (!block){
+        // no more blocks today -> free to close
+        while (cursor < closeMin){
+          const opt = document.createElement('option');
+          opt.value = minutesToHHMM(cursor);
+          opt.textContent = minutesToHHMM(cursor);
+          opt.dataset.owner = TIMES_OWNER;
+          tSel.appendChild(opt);
+          cursor += 60;
+        }
+      }
+    }
+
+    lastGood = snapshotHTML(); // freeze our good state
+  } catch(e){
+    console.error('rebuildTimeDropdownForDate error:', e);
+  } finally {
+    // let our list "win" for ~1s, then unlock
+    setTimeout(()=>{ lockActive = false; mo.disconnect(); }, 1000);
+  }
+
+  // reset durations placeholder
+  dSel.innerHTML = '';
+  const dph = document.createElement('option');
+  dph.value=''; dph.disabled=true; dph.selected=true;
+  dph.textContent = _('Select Time First');
+  dph.dataset.owner = TIMES_OWNER;
+  dSel.appendChild(dph);
+}
+
+
+  // ---- durations builder (with next-day look-ahead) ----
+  if (!bookingTimeInput.dataset.boundDur){
+    bookingTimeInput.dataset.boundDur='1';
+    bookingTimeInput.addEventListener('change', async () => {
+      const dateVal = bookingDateInput?.value;
+      const timeVal = bookingTimeInput?.value;
+      if (!dateVal || !timeVal) return;
+
+      const em = bookingDateInput.parentNode.querySelector('.availability-error');
+      em && em.remove();
+      bookingTimeInput.classList.remove('is-invalid');
+
+      function buildDurationOptions(maxHours, messageIfNone){
+        bookingDuration.innerHTML='';
+        const ph = document.createElement('option');
+        ph.value=''; ph.disabled=true; ph.selected=true; ph.dataset.owner='durations-v2';
+        ph.textContent = _('Select hours');
+        bookingDuration.appendChild(ph);
+
+        if (maxHours<=0){
+          const o = document.createElement('option');
+          o.value=''; o.disabled=true; o.dataset.owner='durations-v2';
+          o.textContent = messageIfNone || _('No duration available from this start time');
+          bookingDuration.appendChild(o);
+          return;
+        }
+        for (let h=1; h<=maxHours; h++){
+          const o = document.createElement('option');
+          o.value=String(h); o.textContent=String(h); o.dataset.owner='durations-v2';
+          bookingDuration.appendChild(o);
+        }
+      }
+
+      buildDurationOptions(0, _('Loading…'));
+
+      try{
+        const resp = await fetch('/bookings/get_unavailable_slots?date=' + encodeURIComponent(dateVal));
+        const data = await resp.json();
+        const merged = mergeRanges(normalizeUnavailable(data.unavailable_slots));
+
+        const startHHMM = timeVal.slice(0,5);
+        const [H,M] = startHHMM.split(':').map(Number);
+        const selectedStartMin = H*60 + (M||0);
+        const dayCloseMin = CLOSE_HOUR*60;
+
+        // inside a block → none
+        const inside = merged.some(b => selectedStartMin >= b.start && selectedStartMin < b.end);
+        if (inside){ buildDurationOptions(0); return; }
+
+        // next same-day block
+        let nextBlockStart = dayCloseMin;
+        for (const b of merged){ if (b.start >= selectedStartMin){ nextBlockStart = b.start; break; } }
+
+        let freeUntilNext = nextBlockStart - selectedStartMin;
+
+        // look ahead into following days (up to MAX_LOOKAHEAD_DAYS)
+        if (nextBlockStart === dayCloseMin){
+          for (let off=1; off<=MAX_LOOKAHEAD_DAYS; off++){
+            const probe = addDaysISO(dateVal, off);
+            const nextDayMerged = await getMergedUnavailableForDate(probe);
+            if (nextDayMerged.length){
+              freeUntilNext += (off-1)*dayCloseMin;   // full free days between
+              freeUntilNext += nextDayMerged[0].start; // free until earliest busy next day
+              break;
+            }
+            freeUntilNext += dayCloseMin; // whole day free
+          }
+        }
+
+        const maxHours = Math.max(0, Math.floor(freeUntilNext/60));
+        buildDurationOptions(maxHours);
+
+      }catch(e){
+        console.error('[durations] build error', e);
+        buildDurationOptions(0, _('Unable to load durations'));
+      }
+    });
+  }
+
+  // ---- wire up rest of UI ----
+  dealerCheckbox?.addEventListener('change', updatePricing);
+  serviceCheckbox?.addEventListener('change', updatePricing);
+  drinksCheckbox?.addEventListener('change', updatePricing);
+
+  nextButtons.forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled=true; const prevHTML=btn.innerHTML;
+      btn.innerHTML='<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
+      try{
+        if (await validateStep(currentStep)){
+          if (currentStep < steps.length-1){ currentStep++; showStep(currentStep); updatePricing(); }
+        }
+      } finally {
+        btn.disabled=false; btn.innerHTML=prevHTML;
+      }
+    });
+  });
+
+  prevButtons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if (currentStep>0){ currentStep--; showStep(currentStep); }
+    });
+  });
+
+  if (bookingDateInput){
+    bookingDateInput.addEventListener('change', async ()=>{
+      const err = bookingDateInput.parentNode.querySelector('.availability-error');
+      err && err.remove();
+      bookingDateInput.classList.remove('is-invalid');
+      bookingTimeInput?.classList.remove('is-invalid');
+
+      if (!bookingDateInput.value) return;
+      try { await rebuildTimeDropdownForDate(bookingDateInput.value);
+        Array.from(bookingTimeInput.options).forEach(o=>{
+          if (o.dataset.owner !== TIMES_OWNER) o.remove();
+        });
+      }
+      catch(e){ console.error('Failed to rebuild time dropdown:', e); }
+    });
+  }
+
+  // init
+  showStep(currentStep);
+  updatePricing();
+  updateStepIndicators();
 });
 </script>

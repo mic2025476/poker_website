@@ -5,7 +5,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var numberOfPeopleInput = document.getElementById('numberOfPeople');
     var costSummaryDiv = document.getElementById('costSummary');
     var paymentMessageDiv = document.getElementById('paymentMessage');
-    
+// top of file (near other globals)
+window.unavailableSlotsForDay = [];  // [{start_time,end_time}, ...]
+
     // Add null checks to prevent errors
     if (!bookingDateInput || !bookingTimeSelect || !numberOfHoursInput) {
         console.log('Required booking form elements not found - skipping legacy booking_form.js setup');
@@ -17,102 +19,215 @@ document.addEventListener('DOMContentLoaded', function () {
     bookingDateInput.min = today;
 
     function checkDateAvailability(dateInput, timeSelect) {
-        var selectedDate = dateInput.value;
-        if (!selectedDate) {
-            timeSelect.innerHTML = '<option value="">Select Time</option>';
-            return;
-        }
-
-        fetch('/bookings/get_unavailable_slots?date=' + selectedDate)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Date availability check:', data);
-                
-                // Always proceed with normal time population (let the smart booking logic handle conflicts)
-                timeSelect.disabled = false;
-                populateTimeOptions(dateInput, timeSelect);
-            })
-            .catch(err => {
-                console.error('Error checking date availability:', err);
-                // On error, proceed with normal time population
-                timeSelect.disabled = false;
-                populateTimeOptions(dateInput, timeSelect);
-            });
-    }
-
-    function populateTimeOptions(dateInput, timeSelect, defaultTime = null) {
+    var selectedDate = dateInput.value;
+    if (!selectedDate) {
         timeSelect.innerHTML = '<option value="">Select Time</option>';
-        var selectedDate = dateInput.value;
-        if (!selectedDate) return;
-    
-        // If defaultTime is provided, get its hour value (as a number)
-        let defaultHour = defaultTime ? parseInt(defaultTime.split(":")[0]) : null;
-    
-        // Check if selected date is today's date; if so, get the current hour (0-23)
-        var now = new Date();
-        var todayStr = now.toISOString().slice(0, 10); // format "YYYY-MM-DD"
-        var currentHour = (selectedDate === todayStr) ? now.getHours() : -1; 
-        console.log('currentHour',currentHour);
-        console.log('todayStr',todayStr);
-        fetch('/bookings/get_unavailable_slots?date=' + selectedDate)
-            .then(response => response.json())
-            .then(data => {
-                console.log('response.json()1113333', data.unavailable_slots);
-                console.log('11111');
-                window.globalDisabledHours = [];
-                if (data.unavailable_slots && data.unavailable_slots.length > 0) {
-                    console.log('svdsvsdv');
-                    data.unavailable_slots.forEach(slot => {
-                        let startHour = parseInt(slot.start_time.split(":")[0]);
-                        let endHour = parseInt(slot.end_time.split(":")[0]);
-                        if (endHour === 0) endHour = 24;
-                        console.log('startHour',startHour);
-                        console.log('endHour',endHour);
-                        for (let h = startHour; h < endHour; h++) {
-                            // Skip pushing the default hour if provided
-                            if (defaultHour !== null && h === defaultHour) continue;
-                            if (!window.globalDisabledHours.includes(h)) {
-                                window.globalDisabledHours.push(h);
-                            }
-                        }
-                    });
-                }
-                for (var hour = 0; hour < 24; hour++) {
-                    // If today, skip time options that are in the past (i.e., less than or equal to the current hour)
-                    if (hour <= currentHour) continue;
-                    // Even if the default hour is in globalDisabledHours, it was skipped so it won't be disabled.
-                    if (window.globalDisabledHours.indexOf(hour) !== -1) continue;
-                    var option = document.createElement('option');
-                    var hourStr = hour.toString().padStart(2, '0') + ":00";
-                    option.value = hourStr;
-                    option.text = hourStr;
-                    console.log('option',option);
-                    timeSelect.appendChild(option);
-                }
-                // If a default time was provided, set it after options are populated
-                if (defaultTime) {
-                    console.log('Setting default time to:', defaultTime);
-                    timeSelect.value = defaultTime;
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                for (var hour = 0; hour < 24; hour++) {
-                    // If today, skip past times
-                    if (hour <= currentHour) continue;
-                    var option = document.createElement('option');
-                    var hourStr = hour.toString().padStart(2, '0') + ":00";
-                    var displayHour = hour % 12 === 0 ? 12 : hour % 12;
-                    var ampm = hour < 12 ? "AM" : "PM";
-                    option.value = hourStr;
-                    option.text = displayHour + ":00 " + ampm;
-                    timeSelect.appendChild(option);
-                }
-                if (defaultTime) {
-                    timeSelect.value = defaultTime;
-                }
-            });
+        return;
     }
+
+    fetch('/bookings/get_unavailable_slots?date=' + selectedDate)
+        .then(response => response.json())
+        .then(data => {
+        console.log('Date availability check:', data);
+
+        // store today’s blocks globally
+        window.unavailableSlotsForDay = Array.isArray(data.unavailable_slots) ? data.unavailable_slots : [];
+
+        timeSelect.disabled = false;
+        populateTimeOptions(dateInput, timeSelect);
+        })
+        .catch(err => {
+        console.error('Error checking date availability:', err);
+        window.unavailableSlotsForDay = [];
+        timeSelect.disabled = false;
+        populateTimeOptions(dateInput, timeSelect);
+        });
+    }
+
+function updateHoursForSelectedTime(timeSelect, hoursEl) {
+  console.log('[updateHours] start for time:', timeSelect.value);
+
+  const isSelect = hoursEl && hoursEl.tagName === 'SELECT';
+  const isNumberInput = hoursEl && hoursEl.tagName === 'INPUT' && hoursEl.type === 'number';
+
+  // reset UI
+  if (isSelect) {
+    hoursEl.innerHTML = '<option value="">Select Hours</option>';
+  } else if (isNumberInput) {
+    hoursEl.value = '';
+    hoursEl.removeAttribute('max');
+    hoursEl.setAttribute('min', '1');
+  }
+
+  const startStr = timeSelect.value;
+  if (!startStr) {
+    if (isSelect) hoursEl.disabled = true;
+    if (isNumberInput) { hoursEl.disabled = true; }
+    console.log('[updateHours] no start time -> disabled');
+    return;
+  }
+
+  const startHour = parseInt(startStr.split(':')[0], 10);
+
+  // build blocked hours
+  const blockedHours = new Set();
+  (window.unavailableSlotsForDay || []).forEach(slot => {
+    let s = parseInt(slot.start_time.split(':')[0], 10);
+    let e = parseInt(slot.end_time.split(':')[0], 10);
+    if (e === 0) e = 24;
+    for (let h = s; h < e; h++) blockedHours.add(h);
+  });
+  console.log('[updateHours] blocked hours:', [...blockedHours]);
+
+  if (blockedHours.has(startHour)) {
+    console.log('[updateHours] start hour is blocked -> none');
+    if (isSelect) {
+      hoursEl.innerHTML = '<option value="">No hours available</option>';
+    }
+    hoursEl.disabled = true;
+    return;
+  }
+
+  const BUSINESS_END_HOUR = 24;
+
+  // first blocked hour after start
+  let firstBlocked = BUSINESS_END_HOUR;
+  for (let h = startHour + 1; h <= 24; h++) {
+    if (blockedHours.has(h)) { firstBlocked = h; break; }
+  }
+
+  const maxHours = Math.min(firstBlocked, BUSINESS_END_HOUR) - startHour;
+  console.log('[updateHours] firstBlocked:', firstBlocked, 'maxHours:', maxHours);
+
+  if (maxHours < 1) {
+    if (isSelect) {
+      hoursEl.innerHTML = '<option value="">No hours available</option>';
+    }
+    hoursEl.disabled = true;
+    return;
+  }
+
+  if (isSelect) {
+    for (let d = 1; d <= maxHours; d++) {
+      const opt = document.createElement('option');
+      opt.value = String(d);
+      opt.textContent = d + (d === 1 ? ' hour' : ' hours');
+      hoursEl.appendChild(opt);
+    }
+    hoursEl.disabled = false;
+    hoursEl.value = ''; // force explicit pick
+  } else if (isNumberInput) {
+    hoursEl.setAttribute('min', '1');
+    hoursEl.setAttribute('max', String(maxHours));
+    hoursEl.step = '1';
+    hoursEl.disabled = false;
+    // Optional: clamp an already-entered value
+    if (hoursEl.value) {
+      const v = Math.max(1, Math.min(maxHours, parseInt(hoursEl.value, 10)));
+      hoursEl.value = String(v);
+    }
+  }
+
+  console.log('[updateHours] options/max built 1..' + maxHours);
+}
+
+
+function populateTimeOptions(dateInput, timeSelect, defaultTime = null) {
+  // Reset time select
+  timeSelect.innerHTML = '<option value="">Select Time</option>';
+
+  const selectedDate = dateInput.value;
+  if (!selectedDate) return;
+
+  // Detect what kind of control bookingDuration is
+  const hoursEl = numberOfHoursInput;
+  const isHoursSelect = hoursEl && hoursEl.tagName === 'SELECT';
+  const isHoursNumber = hoursEl && hoursEl.tagName === 'INPUT' && hoursEl.type === 'number';
+
+  // Reset hours control ONCE (not inside the hour loop!)
+  if (hoursEl) {
+    if (isHoursSelect) {
+      hoursEl.innerHTML = '<option value="">Select Hours</option>';
+      hoursEl.disabled = true;
+    } else if (isHoursNumber) {
+      hoursEl.value = '';
+      hoursEl.removeAttribute('max');
+      hoursEl.setAttribute('min', '1');
+      hoursEl.disabled = true;
+    }
+  }
+
+  // If defaultTime provided, extract its hour
+  const defaultHour = defaultTime ? parseInt(defaultTime.split(':')[0], 10) : null;
+
+  // Figure out “now” rules (don’t show times in the past for today)
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const currentHour = (selectedDate === todayStr) ? now.getHours() : -1;
+
+  fetch('/bookings/get_unavailable_slots?date=' + selectedDate)
+    .then(res => res.json())
+    .then(data => {
+      console.log('unavailable_slots:', data.unavailable_slots);
+
+      // Build disabled hours array for the day
+      window.globalDisabledHours = [];
+      if (Array.isArray(data.unavailable_slots)) {
+        data.unavailable_slots.forEach(slot => {
+          let s = parseInt(slot.start_time.split(':')[0], 10);
+          let e = parseInt(slot.end_time.split(':')[0], 10);
+          if (e === 0) e = 24; // treat midnight as end-of-day
+          for (let h = s; h < e; h++) {
+            if (defaultHour !== null && h === defaultHour) continue; // allow default time
+            if (!window.globalDisabledHours.includes(h)) window.globalDisabledHours.push(h);
+          }
+        });
+      }
+
+      // Populate time options (skip past times for today, and blocked hours)
+      for (let hour = 0; hour < 24; hour++) {
+        if (hour <= currentHour) continue;
+        if (window.globalDisabledHours.indexOf(hour) !== -1) continue;
+
+        const hourStr = String(hour).padStart(2, '0') + ':00';
+        const opt = document.createElement('option');
+        opt.value = hourStr;
+        opt.text = hourStr;
+        timeSelect.appendChild(opt);
+      }
+
+      // Apply default time after options are built
+      if (defaultTime) {
+        console.log('Setting default time to:', defaultTime);
+        timeSelect.value = defaultTime;
+      }
+
+      console.log('[populate] built time options; current value =', timeSelect.value);
+
+      // Now that time options exist, build the hours choices/max
+      updateHoursForSelectedTime(timeSelect, hoursEl);
+    })
+    .catch(err => {
+      console.error('Failed to load unavailable slots:', err);
+
+      // Fallback: just show future hours for today
+      for (let hour = 0; hour < 24; hour++) {
+        if (hour <= currentHour) continue;
+        const hourStr = String(hour).padStart(2, '0') + ':00';
+        const opt = document.createElement('option');
+        opt.value = hourStr;
+        opt.text = hourStr;
+        timeSelect.appendChild(opt);
+      }
+
+      if (defaultTime) timeSelect.value = defaultTime;
+
+      // Even on error, try to build hour limits from empty blocks
+      window.globalDisabledHours = [];
+      updateHoursForSelectedTime(timeSelect, hoursEl);
+    });
+}
+
     
   
     // Helper function to update the cost summary
@@ -195,11 +310,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (bookingTimeSelect) {
-        bookingTimeSelect.addEventListener('change', function () { // Changed from 'input' to 'change' for dropdown
+        if (bookingTimeSelect) {
+        bookingTimeSelect.addEventListener('change', function () {
+            console.log('[change] time picked:', bookingTimeSelect.value);
+            updateHoursForSelectedTime(bookingTimeSelect, numberOfHoursInput);
             updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
         });
-    }
+        }
     
     if (numberOfPeopleInput) {
         numberOfPeopleInput.addEventListener('input', function () {
