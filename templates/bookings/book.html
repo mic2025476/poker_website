@@ -2071,7 +2071,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       // Initialize the Braintree drop-in UI with the retrieved client token.
       braintree.dropin.create({
         authorization: clientToken,
-        container: '#dropin-container'
+        container: '#dropin-container',
+        paypal: {
+          flow: 'vault' 
+        }
       }, function (createErr, instance) {
         if (createErr) {
           console.error('Error creating dropin UI:', createErr);
