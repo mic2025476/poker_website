@@ -3,14 +3,81 @@
 {% load i18n %}
 {% block content %}
 <style>
+  /* ===========================
+     THEME TOKENS (3 OPTIONS)
+     =========================== */
+  :root {
+    /* default = monochrome so it also works if JS is off */
+    --theme-primary: #d9d9d9;
+    --theme-primary-hover: #f5f5f5;
+    --theme-primary-light: rgba(255, 255, 255, 0.3);
+
+    /* text color on primary buttons */
+    --btn-cta-text: #000000;
+
+    /* active tab text */
+    --tab-active-text-color: #000000;
+
+    /* map to old variable names */
+    --theme-red: var(--theme-primary);
+    --theme-red-hover: var(--theme-primary-hover);
+    --theme-red-light: var(--theme-primary-light);
+  }
+
+  /* Option 1: Monochrome (B/W) */
+  :root[data-theme="monochrome"] {
+    --theme-primary: #d9d9d9;
+    --theme-primary-hover: #f5f5f5;
+    --theme-primary-light: rgba(255, 255, 255, 0.3);
+
+    --btn-cta-text: #000000;
+    --tab-active-text-color: #000000;
+
+    --theme-red: var(--theme-primary);
+    --theme-red-hover: var(--theme-primary-hover);
+    --theme-red-light: var(--theme-primary-light);
+  }
+
+  /* Option 2: Blue Table (taken from table felt) */
+  :root[data-theme="blue-table"] {
+    --theme-primary: #2457b6; /* main blue */
+    --theme-primary-hover: #3b6fd4;
+    --theme-primary-light: rgba(36, 87, 182, 0.28);
+
+    --btn-cta-text: #ffffff;        /* white text on blue */
+    --tab-active-text-color: #ffffff;
+
+    --theme-red: var(--theme-primary);
+    --theme-red-hover: var(--theme-primary-hover);
+    --theme-red-light: var(--theme-primary-light);
+  }
+
+  /* Option 3: Gold & Black (matches brass cup holders) */
+  :root[data-theme="gold-classic"] {
+    --theme-primary: #e4b34c;
+    --theme-primary-hover: #f3c667;
+    --theme-primary-light: rgba(228, 179, 76, 0.25);
+
+    --btn-cta-text: #000000;
+    --tab-active-text-color: #000000;
+
+    --theme-red: var(--theme-primary);
+    --theme-red-hover: var(--theme-primary-hover);
+    --theme-red-light: var(--theme-primary-light);
+  }
+
+  /* ===========================
+     AUTH MODAL
+     =========================== */
   #authForm {
     position: fixed;
-    top: 50%;
+    top: 55%;  /* instead of 50% */
+    transform: translate(-50%, 0); /* remove vertical centering */
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1050;
     width: clamp(320px, 90vw, 420px);
-    max-height: 90vh;
+    max-height: 100vh;
     background-color: white;
     padding: clamp(0.75rem, 2vw, 1.5rem);
     border-radius: 0.75rem;
@@ -82,15 +149,15 @@
   }
 
   .nav-tabs .nav-link:hover {
-    color: var(--theme-red);
-    background: rgba(255, 0, 34, 0.05);
+    color: #000;
+    background: var(--theme-red-light);
     transform: translateY(-1px);
   }
 
   .nav-tabs .nav-link.active {
-    color: white;
+    color: var(--tab-active-text-color);
     background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red-hover) 100%);
-    box-shadow: 0 4px 15px rgba(255, 0, 34, 0.3);
+    box-shadow: 0 4px 15px var(--theme-red-light);
     transform: translateY(-2px);
   }
 
@@ -105,23 +172,37 @@
     pointer-events: none;
   }
 
-  .form-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    margin-bottom: 0.15rem;
-    color: #333;
-  }
+.form-label {
+    font-size: 0.62rem;   /* slightly smaller */
+    font-weight: 500;     /* lighter */
+    letter-spacing: 0.3px;
+    margin-bottom: 0.1rem;
+    color: #555;
+}
+
 
   #authForm .form-control {
-    font-size: var(--font-size-sm);
-    padding: 0.75rem;
-    min-height: 44px;
-    border: 2px solid var(--gray-200);
-    border-radius: 0.75rem;
-    margin-bottom: 1rem;
-    transition: all 0.2s ease-in-out;
-    background-color: var(--gray-50);
+      font-size: 0.85rem;
+      padding: 0.65rem 0.75rem;
+      height: 42px; /* consistent height */
+      border: 1px solid #dcdcdc;
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+      background-color: #f8f9fa;
+      transition: all 0.2s ease-in-out;
   }
+
+  #authForm .input-group-text {
+    height: 42px;
+    padding: 0 0.75rem;
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+#authForm .input-group .form-control {
+    height: 42px; /* match text addon */
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
 
   @media (min-width: 1280px) {
     #authForm .form-control {
@@ -158,23 +239,10 @@
     transition: all 0.2s ease-in-out;
   }
 
-  /* Enhanced form field styling */
-  #authForm .form-control {
-    font-size: 0.8rem;
-    padding: 0.4rem;
-    height: 2.2rem;
-    border: 1px solid #e9ecef;
-    border-left: none;
-    border-radius: 0;
-    margin-bottom: 0.5rem;
-    transition: all 0.2s ease-in-out;
-    background-color: #f8f9fa;
-  }
-
   #authForm .input-group:focus-within .input-group-text {
     border-color: var(--theme-red);
     background-color: white;
-    color: var(--theme-red);
+    color: #000;
   }
 
   #authForm .input-group:focus-within .form-control {
@@ -182,11 +250,11 @@
     background-color: white;
   }
 
-  /* Enhanced button styles for mobile */
+  /* Auth buttons */
   .btn-auth {
     background-color: var(--theme-red);
     border: none;
-    color: white;
+    color: var(--btn-cta-text);
     font-size: 0.85rem;
     font-weight: 600;
     padding: 0.6rem;
@@ -194,7 +262,7 @@
     border-radius: 0.4rem;
     margin-bottom: 0.5rem;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(255, 0, 34, 0.3);
+    box-shadow: 0 2px 8px var(--theme-red-light);
     text-transform: uppercase;
     letter-spacing: 0.3px;
     min-height: 38px;
@@ -202,14 +270,14 @@
   }
 
   .btn-google {
-    font-size: 0.75rem; /* Slightly smaller font size */
-    padding: 0.4rem; /* Reduce padding inside buttons */
+    font-size: 0.75rem;
+    padding: 0.4rem;
   }
 
   .btn-auth:hover {
     background-color: var(--theme-red-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 0, 34, 0.4);
+    box-shadow: 0 6px 20px var(--theme-red-light);
   }
 
   .btn-auth:active {
@@ -306,27 +374,31 @@
     color: #666;
   }
 
+  /* Monochrome-style OTP states */
   .otp-error {
-    color: #b00020;
+    color: #333;
     font-size: 0.7rem;
     margin-top: 0.2rem;
   }
 
   .otp-success {
-    color: #198754;
+    color: #666;
     font-size: 0.7rem;
     margin-top: 0.2rem;
   }
 
   .is-invalid {
-    border-color: #b00020 !important;
+    border-color: #444 !important;
   }
 
   .is-valid {
-    border-color: #198754 !important;
+    border-color: #888 !important;
   }
 
   @media (max-width: 576px) {
+  .form-label {
+    font-size: 0.7rem;
+  }
     #authForm {
       width: 88%;
       max-width: 350px;
@@ -334,13 +406,13 @@
       max-height: 90vh;
       padding: 0.5rem;
       border-radius: 0.5rem;
-      top: 50%;
+      top: 20%;
       bottom: auto;
       transform: translate(-50%, -50%);
     }
 
     #authForm .form-control {
-      font-size: 16px; /* iOS requirement to prevent zoom */
+      font-size: 16px;
       padding: 0.4rem;
       height: 2.2rem;
     }
@@ -378,6 +450,9 @@
     }
   }
 
+  /* ===========================
+     HERO
+     =========================== */
   #hero {
     background-size: cover;
     background-position: center;
@@ -435,12 +510,12 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 0, 34, 0.4);
+    box-shadow: 0 4px 15px var(--theme-red-light);
   }
 
   #hero .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 0, 34, 0.5);
+    box-shadow: 0 6px 20px var(--theme-red-light);
   }
 
   #hero .btn:focus {
@@ -476,7 +551,7 @@
   .custom-red-button {
     background-color: var(--theme-red) !important;
     border-color: var(--theme-red) !important;
-    color: white !important;
+    color: var(--btn-cta-text) !important;
     transition: background-color 0.3s, border-color 0.3s;
   }
 
@@ -485,12 +560,79 @@
     border-color: var(--theme-red-hover) !important;
   }
 
-  :root {
-    --theme-red: #ff0022;
-    --theme-red-hover: #cc001a;
+  /* ===========================
+     THEME SWITCHER (BOTTOM RIGHT)
+     =========================== */
+  .theme-switcher {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
   }
 
-  /* Mobile-specific animations */
+  .theme-switcher-label {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+  }
+
+  .theme-switcher-dots {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.25rem 0.4rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+  }
+
+  .theme-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    border: 2px solid #ffffff;
+    cursor: pointer;
+    opacity: 0.75;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  }
+
+  .theme-dot--mono {
+    background: #d9d9d9;
+  }
+
+  .theme-dot--blue {
+    background: #2457b6;
+  }
+
+  .theme-dot--gold {
+    background: #e4b34c;
+  }
+
+  .theme-dot:hover,
+  .theme-dot.theme-dot-active {
+    opacity: 1;
+    transform: scale(1.12);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6);
+  }
+
+  @media (max-width: 576px) {
+    .theme-switcher {
+      right: 0.75rem;
+      bottom: 0.75rem;
+    }
+    .theme-switcher-label {
+      display: none;
+    }
+  }
+
+  /* ===========================
+     ANIMATIONS / MISC
+     =========================== */
   @keyframes slideInModal {
     from {
       transform: translate(-50%, -50%) scale(0.8);
@@ -526,80 +668,18 @@
 
   @keyframes pulse {
     0% {
-      box-shadow: 0 4px 15px rgba(255, 0, 34, 0.3);
+      box-shadow: 0 4px 15px var(--theme-red-light);
     }
     50% {
-      box-shadow: 0 6px 20px rgba(255, 0, 34, 0.5);
+      box-shadow: 0 6px 20px var(--theme-red-light);
     }
     100% {
-      box-shadow: 0 4px 15px rgba(255, 0, 34, 0.3);
+      box-shadow: 0 4px 15px var(--theme-red-light);
     }
   }
 
-  /* Smooth scrolling for the entire page */
   html {
     scroll-behavior: smooth;
-  }
-
-  /* iPhone thumb-friendly optimizations */
-  @media (max-width: 576px) and (max-height: 896px) {
-    #authForm {
-      top: 60%;
-      max-height: 70vh;
-    }
-  }
-
-  /* Extra small iPhones (iPhone SE, etc.) */
-  @media (max-width: 375px) {
-    #authForm {
-      width: 90%;
-      max-width: 270px;
-      padding: 0.4rem;
-      max-height: 65vh;
-    }
-
-    #authForm .form-control,
-    .input-group-text {
-      height: 2rem;
-      padding: 0.35rem;
-      font-size: 14px;
-    }
-
-    .btn-auth,
-    .btn-google {
-      min-height: 34px;
-      padding: 0.45rem;
-      font-size: 0.75rem;
-    }
-
-    .nav-tabs .nav-link {
-      font-size: 0.7rem;
-      padding: 0.4rem 0.8rem;
-      margin: 0 0.1rem;
-    }
-
-    .close-btn {
-      width: 26px;
-      height: 26px;
-      font-size: 1rem;
-    }
-  }
-
-  /* Password toggle styles */
-  .password-toggle {
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background-color: #f8f9fa !important;
-    border-left: none !important;
-  }
-
-  .password-toggle:hover {
-    background-color: #e9ecef !important;
-    color: var(--theme-red) !important;
-  }
-
-  .password-toggle i {
-    font-size: 0.9rem;
   }
 
   /* Add animation to form inputs */
@@ -627,7 +707,6 @@
       animation: slideOutModal 0.2s cubic-bezier(0.55, 0.06, 0.68, 0.19);
     }
 
-    /* Faster animations on mobile */
     .form-control,
     .input-group-text,
     .btn-auth,
@@ -635,7 +714,6 @@
       transition: all 0.2s ease;
     }
 
-    /* Reduce motion for users who prefer it */
     @media (prefers-reduced-motion: reduce) {
       * {
         animation-duration: 0.01ms !important;
@@ -643,6 +721,26 @@
         transition-duration: 0.01ms !important;
       }
     }
+  }
+
+  /* Password toggle styles */
+.password-toggle {
+    height: 42px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: none !important;
+    border-radius: 0 0.5rem 0.5rem 0 !important;
+}
+
+
+  .password-toggle:hover {
+    background-color: #e9ecef !important;
+    color: #000 !important;
+  }
+
+  .password-toggle i {
+    font-size: 0.9rem;
   }
 </style>
 
@@ -801,7 +899,7 @@
 
 <!-- Main Hero Section -->
 <section id="hero" class="d-flex flex-column justify-content-center align-items-center"
-  style="background-image: url('{% static "images/poker_1.avif" %}'); background-size: cover; background-position: center;">
+  style="background-image: url('{% static 'images/poker_1.avif' %}'); background-size: cover; background-position: center;">
   <div class="text-center text-white mb-4">
     <h1 class="display-4 fw-bold">{% trans "Welcome to MG-Entertainment's Poker Lounge" %}</h1>
     <p class="lead">{% trans "Berlin's Premier Poker Lounge by MG Entertainment" %}</p>
@@ -811,9 +909,20 @@
   </div>
 </section>
 
+<!-- Floating Theme Switcher -->
+<div id="themeSwitcher" class="theme-switcher">
+  <div class="theme-switcher-label">Theme</div>
+  <div class="theme-switcher-dots">
+    <button type="button" class="theme-dot theme-dot--mono theme-dot-active" data-theme-option="monochrome" title="Monochrome"></button>
+    <button type="button" class="theme-dot theme-dot--blue" data-theme-option="blue-table" title="Blue Table"></button>
+    <button type="button" class="theme-dot theme-dot--gold" data-theme-option="gold-classic" title="Gold & Black"></button>
+  </div>
+</div>
+
 <script>
   const scriptUrl = "https://script.google.com/macros/s/AKfycbzjgFhr_1tSuMUTWMutUCpyOYWUcWpOGpY-GO-t_nz75S-13QQt0Wpd3xrFZMeae7OcJw/exec";
   const state = { signupData: null };
+  const THEME_KEY = "mg-theme";
 
   function getCSRFToken() {
     return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
@@ -830,6 +939,16 @@
       passwordField.type = 'password';
       iconElement.className = 'bi bi-eye';
     }
+  }
+
+  function applyTheme(themeName) {
+    const allowed = ["monochrome", "blue-table", "gold-classic"];
+    if (!allowed.includes(themeName)) themeName = "monochrome";
+    document.documentElement.setAttribute("data-theme", themeName);
+
+    document.querySelectorAll(".theme-dot").forEach(dot => {
+      dot.classList.toggle("theme-dot-active", dot.dataset.themeOption === themeName);
+    });
   }
 
   // Initialize Google Sign-In (make it global so base template can call it)
@@ -850,8 +969,6 @@
         auto_select: false,
         cancel_on_tap_outside: true
       });
-      // optional: render visual button for debug
-      // google.accounts.id.renderButton(document.getElementById('gsiDebug') || document.body, { theme: 'outline', size: 'medium' });
       console.log('GSI initialized');
     } else {
       console.warn('Google script not loaded yet, retrying...');
@@ -908,7 +1025,6 @@
       google.accounts.id.prompt();
     } else {
       alert("Google Sign-In is loading. Please try again in a moment.");
-      // Try to initialize again
       window.initializeGoogleSignIn();
     }
   }
@@ -927,6 +1043,17 @@
     const otpStatus = document.getElementById('otpStatus');
     const signupStatus = document.getElementById('signupStatus');
     const otpHint = document.getElementById('otpHint');
+
+    // THEME: load stored or default
+    const storedTheme = localStorage.getItem(THEME_KEY) || "monochrome";
+    applyTheme(storedTheme);
+    document.querySelectorAll(".theme-dot").forEach(dot => {
+      dot.addEventListener("click", () => {
+        const theme = dot.dataset.themeOption;
+        applyTheme(theme);
+        localStorage.setItem(THEME_KEY, theme);
+      });
+    });
 
     // Button sections
     const signupButtons = document.getElementById('signupButtons');
@@ -1007,7 +1134,6 @@
           confirm_password: document.getElementById('signupConfirmPassword').value,
         };
 
-        // Basic client validation
         if (!signupData.first_name || !signupData.last_name || !signupData.email_id) {
           signupStatus.textContent = "{% trans 'Please fill all required fields.' %}";
           return;
@@ -1024,7 +1150,6 @@
         signupStatus.textContent = "";
 
         try {
-          // Create pending user in backend
           const signupResp = await fetch('/customers/api/signup/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
@@ -1037,10 +1162,8 @@
             return;
           }
 
-          // Save for OTP verify step
           state.signupData = signupData;
 
-          // Send Email OTP via Apps Script
           signupStatus.textContent = "{% trans 'Sending OTP to your email…' %}";
           const otpResponse = await fetch(`${scriptUrl}?email=${encodeURIComponent(signupData.email_id)}`);
           const otpResult = await otpResponse.json();
@@ -1050,7 +1173,6 @@
             return;
           }
 
-          // Switch UI to OTP section
           signupForm.classList.add('d-none');
           signupOtpSection.classList.remove('d-none');
           signupButtons.classList.add('d-none');
@@ -1070,12 +1192,10 @@
     // ====== BACK TO SIGNUP ======
     if (backToSignupBtn) {
       backToSignupBtn.addEventListener('click', function () {
-        // reset OTP fields & messages
         document.getElementById('emailOtp').value = '';
         document.getElementById('emailOtp').classList.remove('is-invalid', 'is-valid');
         document.getElementById('emailOtpError').classList.add('d-none');
         otpStatus.textContent = '';
-        // show signup form again
         document.getElementById('signupForm').classList.remove('d-none');
         document.getElementById('signupOtpSection').classList.add('d-none');
         signupButtons.classList.remove('d-none');
@@ -1083,7 +1203,6 @@
       });
     }
 
-    // helpers
     function showFieldError(inputEl, errorEl, show) {
       if (show) {
         inputEl.classList.add('is-invalid');
@@ -1101,7 +1220,6 @@
         const emailOtpInput = document.getElementById('emailOtp');
         const emailErr = document.getElementById('emailOtpError');
 
-        // Require email OTP
         let valid = true;
         if (!emailOtpInput.value.trim()) { 
           showFieldError(emailOtpInput, emailErr, true); 
@@ -1115,7 +1233,6 @@
           return;
         }
 
-        // Disable button with spinner
         const original = verifyOtpBtn.innerHTML;
         verifyOtpBtn.disabled = true;
         verifyOtpBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Verifying..." %}`;
@@ -1140,7 +1257,6 @@
             return;
           }
 
-          // Success
           otpStatus.innerHTML = `<span class="otp-success">{% trans "Verification successful! Signing you in…" %}</span>`;
           document.getElementById('authForm').classList.add('d-none');
           window.location.href = "/bookings/book";
@@ -1180,9 +1296,9 @@
     }
 
     // ====== LOGIN ======
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-      loginForm.addEventListener('submit', function (e) {
+    const loginFormEl = document.getElementById('loginForm');
+    if (loginFormEl) {
+      loginFormEl.addEventListener('submit', function (e) {
         e.preventDefault();
         const loginButton = loginButtons.querySelector('.btn-auth');
         const originalButtonText = loginButton.innerHTML;

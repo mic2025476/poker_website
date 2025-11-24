@@ -2,10 +2,17 @@
    DESIGN TOKENS & CSS VARIABLES
    ============================================ */
 :root {
-  /* Brand Colors */
-  --theme-red: #ff0022;
-  --theme-red-hover: #cc001a;
-  --theme-red-light: rgba(255, 0, 34, 0.1);
+  /* Brand Colors (Monochrome) */
+  --brand-bg: #050509;              /* page + navbar background (almost black) */
+  --brand-surface: #141414;         /* cards/sections */
+  --brand-surface-alt: #1f1f1f;     /* headers, subtle panels */
+  --brand-text: #ffffff;
+  --brand-text-muted: #b3b3b3;
+
+  /* Accent (Monochrome – replaces red/gold everywhere) */
+  --theme-red: #d9d9d9;             /* main accent (buttons, highlights) */
+  --theme-red-hover: #f5f5f5;       /* hover accent */
+  --theme-red-light: rgba(255, 255, 255, 0.3);
 
   /* Neutral Palette */
   --gray-50: #f8f9fa;
@@ -65,13 +72,15 @@
   --z-tooltip: 1070;
 }
 
+
 /* ============================================
    GLOBAL TYPOGRAPHY & LAYOUT
    ============================================ */
 body {
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
-  color: var(--gray-900);
+  color: var(--brand-text);
+  background-color: var(--brand-bg);
 }
 
 h1 {
@@ -98,7 +107,9 @@ h4 {
   margin-bottom: var(--space-4);
 }
 
-p, ul, ol {
+p,
+ul,
+ol {
   margin-bottom: var(--space-5);
   max-width: var(--content-max-width);
 }
@@ -126,8 +137,8 @@ html {
    NAVBAR
    ============================================ */
 .navbar {
-  background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red) 100%);
-  border-bottom: 3px solid var(--theme-red);
+  background: linear-gradient(135deg, var(--brand-bg) 0%, var(--brand-surface) 100%);
+  border-bottom: 1px solid var(--theme-red); /* subtle light line */
   z-index: var(--z-fixed);
   box-shadow: var(--shadow-md);
 }
@@ -144,6 +155,7 @@ html {
   font-weight: 600;
   letter-spacing: 0.5px;
   font-size: clamp(1.1rem, 1rem + 0.5vw, 1.375rem);
+  color: var(--brand-text);
 }
 
 .navbar-nav {
@@ -156,17 +168,18 @@ html {
   cursor: pointer;
   padding: 0.5rem 1rem;
   border-bottom: 3px solid transparent;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .navbar-nav .nav-link.active {
-  color: #fff;
+  color: var(--theme-red);
   font-weight: 600;
-  border-bottom-color: #fff;
+  border-bottom-color: var(--theme-red);
 }
 
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link:focus {
-  color: rgba(255, 255, 255, 0.85);
+  color: #ffffff;
   outline: 2px solid rgba(255, 255, 255, 0.3);
   outline-offset: 2px;
 }
@@ -177,6 +190,7 @@ html {
   transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
   padding: 0.5rem 1.5rem;
   font-size: var(--font-size-sm);
+  color: #000;
 }
 
 .navbar-nav .btn:hover {
@@ -195,9 +209,10 @@ html {
    FOOTER
    ============================================ */
 footer {
-  background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red) 100%);
+  background: linear-gradient(135deg, var(--brand-bg) 0%, var(--brand-surface) 100%);
   position: relative;
   padding: var(--space-7) 0;
+  color: var(--brand-text);
 }
 
 footer .container {
@@ -207,8 +222,12 @@ footer .container {
 
 footer::before {
   content: "";
-  background: linear-gradient(135deg, rgba(255, 0, 34, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%);
-  opacity: 0.1;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  opacity: 0.5;
   top: 0;
   left: 0;
   right: 0;
@@ -224,10 +243,11 @@ footer p {
 footer a {
   font-size: 1.2rem;
   transition: color 0.3s;
+  color: var(--brand-text);
 }
 
 footer a:hover {
-  color: #ffc107 !important;
+  color: var(--theme-red) !important;
 }
 
 /* ============================================
@@ -254,7 +274,7 @@ section {
   position: absolute;
   top: -40px;
   left: 0;
-  background: var(--theme-red);
+  background: #000;
   color: white;
   padding: var(--space-3) var(--space-5);
   z-index: 9999;
@@ -366,17 +386,18 @@ section {
   min-height: 52px;
 }
 
+/* NOTE: class name kept, but it's now monochrome themed */
 .custom-red-button {
   background-color: var(--theme-red);
   border-color: var(--theme-red);
-  color: white;
+  color: #000;
 }
 
 .custom-red-button:hover {
   background-color: var(--theme-red-hover);
   border-color: var(--theme-red-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 0, 34, 0.3);
+  box-shadow: 0 4px 12px var(--theme-red-light);
 }
 
 .custom-red-button:active {
@@ -437,36 +458,37 @@ section {
   opacity: 0.7;
 }
 
+/* Monochrome validation states */
 .form-control.is-invalid {
-  border-color: #dc3545;
-  background-color: #fff5f5;
+  border-color: #444;
+  background-color: #f5f5f5;
 }
 
 .form-control.is-invalid:focus {
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
 }
 
 .form-control.is-valid {
-  border-color: #28a745;
-  background-color: #f0fff4;
+  border-color: #888;
+  background-color: #f7f7f7;
 }
 
 .form-control.is-valid:focus {
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.15);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
 }
 
 .form-label {
   font-size: var(--font-size-sm);
   font-weight: 600;
   margin-bottom: var(--space-2);
-  color: var(--gray-900);
+  color: var(--brand-text);
   display: block;
 }
 
 .error-message,
 .invalid-feedback {
   font-size: var(--font-size-xs);
-  color: #dc3545;
+  color: #f0f0f0;
   margin-top: var(--space-2);
   display: block;
 }
@@ -521,7 +543,8 @@ section {
   box-shadow: var(--shadow-sm);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   overflow: hidden;
-  background: white;
+  background: var(--brand-surface);
+  color: var(--brand-text);
 }
 
 .card:hover {
@@ -545,7 +568,6 @@ section {
 .card-header {
   padding: var(--space-5);
   border-bottom: 2px solid var(--gray-100);
-  background-color: var(--gray-50);
   font-weight: 700;
   font-size: var(--font-size-lg);
 }
@@ -557,13 +579,17 @@ section {
 .card-footer {
   padding: var(--space-5);
   border-top: 2px solid var(--gray-100);
-  background-color: var(--gray-50);
 }
 
 @media (min-width: 1280px) {
   .card-body {
     padding: var(--space-7);
   }
+}
+
+.card-header,
+.card-footer {
+  background-color: var(--brand-surface-alt);
 }
 
 /* ============================================
@@ -591,22 +617,25 @@ section {
   border: none;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  background-color: var(--brand-surface);
+  color: var(--brand-text);
 }
 
 .modal-header {
   padding: var(--space-6);
-  border-bottom: 2px solid var(--gray-100);
-  background-color: var(--gray-50);
+  border-bottom: 2px solid var(--brand-surface-alt);
+  background-color: var(--brand-surface-alt);
 }
 
 .modal-body {
   padding: var(--space-6);
+  background-color: var(--brand-surface);
 }
 
 .modal-footer {
   padding: var(--space-6);
-  border-top: 2px solid var(--gray-100);
-  background-color: var(--gray-50);
+  border-top: 2px solid var(--brand-surface-alt);
+  background-color: var(--brand-surface-alt);
 }
 
 .modal-backdrop {
