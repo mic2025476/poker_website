@@ -5,8 +5,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var numberOfPeopleInput = document.getElementById('numberOfPeople');
     var costSummaryDiv = document.getElementById('costSummary');
     var paymentMessageDiv = document.getElementById('paymentMessage');
+    var dateAvailabilityMessageDiv = document.getElementById('dateAvailabilityMessage'); // NEW
+
 // top of file (near other globals)
 window.unavailableSlotsForDay = [];  // [{start_time,end_time}, ...]
+window.dateAtSixUnavailable = false;
 
     // Add null checks to prevent errors
     if (!bookingDateInput || !bookingTimeSelect || !numberOfHoursInput) {
@@ -294,15 +297,69 @@ function populateTimeOptions(dateInput, timeSelect, defaultTime = null) {
         var ampm = hour < 12 ? "AM" : "PM";
         return displayHour + ":00 " + ampm;
     }
-    if (bookingDateInput) {
-        bookingDateInput.addEventListener('change', function () {
-            checkDateAvailability(bookingDateInput, bookingTimeSelect);
-            if (paymentMessageDiv) {
-                paymentMessageDiv.innerText = "Note: Payment is made online (30% deposit). The remainder is due at the venue.";
-            }
-            updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
-        });
+if (bookingDateInput) {
+  bookingDateInput.addEventListener('change', async function () {
+    const selectedDate = bookingDateInput.value;
+
+    // your existing logic
+    checkDateAvailability(bookingDateInput, bookingTimeSelect);
+    updateCostSummary(bookingDateInput, bookingTimeSelect, numberOfHoursInput, numberOfPeopleInput, costSummaryDiv);
+
+    // reset flag + messages
+    window.dateAtSixUnavailable = false;
+    if (dateAvailabilityMessageDiv) {
+      dateAvailabilityMessageDiv.textContent = "";
+      dateAvailabilityMessageDiv.classList.remove('text-danger');
     }
+
+    if (!selectedDate) {
+      if (costSummaryDiv) {
+        costSummaryDiv.innerText = "";
+      }
+      return;
+    }
+
+    try {
+      const resp = await fetch('/bookings/check_date_availability/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+          date: selectedDate,
+          start_time: '18:00',
+          hours_booked: 18
+        })
+      });
+
+      const data = await resp.json();
+      console.log('18:00 availability on date', selectedDate, data);
+
+      if (!data.available) {
+        window.dateAtSixUnavailable = true;
+
+        // 🔴 show inline message under date field
+        if (dateAvailabilityMessageDiv) {
+          dateAvailabilityMessageDiv.textContent =
+            data.message || "This date is not available (18:00 slot already booked). Please choose another date.";
+          dateAvailabilityMessageDiv.classList.add('text-danger');
+        }
+
+        // (Optional) you can still use costSummaryDiv for other messages or leave it empty
+      } else {
+        if (dateAvailabilityMessageDiv) {
+          dateAvailabilityMessageDiv.textContent = "";
+          dateAvailabilityMessageDiv.classList.remove('text-danger');
+        }
+      }
+    } catch (err) {
+      console.error('Error checking 18:00 availability (check_date_availability):', err);
+    }
+  });
+}
+
+
 
     if (numberOfHoursInput) {
         numberOfHoursInput.addEventListener('change', function () { // Changed from 'input' to 'change' for dropdown

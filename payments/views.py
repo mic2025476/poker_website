@@ -75,8 +75,9 @@ def process_braintree_payment(nonce, amount, customer_id):
 def process_payment(request):
     try:
         data = request.data
+
         # Validate required fields
-        required_fields = ['booking_date', 'number_of_people', 'number_of_hours', 'payment_method_nonce','user_id','drinks']
+        required_fields = ['booking_date', 'number_of_people', 'number_of_hours', 'payment_method_nonce', 'user_id', 'drinks']
         for field in required_fields:
             if field not in data:
                 return Response(ResponseData.error(f"Missing {field}"), status=400)
@@ -87,13 +88,23 @@ def process_payment(request):
         people = int(data['number_of_people'])
         total = hours * people * rate
         deposit = round(total * 0.3, 2)
+
         customer = CustomerModel.objects.get(id=data['user_id'], is_active=True)
-        # Process payment
-        success, message, transaction_id = process_braintree_payment(
-            nonce=data['payment_method_nonce'],
-            amount=str(deposit),
-            customer_id=customer.id  # Assuming user has a Braintree customer ID
-        )
+
+        payment_nonce = data['payment_method_nonce']
+
+        # 🔹 1) BANK TRANSFER: skip calling Braintree
+        if payment_nonce == "BANK_TRANSFER":
+            success = True
+            message = "Bank transfer selected – no online payment."
+            transaction_id = None
+        else:
+            # 🔹 2) CARD PAYMENT: existing behavior
+            success, message, transaction_id = process_braintree_payment(
+                nonce=payment_nonce,
+                amount=str(deposit),
+                customer_id=customer.id  # Assuming user has a Braintree customer ID
+            )
 
         if not success:
             return Response(ResponseData.error(message), status=400)
@@ -124,12 +135,21 @@ def process_payment(request):
         print(f'  total_people={data["number_of_people"]}, hours_booked={data["number_of_hours"]}')
         print(f'  total_amount={total}, deposit_amount={deposit}')
         print(f'payment_processor: Found existing_booking={existing_booking}')
-# Assign many-to-many field after object creation
-        if 'drinks' in data:
-            existing_booking.drinks.set(data['drinks'])  # Correct way to assign M2M relationships
-            existing_booking.is_active = True
+
+        # (Optional safety) if no existing_booking found, you could create one here.
+        # For now we assume it exists as in your original logic.
+
+        # 🔹 3) Assign many-to-many field after object creation
+        if existing_booking:
+            if 'drinks' in data and data['drinks']:
+                existing_booking.drinks.set(data['drinks'])  # Correct way to assign M2M relationships
+
+            # 🔹 4) Only auto-activate for *card payments*
+            #if payment_nonce != "BANK_TRANSFER":
+            #    existing_booking.is_active = True
+
             existing_booking.save()
-        
+
         # Add event to Google Calendar after successful booking
         try:
             calendar_service = GoogleCalendarService()
@@ -148,7 +168,7 @@ def process_payment(request):
                 'duration_hours': hours,
                 'total_people': people,
                 'drinks': drink_names,
-                'booking_id': existing_booking.id
+                'booking_id': existing_booking.id if existing_booking else None
             }
             
             calendar_event = calendar_service.add_booking_event(booking_data)
@@ -161,7 +181,7 @@ def process_payment(request):
             print(f"Error adding booking to calendar: {e}")
             # Don't fail the booking if calendar creation fails
         
-        return Response(ResponseData.success_without_data("Booking created & payment processed"))
+        return Response(ResponseData.success_without_data("Booking created (bank transfer / card processed)"))
 
     except Exception as e:
         return Response(ResponseData.error(str(e)), status=500)

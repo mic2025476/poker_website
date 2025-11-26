@@ -237,6 +237,101 @@ def notify_google_apps_script(payload):
         print(f"⚠️ Failed to notify Google Apps Script: {e}")
         
 @api_view(["POST"])
+def check_date_availability(request):
+    """
+    Simple availability check – DOES NOT create a booking.
+    Used by frontend when user selects a date.
+    """
+    try:
+        data = request.data
+        print(f'check_date_availability request.data {data}')
+
+        date_str = data.get("date")
+        time_str = data.get("start_time")
+        hours_booked_raw = data.get("hours_booked")
+
+        if not date_str or not time_str or not hours_booked_raw:
+            return Response(
+                {"available": False, "message": "Missing required parameters."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            hours_booked = int(hours_booked_raw)
+        except ValueError:
+            return Response(
+                {"available": False, "message": "Invalid value for number of hours."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Parse date and time properly
+        booking_date = parse_date(date_str)   # datetime.date
+        start_time = parse_time(time_str)     # datetime.time
+
+        if not booking_date or not start_time:
+            return Response(
+                {"available": False, "message": "Invalid date or time format."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        print(f'check_date_availability: parsed booking_date={booking_date}, start_time={start_time}')
+
+        start_dt = datetime.combine(booking_date, start_time)
+        end_dt = start_dt + timedelta(hours=hours_booked)
+
+        # 1) Check existing active bookings (not cancelled)
+        existing_bookings = BookingModel.objects.filter(
+            booking_date=booking_date,
+            is_cancelled=False,
+            is_active=True
+        )
+        print(f'check_date_availability: existing_bookings={existing_bookings}')
+
+        for booking in existing_bookings:
+            b_start = datetime.combine(booking_date, booking.start_time)
+            b_end = b_start + timedelta(hours=booking.hours_booked)
+            if start_dt < b_end and end_dt > b_start:
+                return Response(
+                    {"available": False, "message": "Selected time overlaps with an existing booking."},
+                    status=status.HTTP_200_OK
+                )
+
+        # 2) Check unavailable manual blocks
+        blocked_slots = UnavailableTimeSlotModel.objects.filter(date=booking_date)
+        for slot in blocked_slots:
+            s_start = datetime.combine(booking_date, slot.start_time)
+            s_end = datetime.combine(booking_date, slot.end_time)
+            if start_dt < s_end and end_dt > s_start:
+                return Response(
+                    {"available": False, "message": "Selected time overlaps with an unavailable slot."},
+                    status=status.HTTP_200_OK
+                )
+
+        # 3) Check Google Calendar events
+        try:
+            calendar_service = GoogleCalendarService()
+            if not calendar_service.is_time_available(booking_date, start_time, end_dt.time()):
+                return Response(
+                    {"available": False, "message": "Selected time conflicts with a HOANG event."},
+                    status=status.HTTP_200_OK
+                )
+        except Exception as e:
+            print(f"Google Calendar check failed in check_date_availability: {e}")
+            # Do not hard-fail if calendar is down
+
+        # If we reached here, slot is free
+        return Response(
+            {"available": True, "message": "Time slot is available."},
+            status=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        return Response(
+            {"available": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+@api_view(["POST"])
 def check_availability(request):
     try:
         print(f'request.data {request.data}')
@@ -272,9 +367,10 @@ def check_availability(request):
         # Check existing active bookings (not cancelled)
         existing_bookings = BookingModel.objects.filter(
             booking_date=booking_date,
-            is_cancelled=False
+            is_cancelled=False,
+            is_active=True
         )
-
+        print(f'existing_bookingsexisting_bookings {existing_bookings}')
         for booking in existing_bookings:
             b_start = datetime.combine(booking_date, booking.start_time)
             # Calculate actual end time based on booking duration
@@ -316,7 +412,7 @@ def check_availability(request):
             deposit_amount=deposit,
             total_people=total_people,
             hours_booked=hours_booked,
-            is_active=False  # Hold the slot, but don't activate yet
+            is_active=True
         )
         # === NEW: Notify Google Apps Script ===
         GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxR89GkT6BqEsR17KQSNNqLYKY0CRMCvrtxL1wKiBIjP0JTvPRsT5ITTrclkg2VeHSEsg/exec"

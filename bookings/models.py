@@ -13,7 +13,7 @@ class BookingModel(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2,null=True,blank=True)
     deposit_amount = models.DecimalField(max_digits=10, decimal_places=2)
     is_cancelled = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_delete = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

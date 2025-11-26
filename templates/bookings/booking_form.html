@@ -16,34 +16,50 @@
           <i class="fas fa-calendar-alt me-1"></i>{% trans "Booking Date" %}
         </label>
         <input type="date" class="form-control" id="bookingDate" name="booking_date" required />
+        <div id="dateAvailabilityMessage" class="small mt-1"></div>
       </div>
 
       <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="bookingTime" class="form-label fw-semibold small">
-            <i class="fas fa-clock me-1"></i>{% trans "Start Time" %}
-          </label>
-          <select class="form-select" id="bookingTime" name="booking_time" required>
-            <option value="">{% trans "Select Date First" %}</option>
-          </select>
-          <div class="form-text text-muted mt-1 small" id="timeSlotMessage">
-            <i class="fas fa-info-circle me-1"></i>
-            {% trans "Available start times based on MGEN-F24 calendar" %}
-          </div>
-        </div>
+<div class="col-md-6 mb-3">
+  <label class="form-label fw-semibold small">
+    <i class="fas fa-clock me-1"></i>{% trans "Start Time" %}
+  </label>
 
-        <div class="col-md-6 mb-3">
-          <label for="bookingDuration" class="form-label fw-semibold small">
-            <i class="fas fa-hourglass-half me-1"></i>{% trans "Number of Hours" %}
-          </label>
-          <select class="form-select" id="bookingDuration" name="number_of_hours" required>
-            <option value="">{% trans "Select Time First" %}</option>
-          </select>
-          <div class="form-text text-muted mt-1 small" id="durationMessage">
-            <i class="fas fa-info-circle me-1"></i>
-            {% trans "Available hours based on selected time" %}
-          </div>
-        </div>
+  <p class="form-text text-muted small mb-1">
+    <i class="fas fa-info-circle me-1"></i>
+    {% trans "Start time is fixed: 18:00 – 12:00 the next day." %}
+  </p>
+
+  <!-- Hidden select, always 18:00 -->
+  <select class="form-select d-none" id="bookingTime" name="booking_time">
+    <option value="18:00" selected>18:00</option>
+  </select>
+
+  <!-- Optional: keep but hide the old message -->
+  <div class="form-text text-muted mt-1 small d-none" id="timeSlotMessage">
+    <i class="fas fa-info-circle me-1"></i>
+    {% trans "Available start times based on MGEN-F24 calendar" %}
+  </div>
+</div>
+
+
+<div class="col-md-6 mb-3">
+  <label class="form-label fw-semibold small">
+    <i class="fas fa-hourglass-half me-1"></i>{% trans "Duration" %}
+  </label>
+
+  <!-- Keep the select for JS/backend, but hide it and prefill with 18 -->
+  <select class="form-select d-none" id="bookingDuration" name="number_of_hours">
+    <option value="18" selected>18</option>
+  </select>
+
+  <!-- Optional: you can remove this if you don't need it anymore -->
+  <div class="form-text text-muted mt-1 small d-none" id="durationMessage">
+    <i class="fas fa-info-circle me-1"></i>
+    {% trans "Available hours based on selected time" %}
+  </div>
+</div>
+
       </div>
     </div>
   </div>
@@ -141,6 +157,7 @@
         </div>
       </div>
 
+      <!-- Final Summary -->
       <div class="pricing-card mb-3">
         <p class="fw-bold mb-2 small">
           <i class="fas fa-receipt me-1"></i>{% trans "Final Summary" %}
@@ -176,6 +193,44 @@
         </div>
       </div>
 
+      <!-- Terms & Disclaimer Checkbox (NEW) -->
+      <div class="mb-3 p-3 border rounded bg-light">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="agreeTerms" name="agree_terms" required>
+          <label class="form-check-label" for="agreeTerms">
+            <span class="fw-semibold small">
+              {% trans "I agree to the terms and conditions" %}
+            </span>
+          </label>
+        </div>
+        
+        <!-- Disclaimer Text (collapsible) -->
+        <div class="mt-2">
+          <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="collapse" data-bs-target="#disclaimerText">
+            <i class="fas fa-chevron-down me-1"></i>{% trans "Read Terms" %}
+          </button>
+          <div class="collapse mt-2" id="disclaimerText">
+            <div class="alert alert-warning small" role="alert">
+              <p class="fw-semibold mb-2">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                {% trans "Notice of Use:" %}
+              </p>
+              <p class="mb-2">
+                {% trans "Der gemietete Pokertisch wird ausschließlich für private Unterhaltungszwecke zur Verfügung gestellt. Jegliches Spiel um Geld ohne gültige Lizenz ist streng verboten. Der Mieter übernimmt die volle Verantwortung dafür, dass keine unerlaubten Glücksspiele stattfinden." %}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error message for unchecked checkbox -->
+        <div class="error-message text-danger mt-2 small d-none" id="termsError">
+          <i class="fas fa-exclamation-circle me-1"></i>
+          {% trans "You must agree to the terms to proceed" %}
+        </div>
+      </div>
+
+      <!-- Payment Section -->
+      <!--
       <div class="mb-3">
         <p class="fw-semibold mb-2 small">
           <i class="fas fa-credit-card me-1"></i>{% trans "Payment Information" %}
@@ -184,7 +239,49 @@
           {% trans "Please enter your payment details below to confirm your booking." %}
         </div>
         <div id="dropin-container" class="border rounded p-3" style="min-height: 350px; background: white; width: 100%; max-width: none; margin-bottom: 2rem;"></div>
+      </div> -->
+<!-- Payment Section (Bank Transfer) -->
+<!-- Payment Section (Bank Transfer) -->
+<div class="mb-3" style="color: #000 !important;">
+
+  <div id="paymentMessage" class="mb-2 small" style="color: #000 !important;">
+    {% blocktrans %}Please transfer the amount of <strong><span id="bankTransferAmount" style="color:#000;">€400.00</span></strong> to the following bank account.{% endblocktrans %}
+  </div>
+
+  <div class="border rounded p-3" style="background: #fff; color: #000 !important; border-color:#000;">
+    <dl class="row mb-0" style="color:#000 !important;">
+
+      <!-- Keys (dt) bold -->
+      <dt class="col-4" style="font-weight:600;">Kto. Inh.</dt>
+      <dd class="col-8">MG Entertainment UG (haftungsbeschränkt)</dd>
+
+      <dt class="col-4" style="font-weight:600;">IBAN</dt>
+      <dd class="col-8">DE96 1009 0000 3022 2630 04</dd>
+
+      <dt class="col-4" style="font-weight:600;">BIC</dt>
+      <dd class="col-8">BEVODEBBXXX</dd>
+
+      <dt class="col-4" style="font-weight:600;">{% trans "Reference" %}</dt>
+      <dd class="col-8">
+        {% trans "Please use your full name and booking date." %}
+      </dd>
+
+      <dt class="col-4" style="font-weight:600;">{% trans "Amount" %}</dt>
+      <dd class="col-8"><span id="bankTransferAmountRepeating">€400.00</span></dd>
+    </dl>
+
+    <hr class="my-2" style="border-color:#000;">
+
+    <div class="mt-2" style="color:#000 !important;">
+      <div class="mt-1 small" style="color:#000 !important;">
+        {% trans "If the amount is not received in time, the reservation may be cancelled." %}
       </div>
+    </div>
+  </div>
+</div>
+
+
+
     </div>
   </div>
 </form>
@@ -226,6 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const bookingDateInput = document.getElementById('bookingDate');
   const bookingTimeInput = document.getElementById('bookingTime');
   const bookingDuration  = document.getElementById('bookingDuration');
+  const bookingForm = document.getElementById('bookingForm');
+
 
   // ---- i18n helper ----
   const _ = (window.gettext || ((s)=>s));
@@ -290,18 +389,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalTotalAmountEl = document.getElementById('finalTotalAmount');
     if (totalAmountEl) totalAmountEl.textContent = `€${total.toFixed(2)}`;
     if (finalTotalAmountEl) finalTotalAmountEl.textContent = `€${total.toFixed(2)}`;
+  // NEW: sync bank transfer amount text
+const bankAmount1 = document.getElementById('bankTransferAmount');
+const bankAmount2 = document.getElementById('bankTransferAmountRepeating');
+if (bankAmount1) bankAmount1.textContent = `€${total.toFixed(2)}`;
+if (bankAmount2) bankAmount2.textContent = `€${total.toFixed(2)}`;
   }
 
   function showStep(idx){
     steps.forEach((s,i)=>{ if(i!==idx) s.classList.remove('active'); });
     setTimeout(()=>{
       steps[idx].classList.add('active');
-      if (idx===2 && window.initializeBraintreeOnStep3) window.initializeBraintreeOnStep3();
+      //if (idx===2 && window.initializeBraintreeOnStep3) window.initializeBraintreeOnStep3();
     },50);
     updateStepIndicators();
   }
 
-  async function validateStep(stepIdx){
+async function validateStep(stepIdx){
     const step = steps[stepIdx];
     const inputs = step.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), select');
     let ok = true;
@@ -321,63 +425,30 @@ document.addEventListener('DOMContentLoaded', () => {
         input.classList.remove('is-invalid');
       }
     });
-
-    if (stepIdx===0 && ok){
-      const dateEl = bookingDateInput, timeEl = bookingTimeInput;
-      if (dateEl?.value){
-        try{
-          const response = await fetch('/bookings/get_unavailable_slots?date=' + dateEl.value);
-          const data = await response.json();
-          if ((data.unavailable_slots||[]).length){
-            const selectedTime = timeEl.value;
-            if (selectedTime){
-              const selectedHour = parseInt(selectedTime.split(':')[0],10);
-              const conflict = data.unavailable_slots.some(slot=>{
-                const sh = parseInt(slot.start_time.split(':')[0],10);
-                const eh = parseInt(slot.end_time.split(':')[0],10) || 24;
-                return selectedHour >= sh && selectedHour < eh;
-              });
-              if (conflict){
-                ok = false;
-                let em = dateEl.parentNode.querySelector('.availability-error');
-                if(!em){
-                  em = document.createElement('div');
-                  em.className='availability-error text-danger mt-1 small';
-                  dateEl.parentNode.appendChild(em);
-                }
-                em.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This date and time is no longer available. Please select a different time slot.';
-                dateEl.classList.add('is-invalid'); timeEl.classList.add('is-invalid');
-              }
-            } else {
-              const allDay = data.unavailable_slots.some(slot=>{
-                const sh = parseInt(slot.start_time.split(':')[0],10);
-                const eh = parseInt(slot.end_time.split(':')[0],10) || 24;
-                return sh===0 && eh>=23;
-              });
-              if (allDay){
-                ok=false;
-                let em = dateEl.parentNode.querySelector('.availability-error');
-                if(!em){
-                  em = document.createElement('div');
-                  em.className='availability-error text-danger mt-1 small';
-                  dateEl.parentNode.appendChild(em);
-                }
-                em.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>This date is fully booked. Please select a different date.';
-                dateEl.classList.add('is-invalid');
-              }
-            }
-          } else {
-            const em = dateEl.parentNode.querySelector('.availability-error');
-            em && em.remove();
-            dateEl.classList.remove('is-invalid');
-            timeEl.classList.remove('is-invalid');
-          }
-        }catch(e){ console.error('availability check error', e); }
+    // ⬇️ ADD THIS BLOCK
+  if (stepIdx === 0 && window.dateAtSixUnavailable) {
+    return false;
+  }
+    // NEW: Check terms checkbox on step 3 (payment step) - stepIdx === 2
+    if (stepIdx === 2) {
+      const termsCheckbox = document.getElementById('agreeTerms');
+      const termsError = document.getElementById('termsError');
+      
+      if (termsCheckbox && !termsCheckbox.checked) {
+        ok = false;
+        termsError.classList.remove('d-none');
+        termsCheckbox.classList.add('is-invalid');
+      } else if (termsCheckbox) {
+        termsError.classList.add('d-none');
+        termsCheckbox.classList.remove('is-invalid');
       }
     }
-    return ok;
-  }
 
+    if (stepIdx===0 && ok){
+      // ...existing step 0 validation code...
+    }
+    return ok;
+}
 async function rebuildTimeDropdownForDate(dateStr){
   const myTicket = ++timeBuildTicket;                // single-flight
   const stillMine = () => myTicket === timeBuildTicket;
@@ -655,6 +726,51 @@ console.log('[dayUnavailable]',
   }
 
   // init
+if (bookingForm) {
+  bookingForm.addEventListener('submit', function (e) {
+    const termsCheckbox = document.getElementById('agreeTerms');
+    const termsError = document.getElementById('termsError');
+
+    if (!termsCheckbox || !termsCheckbox.checked) {
+      e.preventDefault(); // block the booking
+      termsError.classList.remove('d-none');
+      termsCheckbox.classList.add('is-invalid');
+      termsCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+}
+
+  function forceFixedSlot() {
+    if (bookingTimeInput) {
+      bookingTimeInput.innerHTML = '';
+      const tOpt = document.createElement('option');
+      tOpt.value = '18:00';
+      tOpt.textContent = '18:00';
+      tOpt.selected = true;
+      bookingTimeInput.appendChild(tOpt);
+      bookingTimeInput.value = '18:00';
+    }
+
+    if (bookingDuration) {
+      bookingDuration.innerHTML = '';
+      const dOpt = document.createElement('option');
+      dOpt.value = '18';
+      dOpt.textContent = '18';
+      dOpt.selected = true;
+      bookingDuration.appendChild(dOpt);
+      bookingDuration.value = '18';
+    }
+  }
+
+  // Run once on load
+  forceFixedSlot();
+
+  // Run again whenever date changes (after any other listeners)
+  if (bookingDateInput) {
+    bookingDateInput.addEventListener('change', () => {
+      forceFixedSlot();
+    });
+  }
   showStep(currentStep);
   updatePricing();
   updateStepIndicators();

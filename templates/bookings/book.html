@@ -1917,7 +1917,7 @@
 
 
 <!-- Include Braintree Drop-in Library -->
-<script src="https://js.braintreegateway.com/web/dropin/1.38.0/js/dropin.min.js"></script>
+<!-- <script src="https://js.braintreegateway.com/web/dropin/1.38.0/js/dropin.min.js"></script> -->
 
 <!-- Consolidated JavaScript for both New & Edit Booking Forms -->
 <script>
@@ -1995,6 +1995,26 @@ window.switchTab = function(tabId, clickedTab) {
   }
 };
 
+async function validateStep(stepIndex) {
+    const step = document.querySelector(`.form-step[data-step="${stepIndex + 1}"]`);
+    if (!step) return true;
+    
+    const inputs = step.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), select');
+    let isValid = true;
+
+    // Existing validation for other fields
+    inputs.forEach(input => {
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+
+    return isValid;
+}
+
 // Function to reset booking form to step 1
 function resetBookingFormToStep1() {
   // Reset to first step
@@ -2036,7 +2056,7 @@ function resetBookingFormToStep1() {
     const peopleInput = document.getElementById('numberOfPeople');
 
     if (dateInput) dateInput.value = '';
-    if (timeSelect) timeSelect.innerHTML = '<option value="">Select Date First</option>';
+    if (timeSelect) timeSelect.innerHTML = '<option value="">Select Date Fi</option>';
     if (durationSelect) durationSelect.innerHTML = '<option value="">Select Time First</option>';
     if (peopleInput) peopleInput.value = '';
 
@@ -2065,7 +2085,17 @@ function resetBookingFormToStep1() {
 
 document.addEventListener('DOMContentLoaded', async function() {
   let braintreeInitialized = false;
+  const termsCheckbox = document.getElementById('agreeTerms');
+  const termsError = document.getElementById('termsError');
   
+  if (termsCheckbox) {
+    termsCheckbox.addEventListener('change', () => {
+      if (termsCheckbox.checked) {
+        termsError.classList.add('d-none');
+        termsCheckbox.classList.remove('is-invalid');
+      }
+    });
+  }
   // Initialize current step variable
   window.currentStep = 1;
   
@@ -2128,6 +2158,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       console.error('Error fetching client token:', error);
     }
   }
+  window.user_id = "{{ request.session.user_id|default:'' }}";
   const user_id = "{{ request.session.user_id|default:'' }}";
   let allBookings = []; // Global variable for bookings
   
@@ -2461,134 +2492,149 @@ document.addEventListener('DOMContentLoaded', async function() {
   const bookingTimeSelectSubmit = document.getElementById('bookingTime');
   const numberOfPeopleInput = document.getElementById('numberOfPeople');
   const numberOfHoursInput = document.getElementById('bookingDuration');
+
 console.log('bookingDate', bookingDateInput?.value || 'null');
 console.log('bookingTime', bookingTimeSelectSubmit?.value || 'null');
 console.log('hours', numberOfHoursInput?.value || 'null');
 
   // --- Booking Form Submission ---
-  document.getElementById('bookingForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Validate all required fields
-    const bookingDate = document.getElementById('bookingDate').value;
-    const bookingTime = document.getElementById('bookingTime').value;
-    const bookingDuration = document.getElementById('bookingDuration').value;
-    const numberOfPeople = document.getElementById('numberOfPeople').value;
+// --- Booking Form Submission (BANK TRANSFER ONLY) ---
+document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
 
-    console.log('Form validation:', { bookingDate, bookingTime, bookingDuration, numberOfPeople });
+  // Make sure fixed time & duration are set (18:00 – 12:00 next day = 18 hours)
+  const bookingTimeField = document.getElementById('bookingTime');
+  const bookingDurationField = document.getElementById('bookingDuration');
 
-    if (!bookingDate || !bookingTime || !bookingDuration || !numberOfPeople) {
-      alert('Please fill in all required fields (Date, Start Time, Number of Hours, Number of People)');
-      return;
-    }
+  if (bookingTimeField) {
+    bookingTimeField.innerHTML = '';
+    const optTime = document.createElement('option');
+    optTime.value = '18:00';
+    optTime.textContent = '18:00';
+    optTime.selected = true;
+    bookingTimeField.appendChild(optTime);
+  }
 
-    // Double-check date availability before proceeding
-    const dateCheckResponse = await fetch('/bookings/get_unavailable_slots?date=' + bookingDateInput.value);
-    const dateCheckData = await dateCheckResponse.json();
-    
-    /*if (dateCheckData.unavailable_slots && dateCheckData.unavailable_slots.length > 0) {
-      alert('This date is no longer available for booking. Please select a different date.');
-      return; // Prevent form submission
-    }*/
+  if (bookingDurationField) {
+    bookingDurationField.innerHTML = '';
+    const optDur = document.createElement('option');
+    optDur.value = '18';      // 18 hours
+    optDur.textContent = '18';
+    optDur.selected = true;
+    bookingDurationField.appendChild(optDur);
+  }
 
-    // Call the availability check API (this should not be needed anymore, but keeping as backup)
-    const availabilityResponse = await fetch('/bookings/check_availability/', {
+  // Use the global references already declared later in the file
+  const bookingDate = bookingDateInput?.value || '';
+  const numberOfPeople = numberOfPeopleInput?.value || '';
+  const bookingTime = bookingTimeSelectSubmit?.value || '18:00';
+  const bookingDuration = numberOfHoursInput?.value || '18';
+
+  console.log('Form validation:', { bookingDate, bookingTime, bookingDuration, numberOfPeople });
+
+  if (!bookingDate || !numberOfPeople) {
+    alert('Please fill in all required fields (Date, Number of People)');
+    return;
+  }
+
+  // Terms & conditions check
+  const termsCheckbox = document.getElementById('agreeTerms');
+  const termsError = document.getElementById('termsError');
+
+  if (!termsCheckbox || !termsCheckbox.checked) {
+    if (termsError) termsError.classList.remove('d-none');
+    termsCheckbox?.classList.add('is-invalid');
+    alert('You must agree to the terms and conditions before booking.');
+    return;
+  } else {
+    if (termsError) termsError.classList.add('d-none');
+    termsCheckbox?.classList.remove('is-invalid');
+  }
+
+  // Optional: extra date check (kept from old code)
+  const dateCheckResponse = await fetch('/bookings/get_unavailable_slots?date=' + bookingDateInput.value);
+  const dateCheckData = await dateCheckResponse.json();
+  console.log('dateCheckData', dateCheckData);
+
+  // Availability check
+  const availabilityResponse = await fetch('/bookings/check_availability/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+    },
+    body: JSON.stringify({
+      user_id: user_id,
+      date: bookingDateInput.value,
+      total_people: numberOfPeopleInput.value,
+      start_time: bookingTime,        // will be 18:00
+      hours_booked: bookingDuration   // will be 18
+    })
+  });
+
+  const availabilityData = await availabilityResponse.json();
+  console.log('availabilityData', availabilityData);
+  if (!availabilityData.available) {
+    alert(availabilityData.message || "Selected time slot is unavailable.");
+    return;
+  }
+
+  // ---- BANK TRANSFER FLOW (no Braintree on frontend) ----
+  const submitButton = document.querySelector('button[type="submit"][form="bookingForm"]');
+  submitButton.disabled = true;
+  submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Saving booking..." %}';
+
+  const formData = {
+    booking_date: bookingDate + "T" + bookingTime, // e.g. 2025-03-01T18:00
+    number_of_people: numberOfPeople,
+    number_of_hours: bookingDuration,
+    drinks: Array.from(document.querySelectorAll('input[name="drinks"]:checked')).map(o => parseInt(o.value, 10)),
+
+    // keep same field name for backend
+    payment_method_nonce: 'BANK_TRANSFER',
+
+    user_id: user_id
+  };
+
+  try {
+    const response = await fetch('/payments/braintree/process-payment/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
       },
-      body: JSON.stringify({
-        user_id: user_id,
-        date: bookingDateInput.value,
-        total_people: numberOfPeopleInput.value,
-        start_time: bookingTimeSelectSubmit.value,
-        hours_booked: numberOfHoursInput.value
-      })
+      body: JSON.stringify(formData)
     });
-    const availabilityData = await availabilityResponse.json();
-    console.log('availabilityData',availabilityData);
-    if (!availabilityData.available) {
-      alert(availabilityData.message || "Selected time slot is unavailable.");
-      return; // Prevent form submission
-    }
-    // Cost summary was removed from step 2, so no need to check it
 
-    const submitButton = document.querySelector('button[type="submit"][form="bookingForm"]');
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-    console.log('window.braintreeInstance',window.braintreeInstance)
-    if (!window.braintreeInstance) {
-      alert("Payment interface not loaded yet.");
-      submitButton.disabled = false;
-      submitButton.innerHTML = '<i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}';
-      return;
-    }
-    window.braintreeInstance.requestPaymentMethod(async (err, payload) => {
-      if (err) {
-        alert("Payment error. Please check card details.");
-        submitButton.disabled = false;
-        submitButton.innerHTML = '<i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}';
-        return;
-      }
+    const data = await response.json();
+    if (response.ok && data.success) {
+      alert('{% trans "Booking saved! Please complete the bank transfer to confirm your reservation." %}');
 
-      const formData = {
-        booking_date: bookingDateInput.value + "T" + bookingTimeSelectSubmit.value,
-        number_of_people: numberOfPeopleInput.value,
-        number_of_hours: numberOfHoursInput.value,
-        drinks: Array.from(document.querySelectorAll('input[name="drinks"]:checked')).map(o => parseInt(o.value)),
-        payment_method_nonce: payload.nonce,
-        user_id: user_id
-      };
-      try {
-        const response = await fetch('/payments/braintree/process-payment/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-          },
-          body: JSON.stringify(formData)
-        });
-        const data = await response.json();
-        if (response.ok && data.success) {
-          alert('Booking successful! Your reservation has been confirmed.');
-          
-          // Clear saved form progress
-          // Form progress functionality removed
-          
-          // Reset form
-          document.getElementById('bookingForm').reset();
-          
-          // Switch to My Bookings tab and refresh data
-          setTimeout(() => {
-            console.log('Switching to My Bookings tab after successful booking');
-            const myBookingsTab = document.getElementById('my-bookings-tab');
-            console.log('My Bookings tab element:', myBookingsTab);
-            
-            // Switch to the tab first
-            window.switchTab('my-bookings', myBookingsTab);
-            
-            // Then load the bookings data with a small delay
-            setTimeout(() => {
-              if (typeof window.loadMyBookings === 'function') {
-                console.log('Loading My Bookings data');
-                window.loadMyBookings();
-              } else {
-                console.error('loadMyBookings function not found');
-              }
-            }, 200);
-          }, 500);
-        } else {
-          alert('Error: ' + (data.message || 'Payment failed'));
-        }
-      } catch (error) {
-        alert('Network error. Please try again.');
-      } finally {
-        submitButton.disabled = false;
-        submitButton.innerHTML = '<i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}';
-      }
-    });
-  });
+      // Reset form
+      document.getElementById('bookingForm').reset();
+
+      // Go to "My Bookings" and reload list
+      setTimeout(() => {
+        const myBookingsTab = document.getElementById('my-bookings-tab');
+        window.switchTab('my-bookings', myBookingsTab);
+        setTimeout(() => {
+          if (typeof window.loadMyBookings === 'function') {
+            window.loadMyBookings();
+          }
+        }, 200);
+      }, 500);
+    } else {
+      alert('Error: ' + (data.message || 'Could not save booking'));
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Network error. Please try again.');
+  } finally {
+    submitButton.disabled = false;
+    submitButton.innerHTML = '<i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}';
+  }
+});
+
 
   // Profile Management Functions
   window.loadProfile = function() {
@@ -2884,11 +2930,11 @@ console.log('hours', numberOfHoursInput?.value || 'null');
     dynamicBookingDate.addEventListener('change', function() {
       const selectedDate = this.value;
       if (selectedDate) {
-        loadAvailableTimeSlots(selectedDate);
+        //loadAvailableTimeSlots(selectedDate);
         // Reset selections
-        bookingTimeSelect.innerHTML = '<option value="">Loading...</option>';
-        bookingDurationSelect.innerHTML = '<option value="">Select Time First</option>';
-        updatePricing();
+        //bookingTimeSelect.innerHTML = '<option value="">Loading...</option>';
+        //bookingDurationSelect.innerHTML = '<option value="">Select Time First</option>';
+        //updatePricing();
       }
     });
   }
