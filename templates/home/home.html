@@ -71,23 +71,32 @@
      =========================== */
 #authForm {
   position: fixed;
+  z-index: 1050;
+  /* centered by default */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1050;
+
+  /* dynamic width */
   width: clamp(320px, 90vw, 420px);
-  max-height: 100vh;
-  background-color: white;
-  padding: clamp(0.75rem, 2vw, 1.5rem);
+
+  /* dynamic height */
+  max-height: 88vh;              /* never taller than viewport */
+  overflow-y: auto;
+
+  background-color: #fff;
+  padding: clamp(0.75rem, 2vw, 1.4rem);  /* padding shrinks on small screens */
   border-radius: 0.75rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  overflow-y: auto;
+
   display: flex;
   flex-direction: column;
+
   backdrop-filter: blur(10px);
   animation: slideInModal 0.3s ease-out;
   transition: all 0.2s ease;
 }
+
 
 
   @media (min-width: 1280px) {
@@ -450,6 +459,48 @@
   }
 }
 
+
+/* Phones and small tablets */
+@media (max-width: 768px) {
+  #authForm {
+    width: 92vw;
+    max-width: 380px;
+    max-height: 82vh;                      /* a bit shorter on phones */
+    padding: clamp(0.6rem, 2vw, 1rem);
+    border-radius: 0.6rem;
+    top: 52%;                              /* slightly lower than perfect center */
+    transform: translate(-50%, -50%);
+  }
+
+  #authForm .form-label {
+    font-size: clamp(0.7rem, 2.8vw, 0.85rem);
+  }
+
+  #authForm .form-control {
+    font-size: 16px;                       /* avoids iOS auto-zoom */
+    padding: 0.4rem 0.55rem;
+    height: 2.2rem;
+  }
+
+  #authForm .nav-tabs .nav-link {
+    font-size: 0.8rem;
+    padding: 0.45rem 0.8rem;
+  }
+
+  .btn-auth {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    min-height: 36px;
+  }
+}
+
+/* Very short screens (small iPhones / landscape) */
+@media (max-height: 700px) and (max-width: 768px) {
+  #authForm {
+    top: 50%;            /* keep more centered on very short screens */
+    max-height: 78vh;    /* a bit shorter */
+  }
+}
 
   /* ===========================
      HERO
