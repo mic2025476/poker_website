@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    customer_logout, customer_signup, verify_otp, customer_login,
+    customer_logout, customer_signup, forgot_password, reset_password, verify_otp, customer_login,
     send_mobile_otp, verify_mobile_otp, get_customer_profile, update_phone_number,
     google_auth, whoami
 )
@@ -16,4 +16,6 @@ urlpatterns = [
     path('api/update-phone/', update_phone_number, name='update_phone_number'),
     path('api/google-auth/', google_auth, name='google_auth'),
     path('api/whoami/', whoami, name='whoami'),
+    path('api/forgot-password/', forgot_password, name='forgot_password'),
+    path('api/reset-password/', reset_password, name='reset_password'),
 ]

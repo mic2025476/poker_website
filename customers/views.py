@@ -4,6 +4,7 @@ import json
 from django.contrib.sessions.models import Session
 from django.utils.timezone import now
 from requests import Response
+from django.db import transaction
 from rest_framework.decorators import api_view
 from rest_framework.response import Response as DRFResponse
 from rest_framework import status
@@ -403,104 +404,104 @@ def update_phone_number(request):
 
 @api_view(["POST"])
 def google_auth(request):
-    """Handle Google OAuth authentication"""
+    """
+    Google sign-in handler.
+    - flow_type = 'signup': if email exists, return message asking user to log in instead.
+    - flow_type = 'login' : if email exists, log in; otherwise create and log in.
+    """
+    google_token = request.data.get("google_token")
+    flow_type = request.data.get("flow_type", "login")  # 'signup' or 'login'
+
+    if not google_token:
+        return DRFResponse(
+            ResponseData.error("Google token missing."),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     try:
-        google_token = request.data.get('google_token')
-        if not google_token:
+        google_request = google_requests.Request()
+
+        idinfo = id_token.verify_oauth2_token(
+            google_token,
+            google_request,
+            settings.GOOGLE_OAUTH2_CLIENT_ID,
+        )
+
+        email = idinfo.get("email")
+        given_name = idinfo.get("given_name") or ""
+        family_name = idinfo.get("family_name") or ""
+
+        if not email:
             return DRFResponse(
-                ResponseData.error("Google token is required."),
+                ResponseData.error("Could not get email from Google."),
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Verify the Google token
-        try:
-            idinfo = id_token.verify_oauth2_token(
-                google_token,
-                google_requests.Request(),
-                settings.GOOGLE_OAUTH2_CLIENT_ID
-            )
+        # Check if account already exists
+        existing_qs = CustomerModel.objects.filter(
+            email_id=email,
+            is_deleted=False
+        )
 
-            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-                raise ValueError('Wrong issuer.')
-
-            # Extract user information from Google token
-            google_id = idinfo['sub']
-            email = idinfo['email']
-            first_name = idinfo.get('given_name', '')
-            last_name = idinfo.get('family_name', '')
-            picture = idinfo.get('picture', '')
-
-        except ValueError as e:
+        # ✳️ Case 1: Sign-up flow, but account already exists → show message, do not log in
+        if flow_type == "signup" and existing_qs.exists():
             return DRFResponse(
-                ResponseData.error("Invalid Google token."),
+                ResponseData.error(
+                    "An account with this email already exists. "
+                    "Please log in instead or use 'Continue with Google' on the Login tab."
+                ),
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check if user already exists
-        customer = CustomerModel.objects.filter(email_id=email, is_deleted=False).first()
+        # ✳️ Case 2: Login flow, or sign-up with new email → create or reuse
+        with transaction.atomic():
+            if existing_qs.exists():
+                customer = existing_qs.first()
+                created = False
+            else:
+                customer = CustomerModel.objects.create(
+                    email_id=email,
+                    first_name=given_name,
+                    last_name=family_name,
+                    is_email_verified=True,
+                )
+                created = True
 
-        if customer:
-            # User exists, log them in
-            if not customer.is_active:
-                # Activate the account since Google has verified the email
-                customer.is_active = True
-                customer.is_email_verified = True
-                customer.save()
+            # Optionally update some fields if we just reused an existing user
+            if not created:
+                updated = False
+                if not customer.first_name and given_name:
+                    customer.first_name = given_name
+                    updated = True
+                if not customer.last_name and family_name:
+                    customer.last_name = family_name
+                    updated = True
+                if not customer.is_email_verified:
+                    customer.is_email_verified = True
+                    updated = True
+                if updated:
+                    customer.save()
 
-            # Update last login
-            customer.last_login = now()
-            customer.save()
+        # Log the user in (same as your normal login)
+        request.session["user_id"] = str(customer.id)
 
-            # Set session
-            request.session["user_id"] = customer.id
+        return DRFResponse(
+            ResponseData.success(str(customer.id), "Login successful."),
+            status=status.HTTP_200_OK
+        )
 
-            return DRFResponse(
-                ResponseData.success(customer.id, "Login successful."),
-                status=status.HTTP_200_OK
-            )
-        else:
-            # Create new user
-            new_customer = CustomerModel.objects.create(
-                first_name=first_name,
-                last_name=last_name,
-                email_id=email,
-                password='',  # No password for Google users
-                is_email_verified=True,  # Google has verified the email
-                is_active=True,
-                is_deleted=False,
-                last_login=now()
-            )
-
-            # Create Braintree customer
-            try:
-                result = gateway.customer.create({
-                    "first_name": new_customer.first_name,
-                    "last_name": new_customer.last_name,
-                    "email": new_customer.email_id,
-                })
-                if result.is_success:
-                    new_customer.braintree_customer_id = result.customer.id
-                    new_customer.save()
-                else:
-                    # Log the error but don't fail the registration
-                    print(f"Braintree customer creation failed: {result.message}")
-            except Exception as e:
-                print(f"Braintree error: {str(e)}")
-
-            # Set session
-            request.session["user_id"] = new_customer.id
-
-            return DRFResponse(
-                ResponseData.success(new_customer.id, "Account created and logged in successfully."),
-                status=status.HTTP_201_CREATED
-            )
-
+    except ValueError as e:
+        return DRFResponse(
+            ResponseData.error(f"Invalid Google token: {e}"),
+            status=status.HTTP_400_BAD_REQUEST
+        )
     except Exception as e:
+        print("google_auth error:", e)
         return DRFResponse(
             ResponseData.error(str(e)),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
+    
 @api_view(["GET"])
 def whoami(request):
     incoming = request.COOKIES.get("sessionid")
@@ -516,3 +517,126 @@ def whoami(request):
         "session_row_exists": exists,
         "session_user_id": request.session.get("user_id"),
     })
+
+@api_view(["POST"])
+def forgot_password(request):
+    """
+    Step 1: User submits email, we generate an email OTP and send it.
+    """
+    try:
+        email_id = request.data.get("email_id")
+
+        if not email_id:
+            return DRFResponse(
+                ResponseData.error("Email is required."),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Don't reveal whether user exists or not
+        customer = CustomerModel.objects.filter(
+            email_id=email_id,
+            is_deleted=False
+        ).first()
+
+        if customer:
+            # Remove old unverified email OTPs for this address
+            OTPModel.objects.filter(
+                email_id=email_id,
+                otp_type="email",
+                is_verified=False
+            ).delete()
+
+            # Create new OTP record
+            otp_instance = OTPModel.objects.create(
+                email_id=email_id,
+                otp_type="email"
+            )
+            otp_instance.generate_otp()  # sets otp + created_at + save()
+
+            # Send OTP by email
+            subject = "Your Poker Lounge password reset code"
+            message = (
+                f"Hi {customer.first_name},\n\n"
+                f"Use the following one-time password (OTP) to reset your password: {otp_instance.otp}\n"
+                "This code is valid for 10 minutes.\n\n"
+                "If you did not request a password reset, you can ignore this email."
+            )
+
+            # Make sure EMAIL settings are configured in settings.py
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                    recipient_list=[email_id],
+                    fail_silently=True,  # avoid breaking if email config is not perfect yet
+                )
+            except Exception as mail_error:
+                # Log / print if needed
+                print(f"Error sending reset email: {mail_error}")
+
+        # Always return success message to avoid user enumeration
+        return DRFResponse(
+            ResponseData.success_without_data(
+                "If an account with this email exists, an OTP has been sent."
+            ),
+            status=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        return DRFResponse(
+            ResponseData.error(str(e)),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+def reset_password(request):
+    """
+    Called after OTP has already been verified in /customers/api/verify-otp/.
+    Just change the password for the given email.
+    """
+    try:
+        email_id = request.data.get("email_id")
+        new_password = request.data.get("password")
+        confirm_password = request.data.get("confirm_password")
+
+        if not email_id or not new_password or not confirm_password:
+            return DRFResponse(
+                ResponseData.error("Email, password and confirm password are required."),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_password != confirm_password:
+            return DRFResponse(
+                ResponseData.error("Passwords do not match."),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        customer = CustomerModel.objects.filter(
+            email_id=email_id, is_deleted=False
+        ).first()
+
+        if not customer:
+            return DRFResponse(
+                ResponseData.error("Customer not found."),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # NOTE: you currently store password as plain text in CustomerModel.
+        # Keep it consistent so login keeps working.
+        customer.password = new_password
+        customer.save()
+
+        return DRFResponse(
+            ResponseData.success_without_data(
+                "Password reset successfully. You can now log in with the new password."
+            ),
+            status=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        return DRFResponse(
+            ResponseData.error(str(e)),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
