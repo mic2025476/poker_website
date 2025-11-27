@@ -81,7 +81,7 @@ def customer_signup(request):
                     email_id=email_id,
                     phone_number=phone_number,
                     password=password,
-                    is_active=False,
+                    is_active=True,
                     is_deleted=False
                 )
                 result = gateway.customer.create({
@@ -464,6 +464,7 @@ def google_auth(request):
                     first_name=given_name,
                     last_name=family_name,
                     is_email_verified=True,
+                    is_active=True
                 )
                 created = True
 
