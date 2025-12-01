@@ -1,0 +1,292 @@
+{% extends "core/base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<style>
+  /* ===== TERMS PAGE LAYOUT ===== */
+
+  .legal-hero {
+    position: relative;
+    min-height: 40vh;
+    background-image: url("{% static 'images/poker_1.avif' %}");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .legal-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .legal-hero-inner {
+    position: relative;
+    z-index: 1;
+    color: #ffffff;
+    max-width: 700px;
+    padding: 2rem 1.5rem;
+  }
+
+  .legal-hero-title {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .legal-hero-subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+  }
+
+  /* ===== TERMS CARD ===== */
+
+  .legal-section {
+    background: radial-gradient(circle at top, rgba(0,0,0,0.35), #050608 70%);
+    padding: 3rem 1rem 4rem;
+  }
+
+  .legal-card {
+    max-width: 960px;
+    margin: 0 auto;
+    background: rgba(15, 15, 20, 0.95);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.6);
+    color: #f1f1f1;
+    backdrop-filter: blur(10px);
+    padding: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  .legal-card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .legal-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--theme-primary, #e4b34c);
+  }
+
+  .legal-meta {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #b0b0b0;
+  }
+
+  .legal-meta strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .legal-section-block + .legal-section-block {
+    margin-top: 1.75rem;
+  }
+
+  .legal-section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    color: #f7f7f7;
+  }
+
+  .legal-section-kicker {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--theme-primary, #e4b34c);
+    margin-bottom: 0.15rem;
+  }
+
+  .legal-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #d3d3d3;
+  }
+
+  .legal-list {
+    font-size: 0.9rem;
+    color: #d3d3d3;
+    padding-left: 1.2rem;
+    margin-bottom: 0;
+  }
+
+  .legal-list li + li {
+    margin-top: 0.25rem;
+  }
+
+  .legal-highlight {
+    color: var(--theme-primary, #e4b34c);
+    font-weight: 500;
+  }
+
+  .legal-anchor {
+    color: var(--theme-primary, #e4b34c);
+    text-decoration: underline;
+  }
+
+  .legal-anchor:hover {
+    text-decoration: none;
+  }
+
+  @media (max-width: 576px) {
+    .legal-section {
+      padding: 2.25rem 0.75rem 3rem;
+    }
+    .legal-card {
+      padding: 1.5rem 1.1rem;
+      border-radius: 0.85rem;
+    }
+  }
+</style>
+
+<section class="legal-hero">
+  <div class="legal-hero-inner">
+    <h1 class="legal-hero-title">{% trans "Terms & Conditions" %}</h1>
+    <p class="legal-hero-subtitle">
+      {% trans "Please read these terms carefully before using MGEN Poker Lounge's online services." %}
+    </p>
+  </div>
+</section>
+
+<section class="legal-section">
+  <div class="legal-card">
+    <header class="legal-card-header">
+      <div class="legal-card-title">
+        {% trans "MG-Entertainment Poker Lounge" %}
+      </div>
+    </header>
+
+    <!-- 1. Introduction -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 1" %}</div>
+      <h2 class="legal-section-title">{% trans "Scope & Acceptance" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        By creating an account, booking a table, or otherwise using the online services of
+        <span class="legal-highlight">MGEN Poker Lounge</span> (the “Service”), you agree to be bound by
+        these Terms &amp; Conditions (“Terms”). If you do not agree with these Terms, please do not use
+        the Service.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 2. Eligibility -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 2" %}</div>
+      <h2 class="legal-section-title">{% trans "Eligibility & Age Requirements" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        Access to our poker lounge and use of our booking platform is restricted to individuals who are at
+        least <span class="legal-highlight">18 years of age</span> (or any higher age required by local law).
+        By using the Service, you confirm that you meet the applicable legal age requirement and that you
+        are legally capable of entering into binding agreements.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 3. Account & Bookings -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 3" %}</div>
+      <h2 class="legal-section-title">{% trans "Accounts, Reservations & No-Show Policy" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        You are responsible for maintaining the confidentiality of your login credentials and for all
+        activity under your account. When booking a table, you agree to provide accurate information and
+        to respect the reserved time slot.
+        {% endblocktrans %}
+      </p>
+      <ul class="legal-list">
+        <li>{% trans "We reserve the right to cancel or adjust reservations in case of operational needs." %}</li>
+        <li>{% trans "Repeated no-shows or late cancellations may result in limited booking privileges." %}</li>
+        <li>{% trans "For group bookings or special events, additional conditions may apply on-site." %}</li>
+      </ul>
+    </div>
+
+    <!-- 4. Responsible Gaming -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 4" %}</div>
+      <h2 class="legal-section-title">{% trans "Responsible Gaming" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        Poker is a form of entertainment that involves financial risk. Please play responsibly.
+        If you feel that gambling is becoming a problem, we strongly encourage you to seek help from
+        professional support organisations. On request, our staff can provide further information
+        about available support services in Germany.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 5. Behaviour on Premises -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 5" %}</div>
+      <h2 class="legal-section-title">{% trans "House Rules & Conduct" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        While on our premises, you agree to follow the house rules communicated by our staff.
+        We reserve the right to deny entry or remove guests who behave in a disruptive, unsafe,
+        or unlawful manner, or who do not comply with staff instructions.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 6. Data Protection -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 6" %}</div>
+      <h2 class="legal-section-title">{% trans "Data Protection & Privacy" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        We process your personal data in accordance with our
+        <a href="/privacy/" class="legal-anchor" target="_blank">Privacy Policy</a>, which explains in detail
+        what data we collect, for which purposes, and what rights you have under applicable data protection law
+        (including the GDPR).
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 7. Changes -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 7" %}</div>
+      <h2 class="legal-section-title">{% trans "Changes to These Terms" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        We may update these Terms from time to time to reflect operational, legal, or regulatory changes.
+        When we make material changes, we will update the “Last updated” date above and, where appropriate,
+        notify registered users by email or via the Service. Your continued use of the Service after such
+        changes constitutes acceptance of the updated Terms.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 8. Contact -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 8" %}</div>
+      <h2 class="legal-section-title">{% trans "Contact" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        If you have any questions about these Terms &amp; Conditions, bookings, or your account, please
+        contact us via the details provided in our
+        <a href="/impressum/" class="legal-anchor">Imprint / Impressum</a>.
+        {% endblocktrans %}
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

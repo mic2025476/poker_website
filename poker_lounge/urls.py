@@ -4,7 +4,7 @@ from home import views as homeView
 from gallery import views as galleryView
 from pricing import views as priceView
 from contact import views as contactView
-
+from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('home.urls'),name='home'),
@@ -16,4 +16,7 @@ urlpatterns = [
     path('customers/', include('customers.urls')),
     path('bookings/', include('bookings.urls'), name='bookings'),
     path('payments/', include('payments.urls')),
+    path("terms/", TemplateView.as_view(template_name="core/terms.html"), name="terms"),
+    path("privacy/", TemplateView.as_view(template_name="core/privacy.html"), name="privacy"),
+    path("impressum/", TemplateView.as_view(template_name="core/impressum.html"), name="impressum"),
 ]

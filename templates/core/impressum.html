@@ -1,0 +1,264 @@
+{% extends "core/base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<style>
+  /* ===== IMPRESSUM PAGE LAYOUT (same look as terms/privacy) ===== */
+
+  .legal-hero {
+    position: relative;
+    min-height: 40vh;
+    background-image: url("{% static 'images/poker_1.avif' %}");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .legal-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .legal-hero-inner {
+    position: relative;
+    z-index: 1;
+    color: #ffffff;
+    max-width: 700px;
+    padding: 2rem 1.5rem;
+  }
+
+  .legal-hero-title {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .legal-hero-subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+  }
+
+  .legal-section {
+    background: radial-gradient(circle at top, rgba(0,0,0,0.35), #050608 70%);
+    padding: 3rem 1rem 4rem;
+  }
+
+  .legal-card {
+    max-width: 960px;
+    margin: 0 auto;
+    background: rgba(15, 15, 20, 0.95);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.6);
+    color: #f1f1f1;
+    backdrop-filter: blur(10px);
+    padding: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  .legal-card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .legal-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--theme-primary, #e4b34c);
+  }
+
+  .legal-section-block + .legal-section-block {
+    margin-top: 1.5rem;
+  }
+
+  .legal-section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    color: #f7f7f7;
+  }
+
+  .legal-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #d3d3d3;
+  }
+
+  .legal-text strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .legal-list {
+    font-size: 0.9rem;
+    color: #d3d3d3;
+    padding-left: 1.2rem;
+    margin-bottom: 0;
+  }
+
+  .legal-list li + li {
+    margin-top: 0.25rem;
+  }
+
+  .legal-highlight {
+    color: var(--theme-primary, #e4b34c);
+    font-weight: 500;
+  }
+
+  @media (max-width: 576px) {
+    .legal-section {
+      padding: 2.25rem 0.75rem 3rem;
+    }
+    .legal-card {
+      padding: 1.5rem 1.1rem;
+      border-radius: 0.85rem;
+    }
+  }
+</style>
+
+<section class="legal-hero">
+  <div class="legal-hero-inner">
+    <h1 class="legal-hero-title">{% trans "Imprint" %}</h1>
+    <p class="legal-hero-subtitle">
+      {% trans "Legal information according to German law (Impressumspflicht)." %}
+    </p>
+  </div>
+</section>
+
+<section class="legal-section">
+  <div class="legal-card">
+    <header class="legal-card-header">
+      <h2 class="legal-card-title">
+        {% trans "MG-Entertainment Poker Lounge" %}
+      </h2>
+    </header>
+
+    <!-- 1. Provider details -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Service Provider" %}</h3>
+      <p class="legal-text">
+        <strong>MG-Entertainment Poker Lounge</strong><br>
+        <!-- 🔁 FILL IN YOUR REAL COMPANY/OWNER NAME -->
+        MG Entertainment UG (haftungsbe
+schränkt)<br>
+        Friedrichsberger Str. 24<br>
+        10243 Berlin<br>
+        Deutschland
+      </p>
+    </div>
+
+    <!-- 2. Contact -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Contact" %}</h3>
+      <p class="legal-text">
+        {% trans "Telephone" %}: +49 163 166 0359<br>
+        {% trans "Email" %}: <a href="mailto:info@mgen-poker.com">finance_mgen@ming-group.de</a><br>
+        {% trans "Website" %}: <a href="https://mgen-poker.com" target="_blank">mgen-poker.com</a>
+      </p>
+    </div>
+
+    <!-- 3. Represented by -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Represented by" %}</h3>
+      <p class="legal-text">
+        <!-- 🔁 FILL IN MANAGING DIRECTOR / OWNER -->
+        {% trans "Managing Director" %}: Herr Nick Fu
+      </p>
+    </div>
+
+    <!-- 4. Register / VAT (if applicable) -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Register & Regulatory Information" %}</h3>
+      <p class="legal-text">
+        <!-- 🔁 OPTIONAL: SUPERVISORY AUTHORITY / GAMING LICENSE -->
+        {% blocktrans %}
+        Where applicable, the operation of the poker lounge may be subject to local regulatory approval
+        and supervision. Details can be provided on request.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 5. EU dispute resolution info -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Online Dispute Resolution" %}</h3>
+      <p class="legal-text">
+        {% blocktrans %}
+        The European Commission provides a platform for online dispute resolution (ODR), which you can find at
+        https://ec.europa.eu/consumers/odr/. We are neither obliged nor willing to participate in dispute
+        resolution proceedings before a consumer arbitration board.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 6. Liability for content -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Liability for Contents" %}</h3>
+      <p class="legal-text">
+        {% blocktrans %}
+        We are responsible for our own content on these pages under general laws. However, we are not
+        obliged to monitor transmitted or stored third-party information or to investigate circumstances
+        that indicate illegal activity. Obligations to remove or block the use of information under general
+        laws remain unaffected. Any liability in this respect is only possible from the time of knowledge
+        of a specific infringement. Upon becoming aware of such infringements, we will remove the content
+        immediately.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 7. Liability for links -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Liability for Links" %}</h3>
+      <p class="legal-text">
+        {% blocktrans %}
+        Our website contains links to external websites of third parties over whose content we have no
+        control. Therefore, we cannot assume any liability for these external contents. The respective
+        provider or operator of the pages is always responsible for the contents of linked pages. The
+        linked pages were checked for possible legal violations at the time of linking. Illegal contents
+        were not recognisable at that time. Permanent monitoring of the content of linked pages is not
+        reasonable without specific evidence of a violation. If we become aware of legal infringements,
+        we will remove such links immediately.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 8. Copyright -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Copyright" %}</h3>
+      <p class="legal-text">
+        {% blocktrans %}
+        The content and works created by us on these pages are subject to German copyright law. Duplication,
+        processing, distribution, or any form of commercialisation of such material beyond the scope of the
+        copyright law shall require the prior written consent of the respective author or creator.
+        Downloads and copies of this site are only permitted for private, non-commercial use. Insofar as the
+        content on this site was not created by us, the copyrights of third parties are respected. In
+        particular, third-party content is marked as such. Should you nevertheless become aware of a
+        copyright infringement, please inform us. Upon notification of violations, we will remove such
+        content immediately.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 9. Image credits (optional) -->
+    <div class="legal-section-block">
+      <h3 class="legal-section-title">{% trans "Image Credits" %}</h3>
+      <p class="legal-text">
+        {% blocktrans %}
+        Unless otherwise stated, images used on this website are owned or licensed by MG-Entertainment
+        Poker Lounge. Stock images, if used, are licensed from the respective providers.
+        {% endblocktrans %}
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

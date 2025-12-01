@@ -43,6 +43,7 @@ def customer_signup(request):
             last_name = data['last_name']
             password = data['password']
             confirm_password = data['confirm_password']
+            terms_accepted = data['terms_accepted']
 
             if password != confirm_password:
                 return DRFResponse(
@@ -82,7 +83,10 @@ def customer_signup(request):
                     phone_number=phone_number,
                     password=password,
                     is_active=True,
-                    is_deleted=False
+                    is_deleted=False,
+                    terms_accepted=terms_accepted,
+                    terms_accepted_at=now(),
+                    terms_version="v1",  # or settings.TERMS_VERSION
                 )
                 result = gateway.customer.create({
                     "first_name": new_customer.first_name,
@@ -411,7 +415,14 @@ def google_auth(request):
     """
     google_token = request.data.get("google_token")
     flow_type = request.data.get("flow_type", "login")  # 'signup' or 'login'
+    terms_accepted = request.data.get("terms_accepted", False)
 
+    # ✅ Only enforce consent when it's a sign-up flow
+    if flow_type == "signup" and not terms_accepted:
+        return DRFResponse(
+            ResponseData.error("You must accept the Terms & Conditions to sign up."),
+            status=status.HTTP_400_BAD_REQUEST
+        )
     if not google_token:
         return DRFResponse(
             ResponseData.error("Google token missing."),
@@ -464,7 +475,11 @@ def google_auth(request):
                     first_name=given_name,
                     last_name=family_name,
                     is_email_verified=True,
-                    is_active=True
+                    is_active=True,
+                    # ✅ store consent for Google signups
+                    terms_accepted=bool(terms_accepted),
+                    terms_accepted_at=now(),
+                    terms_version="v1",
                 )
                 created = True
 

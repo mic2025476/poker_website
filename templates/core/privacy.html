@@ -1,0 +1,346 @@
+{% extends "core/base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<style>
+  /* ===== PRIVACY PAGE LAYOUT (same look as terms) ===== */
+
+  .legal-hero {
+    position: relative;
+    min-height: 40vh;
+    background-image: url("{% static 'images/poker_1.avif' %}");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .legal-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .legal-hero-inner {
+    position: relative;
+    z-index: 1;
+    color: #ffffff;
+    max-width: 700px;
+    padding: 2rem 1.5rem;
+  }
+
+  .legal-hero-title {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .legal-hero-subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+  }
+
+  .legal-section {
+    background: radial-gradient(circle at top, rgba(0,0,0,0.35), #050608 70%);
+    padding: 3rem 1rem 4rem;
+  }
+
+  .legal-card {
+    max-width: 960px;
+    margin: 0 auto;
+    background: rgba(15, 15, 20, 0.95);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.6);
+    color: #f1f1f1;
+    backdrop-filter: blur(10px);
+    padding: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  .legal-card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .legal-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--theme-primary, #e4b34c);
+  }
+
+  .legal-meta {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #b0b0b0;
+  }
+
+  .legal-meta strong {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .legal-section-block + .legal-section-block {
+    margin-top: 1.75rem;
+  }
+
+  .legal-section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    color: #f7f7f7;
+  }
+
+  .legal-section-kicker {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--theme-primary, #e4b34c);
+    margin-bottom: 0.15rem;
+  }
+
+  .legal-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #d3d3d3;
+  }
+
+  .legal-list {
+    font-size: 0.9rem;
+    color: #d3d3d3;
+    padding-left: 1.2rem;
+    margin-bottom: 0;
+  }
+
+  .legal-list li + li {
+    margin-top: 0.25rem;
+  }
+
+  .legal-highlight {
+    color: var(--theme-primary, #e4b34c);
+    font-weight: 500;
+  }
+
+  .legal-anchor {
+    color: var(--theme-primary, #e4b34c);
+    text-decoration: underline;
+  }
+
+  .legal-anchor:hover {
+    text-decoration: none;
+  }
+
+  @media (max-width: 576px) {
+    .legal-section {
+      padding: 2.25rem 0.75rem 3rem;
+    }
+    .legal-card {
+      padding: 1.5rem 1.1rem;
+      border-radius: 0.85rem;
+    }
+  }
+</style>
+
+<section class="legal-hero">
+  <div class="legal-hero-inner">
+    <h1 class="legal-hero-title">{% trans "Privacy Policy" %}</h1>
+    <p class="legal-hero-subtitle">
+      {% trans "How MGEN Poker Lounge collects, uses, and protects your personal data." %}
+    </p>
+  </div>
+</section>
+
+<section class="legal-section">
+  <div class="legal-card">
+    <header class="legal-card-header">
+      <div class="legal-card-title">
+        {% trans "MG-Entertainment Poker Lounge" %}
+      </div>
+    </header>
+
+    <!-- 1. Controller -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 1" %}</div>
+      <h2 class="legal-section-title">{% trans "Data Controller" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        The controller responsible for the processing of your personal data in connection with the
+        online services of <span class="legal-highlight">MGEN Poker Lounge</span> is the operator of the
+        poker lounge in Berlin, Germany (“we”, “us”). Full contact details are available in our
+        <a href="/impressum/" class="legal-anchor">Imprint / Impressum</a>.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 2. What data we collect -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 2" %}</div>
+      <h2 class="legal-section-title">{% trans "Personal Data We Collect" %}</h2>
+      <p class="legal-text">
+        {% trans "We may process the following categories of personal data when you use our website and services:" %}
+      </p>
+      <ul class="legal-list">
+        <li>{% trans "Account data (e.g. name, email address, password, contact details)." %}</li>
+        <li>{% trans "Reservation data (e.g. date and time of booking, table preferences, group size)." %}</li>
+        <li>{% trans "Technical data (e.g. IP address, device information, browser type, access times)." %}</li>
+        <li>{% trans "Communication data (e.g. messages and enquiries you send to us)." %}</li>
+        <li>{% trans "Data from sign-in providers (e.g. Google), if you choose to log in via such services." %}</li>
+      </ul>
+    </div>
+
+    <!-- 3. Purposes & legal bases -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 3" %}</div>
+      <h2 class="legal-section-title">{% trans "Purposes & Legal Bases of Processing" %}</h2>
+      <p class="legal-text">
+        {% trans "We process your personal data only where permitted by law. In particular, we rely on the following legal bases:" %}
+      </p>
+      <ul class="legal-list">
+        <li>
+          {% blocktrans %}
+          <span class="legal-highlight">Contract performance</span> (Art. 6(1)(b) GDPR) – to create and manage
+          your account, handle reservations, and provide access to our services.
+          {% endblocktrans %}
+        </li>
+        <li>
+          {% blocktrans %}
+          <span class="legal-highlight">Legal obligations</span> (Art. 6(1)(c) GDPR) – for example, to comply
+          with regulatory requirements or retention obligations.
+          {% endblocktrans %}
+        </li>
+        <li>
+          {% blocktrans %}
+          <span class="legal-highlight">Legitimate interests</span> (Art. 6(1)(f) GDPR) – such as ensuring
+          the security of our systems, preventing misuse, and improving our services.
+          {% endblocktrans %}
+        </li>
+        <li>
+          {% blocktrans %}
+          <span class="legal-highlight">Consent</span> (Art. 6(1)(a) GDPR) – in specific situations such as
+          optional marketing communications or certain non-essential cookies. You can withdraw consent at
+          any time with effect for the future.
+          {% endblocktrans %}
+        </li>
+      </ul>
+    </div>
+
+    <!-- 4. Cookies & tracking -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 4" %}</div>
+      <h2 class="legal-section-title">{% trans "Cookies & Analytics" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        Our website may use cookies and similar technologies to enable core functionality (such as secure
+        log-in and reservation management) and, where you consent, for analytics and performance purposes.
+        {% endblocktrans %}
+      </p>
+      <p class="legal-text">
+        {% blocktrans %}
+        You can manage your cookie preferences at any time via the cookie banner or your browser settings.
+        Essential cookies, which are strictly necessary for the operation of the site, are used on the basis
+        of our legitimate interests and do not require consent.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 5. Recipients & transfers -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 5" %}</div>
+      <h2 class="legal-section-title">{% trans "Data Recipients & Transfers" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        We may share your personal data with carefully selected service providers who support our operations,
+        for example hosting providers, email delivery services, or IT support. These processors act on our
+        instructions and are contractually bound to appropriate data protection obligations.
+        {% endblocktrans %}
+      </p>
+      <p class="legal-text">
+        {% blocktrans %}
+        Where personal data is transferred to countries outside the European Economic Area (EEA), we ensure
+        that appropriate safeguards are in place, such as standard contractual clauses or equivalent mechanisms,
+        in accordance with applicable data protection law.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 6. Retention -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 6" %}</div>
+      <h2 class="legal-section-title">{% trans "Retention Periods" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        We store your personal data only for as long as necessary for the purposes described in this Privacy
+        Policy, including to meet legal, accounting, or reporting requirements. When data is no longer required,
+        it will be deleted or anonymised in accordance with our retention policies.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 7. Your rights -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 7" %}</div>
+      <h2 class="legal-section-title">{% trans "Your Rights" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        Under the GDPR and applicable data protection law, you have various rights regarding your personal data.
+        Subject to the conditions set out in the law, these rights may include:
+        {% endblocktrans %}
+      </p>
+      <ul class="legal-list">
+        <li>{% trans "Right of access to your personal data;" %}</li>
+        <li>{% trans "Right to rectification of inaccurate or incomplete data;" %}</li>
+        <li>{% trans "Right to erasure (“right to be forgotten”) in certain circumstances;" %}</li>
+        <li>{% trans "Right to restriction of processing;" %}</li>
+        <li>{% trans "Right to data portability;" %}</li>
+        <li>{% trans "Right to object to certain processing, including direct marketing;" %}</li>
+        <li>{% trans "Right to withdraw consent where processing is based on your consent." %}</li>
+      </ul>
+      <p class="legal-text mt-2">
+        {% blocktrans %}
+        You also have the right to lodge a complaint with a supervisory authority, in particular in the Member
+        State of your habitual residence, place of work, or alleged infringement.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 8. Security -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 8" %}</div>
+      <h2 class="legal-section-title">{% trans "Data Security" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        We implement appropriate technical and organisational measures to protect your personal data against
+        unauthorised access, loss, misuse, or destruction. However, no online system can be guaranteed to be
+        100% secure, and you share information with us at your own risk.
+        {% endblocktrans %}
+      </p>
+    </div>
+
+    <!-- 9. Contact -->
+    <div class="legal-section-block">
+      <div class="legal-section-kicker">{% trans "Section 9" %}</div>
+      <h2 class="legal-section-title">{% trans "Contact" %}</h2>
+      <p class="legal-text">
+        {% blocktrans %}
+        If you have questions about this Privacy Policy or wish to exercise your data protection rights, please
+        contact us using the details provided in our <a href="/impressum/" class="legal-anchor">Imprint / Impressum</a>.
+        {% endblocktrans %}
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

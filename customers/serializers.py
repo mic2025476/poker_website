@@ -7,7 +7,16 @@ class CustomerSignupSerializer(serializers.Serializer):
     phone_number = serializers.CharField(max_length=15, required=False, allow_blank=True)
     password = serializers.CharField(max_length=128)
     confirm_password = serializers.CharField(max_length=128)
+    # ✅ New: user must tick this
+    terms_accepted = serializers.BooleanField()
 
+    def validate_terms_accepted(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                "You must accept the Terms & Conditions to create an account."
+            )
+        return value
+    
 class OTPCombinedVerifySerializer(serializers.Serializer):
     phone_number = serializers.CharField(max_length=15, required=False)
     phone_otp = serializers.CharField(max_length=6, required=False)
