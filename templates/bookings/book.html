@@ -1996,23 +1996,50 @@ window.switchTab = function(tabId, clickedTab) {
 };
 
 async function validateStep(stepIndex) {
-    const step = document.querySelector(`.form-step[data-step="${stepIndex + 1}"]`);
-    if (!step) return true;
-    
-    const inputs = step.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), select');
-    let isValid = true;
+  const step = document.querySelector(`.form-step[data-step="${stepIndex + 1}"]`);
+  if (!step) {
+    // If step doesn't exist, don't block user – just allow it
+    return true;
+  }
 
-    // Existing validation for other fields
-    inputs.forEach(input => {
-        if (!input.value.trim()) {
-            input.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            input.classList.remove('is-invalid');
-        }
-    });
+  const inputs = step.querySelectorAll(
+    'input:not([type="hidden"]):not([type="checkbox"]), select'
+  );
 
-    return isValid;
+  let isValid = true;
+
+  inputs.forEach(input => {
+    // Super defensive: if something weird is in the NodeList, just skip it
+    if (!input || !input.classList) {
+      return;
+    }
+
+    const value = (input.value || '').toString().trim();
+
+    if (!value) {
+      input.classList.add('is-invalid');
+      isValid = false;
+    } else {
+      input.classList.remove('is-invalid');
+    }
+  });
+
+  return isValid;
+}
+
+// Get numeric total amount from the pricing card (e.g. "€540.00" -> 540)
+function getTotalAmountFromUI() {
+  const totalAmountEl = document.getElementById('totalAmount');
+  if (!totalAmountEl) return 0;
+
+  const rawText = (totalAmountEl.textContent || '').trim(); // e.g. "€540.00"
+  // Remove everything except digits, dot and comma
+  const cleaned = rawText.replace(/[^\d.,]/g, '');
+
+  // If you only use "." as decimal separator, this is enough:
+  const value = parseFloat(cleaned.replace(',', '.')) || 0;
+
+  return value;
 }
 
 // Function to reset booking form to step 1
@@ -2085,17 +2112,20 @@ function resetBookingFormToStep1() {
 
 document.addEventListener('DOMContentLoaded', async function() {
   let braintreeInitialized = false;
-  const termsCheckbox = document.getElementById('agreeTerms');
-  const termsError = document.getElementById('termsError');
-  
-  if (termsCheckbox) {
-    termsCheckbox.addEventListener('change', () => {
-      if (termsCheckbox.checked) {
+const termsCheckbox = document.getElementById('agreeTerms');
+const termsError = document.getElementById('termsError');
+
+if (termsCheckbox) {
+  termsCheckbox.addEventListener('change', () => {
+    if (termsCheckbox.checked) {
+      if (termsError && termsError.classList) {
         termsError.classList.add('d-none');
-        termsCheckbox.classList.remove('is-invalid');
       }
-    });
-  }
+      termsCheckbox.classList.remove('is-invalid');
+    }
+  });
+}
+
   // Initialize current step variable
   window.currentStep = 1;
   
@@ -2542,7 +2572,9 @@ document.getElementById('bookingForm').addEventListener('submit', async function
   const termsError = document.getElementById('termsError');
 
   if (!termsCheckbox || !termsCheckbox.checked) {
-    if (termsError) termsError.classList.remove('d-none');
+    if (termsError){
+      termsError.classList.remove('d-none')
+    };
     termsCheckbox?.classList.add('is-invalid');
     alert('You must agree to the terms and conditions before booking.');
     return;
@@ -2556,6 +2588,11 @@ document.getElementById('bookingForm').addEventListener('submit', async function
   const dateCheckData = await dateCheckResponse.json();
   console.log('dateCheckData', dateCheckData);
 
+  // Read total amount that is shown in the pricing card
+const totalAmount = window.bookingTotalAmount || 0;
+console.log('Sending total_amount to backend:', totalAmount);
+
+
   // Availability check
   const availabilityResponse = await fetch('/bookings/check_availability/', {
     method: 'POST',
@@ -2568,7 +2605,8 @@ document.getElementById('bookingForm').addEventListener('submit', async function
       date: bookingDateInput.value,
       total_people: numberOfPeopleInput.value,
       start_time: bookingTime,        // will be 18:00
-      hours_booked: bookingDuration   // will be 18
+      hours_booked: bookingDuration,  // will be 18
+      total_amount: totalAmount 
     })
   });
 
@@ -2583,7 +2621,6 @@ document.getElementById('bookingForm').addEventListener('submit', async function
   const submitButton = document.querySelector('button[type="submit"][form="bookingForm"]');
   submitButton.disabled = true;
   submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Saving booking..." %}';
-
   const formData = {
     booking_date: bookingDate + "T" + bookingTime, // e.g. 2025-03-01T18:00
     number_of_people: numberOfPeople,
@@ -2593,7 +2630,8 @@ document.getElementById('bookingForm').addEventListener('submit', async function
     // keep same field name for backend
     payment_method_nonce: 'BANK_TRANSFER',
 
-    user_id: user_id
+    user_id: user_id,
+    total_amount: totalAmount
   };
 
   try {
@@ -2922,7 +2960,7 @@ document.getElementById('bookingForm').addEventListener('submit', async function
 
   // Base hourly rate (can be adjusted)
   const HOURLY_RATE = 50; // €50 per hour
-
+  let CURRENT_TOTAL_AMOUNT = 0;
 
 
   // Load available time slots when date changes
@@ -3076,41 +3114,45 @@ document.getElementById('bookingForm').addEventListener('submit', async function
   }
   
   // Function to update pricing based on selected duration
-  function updatePricing() {
-    if (!bookingDurationSelect) return;
+function updatePricing() {
+  if (!bookingDurationSelect) return;
 
-    const selectedDuration = parseInt(bookingDurationSelect.value) || 0;
-    const dealerChecked = document.getElementById('dealerService')?.checked || false;
-    const serviceChecked = document.getElementById('servicePersonal')?.checked || false;
-    
-    // Base rental cost
-    const baseRental = selectedDuration * HOURLY_RATE;
-    
-    // Show/hide base rental cost
-    const baseRentalCost = document.getElementById('baseRentalCost');
-    const rentalLabel = document.getElementById('rentalLabel');
-    const rentalAmount = document.getElementById('rentalAmount');
-    
-    if (selectedDuration > 0) {
-      if (baseRentalCost) baseRentalCost.style.display = 'flex';
-      if (rentalLabel) rentalLabel.textContent = `${selectedDuration} hour${selectedDuration > 1 ? 's' : ''} Rental`;
-      if (rentalAmount) rentalAmount.textContent = `€${baseRental.toFixed(2)}`;
-    } else {
-      if (baseRentalCost) baseRentalCost.style.display = 'none';
-    }
-    
-    // Calculate total
-    let total = baseRental;
-    if (dealerChecked) total += 200;
-    if (serviceChecked) total += 200;
-    
-    // Update total amount
-    const totalAmountEl = document.getElementById('totalAmount');
-    if (totalAmountEl) {
-      totalAmountEl.textContent = `€${total.toFixed(2)}`;
-    }
+  const selectedDuration = parseInt(bookingDurationSelect.value) || 0;
+  const dealerChecked = document.getElementById('dealerService')?.checked || false;
+  const serviceChecked = document.getElementById('servicePersonal')?.checked || false;
+  
+  // Base rental cost
+  const baseRental = selectedDuration * HOURLY_RATE;
+
+  // Show/hide base rental cost (unchanged)
+  const baseRentalCost = document.getElementById('baseRentalCost');
+  const rentalLabel = document.getElementById('rentalLabel');
+  const rentalAmount = document.getElementById('rentalAmount');
+  
+  if (selectedDuration > 0) {
+    if (baseRentalCost) baseRentalCost.style.display = 'flex';
+    if (rentalLabel) rentalLabel.textContent =
+      `${selectedDuration} hour${selectedDuration > 1 ? 's' : ''} Rental`;
+    if (rentalAmount) rentalAmount.textContent = `€${baseRental.toFixed(2)}`;
+  } else {
+    if (baseRentalCost) baseRentalCost.style.display = 'none';
   }
   
+  // Calculate total
+  let total = baseRental;
+  if (dealerChecked) total += 200;
+  if (serviceChecked) total += 200;
+
+  // 🔥 store it in the global variable
+  CURRENT_TOTAL_AMOUNT = total;
+
+  // Update total amount in UI (keep this for the user)
+  const totalAmountEl = document.getElementById('totalAmount');
+  if (totalAmountEl) {
+    totalAmountEl.textContent = `€${total.toFixed(2)}`;
+  }
+}
+
   // Add event listeners for service checkboxes
   const dealerCheckbox = document.getElementById('dealerService');
   const serviceCheckbox = document.getElementById('servicePersonal');

@@ -310,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentStep = 0;
   const TIMES_OWNER = 'times-v2';
   let timeBuildTicket = 0; // SINGLE-FLIGHT TICKET (global)
+   window.bookingTotalAmount = 400;
 
   // ---- dom refs ----
   const steps = document.querySelectorAll('.form-step');
@@ -376,24 +377,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalServiceCost = document.getElementById('finalServiceCost');
     const finalDrinksCost = document.getElementById('finalDrinksCost');
 
-    if (dealerCheckbox?.checked){ total+=200; dealerCost&& (dealerCost.style.display='flex'); finalDealerCost&& (finalDealerCost.style.display='flex'); }
-    else { dealerCost&& (dealerCost.style.display='none'); finalDealerCost&& (finalDealerCost.style.display='none'); }
+    if (dealerCheckbox?.checked){
+      total += 200;
+      dealerCost && (dealerCost.style.display = 'flex');
+      finalDealerCost && (finalDealerCost.style.display = 'flex');
+    } else {
+      dealerCost && (dealerCost.style.display = 'none');
+      finalDealerCost && (finalDealerCost.style.display = 'none');
+    }
 
-    if (serviceCheckbox?.checked){ total+=200; serviceCost&& (serviceCost.style.display='flex'); finalServiceCost&& (finalServiceCost.style.display='flex'); }
-    else { serviceCost&& (serviceCost.style.display='none'); finalServiceCost&& (finalServiceCost.style.display='none'); }
+    if (serviceCheckbox?.checked){
+      total += 200;
+      serviceCost && (serviceCost.style.display = 'flex');
+      finalServiceCost && (finalServiceCost.style.display = 'flex');
+    } else {
+      serviceCost && (serviceCost.style.display = 'none');
+      finalServiceCost && (finalServiceCost.style.display = 'none');
+    }
 
-    if (drinksCheckbox?.checked){ total+=200; finalDrinksCost&&(finalDrinksCost.style.display='flex'); }
-    else { finalDrinksCost&&(finalDrinksCost.style.display='none'); }
+    if (drinksCheckbox?.checked){
+      total += 200;
+      finalDrinksCost && (finalDrinksCost.style.display = 'flex');
+    } else {
+      finalDrinksCost && (finalDrinksCost.style.display = 'none');
+    }
 
+    // 🔥 expose the same total to the rest of the app
+    window.bookingTotalAmount = total;
+
+    // Update UI
     const totalAmountEl = document.getElementById('totalAmount');
     const finalTotalAmountEl = document.getElementById('finalTotalAmount');
     if (totalAmountEl) totalAmountEl.textContent = `€${total.toFixed(2)}`;
     if (finalTotalAmountEl) finalTotalAmountEl.textContent = `€${total.toFixed(2)}`;
-  // NEW: sync bank transfer amount text
-const bankAmount1 = document.getElementById('bankTransferAmount');
-const bankAmount2 = document.getElementById('bankTransferAmountRepeating');
-if (bankAmount1) bankAmount1.textContent = `€${total.toFixed(2)}`;
-if (bankAmount2) bankAmount2.textContent = `€${total.toFixed(2)}`;
+
+    // Sync bank transfer block
+    const bankAmount1 = document.getElementById('bankTransferAmount');
+    const bankAmount2 = document.getElementById('bankTransferAmountRepeating');
+    if (bankAmount1) bankAmount1.textContent = `€${total.toFixed(2)}`;
+    if (bankAmount2) bankAmount2.textContent = `€${total.toFixed(2)}`;
   }
 
   function showStep(idx){
@@ -595,12 +617,14 @@ console.log('[dayUnavailable]',
   }
 
   // reset durations placeholder
-  dSel.innerHTML = '';
+  if (dSel) {
+    dSel.innerHTML = '';
   const dph = document.createElement('option');
   dph.value=''; dph.disabled=true; dph.selected=true;
   dph.textContent = _('Select Time First');
   dph.dataset.owner = TIMES_OWNER;
   dSel.appendChild(dph);
+  }
 }
 
 

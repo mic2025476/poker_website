@@ -339,6 +339,7 @@ def check_availability(request):
         user_id = request.data.get("user_id")
         time_str = request.data.get("start_time")
         total_people = request.data.get("total_people")
+        total_amount = request.data.get("total_amount")
         hours_booked_raw = request.data.get("hours_booked")
 
         if not date_str or not time_str or not hours_booked_raw:
@@ -400,7 +401,7 @@ def check_availability(request):
         except (ValueError, TypeError):
             return Response({"available": False, "message": "Invalid input for hours or people."}, status=status.HTTP_400_BAD_REQUEST)
 
-        total = hours_booked * total_people * rate
+        total = total_amount
         deposit = round(total * 0.3, 2)
         # Create a temp inactive booking to "hold" the slot
         customer = CustomerModel.objects.get(id=user_id, is_active=True)
