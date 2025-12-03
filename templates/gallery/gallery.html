@@ -2,83 +2,594 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
+
 {% block content %}
 <style>
-.gallery-card {
-  border: none;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+    :root {
+        --poker-bg: #050810;
+        --poker-card: #0f172a;
+        --poker-accent: #dc143c;
+        --poker-accent-soft: rgba(220, 20, 60, 0.18);
+        --poker-gold: #fbbf24;
+        --poker-border: rgba(148, 163, 184, 0.35);
+        --poker-text-soft: #e5e7eb;
+    }
+
+    body {
+        background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+    }
+
+    #gallery {
+        color: var(--poker-text-soft);
+    }
+
+    #gallery h1 {
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: clamp(1.8rem, 2.8vw, 2.4rem);
+    }
+
+    .gallery-subtitle {
+        color: #9ca3af;
+        max-width: 520px;
+        margin: 0.5rem auto 2.5rem;
+        font-size: 0.95rem;
+    }
+
+    .gallery-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .gallery-count-badge {
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--poker-border);
+        background: linear-gradient(135deg, rgba(15,23,42,0.9), rgba(15,23,42,0.3));
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .gallery-count-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--poker-accent);
+        box-shadow: 0 0 0 4px rgba(220, 20, 60, 0.25);
+    }
+
+    .gallery-filter-chip {
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        background: rgba(15,23,42,0.85);
+        color: #e5e7eb;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .gallery-filter-chip span {
+        font-size: 1rem;
+    }
+
+    .gallery-filter-chip:hover,
+    .gallery-filter-chip.active {
+        border-color: var(--poker-accent-soft);
+        background: radial-gradient(circle at top, rgba(220,20,60,0.18), rgba(15,23,42,0.95));
+        box-shadow: 0 0 0 1px rgba(248, 250, 252, 0.03);
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        flex: 1 1 220px;
+        max-width: 320px;
+    }
+
+    .search-input-wrapper input {
+        width: 100%;
+        border-radius: 999px;
+        border: 1px solid var(--poker-border);
+        background: rgba(15,23,42,0.9);
+        color: #e5e7eb;
+        padding: 0.5rem 2.4rem 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .search-input-wrapper input::placeholder {
+        color: #6b7280;
+    }
+
+    .search-input-wrapper .search-icon {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.95rem;
+        color: #6b7280;
+    }
+
+    .gallery-card {
+        position: relative;
+        border-radius: 0.9rem;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: radial-gradient(circle at top, #020617, #020617);
+        box-shadow:
+            0 16px 40px rgba(0, 0, 0, 0.8),
+            0 0 0 1px rgba(15,23,42,0.8);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .gallery-card::before {
+        content: attr(data-suit);
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        font-size: 1.4rem;
+        opacity: 0.18;
+        color: var(--poker-accent);
+        z-index: 1;
+        pointer-events: none;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .gallery-card::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        border: 1px solid transparent;
+        background: linear-gradient(135deg, rgba(220,20,60,0.6), rgba(251,191,36,0.35)) border-box;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        mask:
+          linear-gradient(#000 0 0) padding-box,
+          linear-gradient(#000 0 0);
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .gallery-card:hover {
+        transform: translateY(-6px) scale(1.02);
+        border-color: var(--poker-accent-soft);
+        box-shadow:
+            0 20px 55px rgba(0, 0, 0, 0.92),
+            0 0 0 1px rgba(220,20,60,0.4);
+    }
+
+    .gallery-card:hover::before {
+        opacity: 0.4;
+        transform: translateY(-4px) scale(1.1);
+    }
+
+    .gallery-card:hover::after {
+        opacity: 1;
+    }
+
+    .image-wrapper {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        background: #020617;
+    }
+
+    .gallery-card .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        transform: scale(1.02);
+        transition: transform 0.45s ease, filter 0.45s ease;
+        filter: saturate(1.05) contrast(1.02);
+    }
+
+    .gallery-card:hover .card-img-top {
+        transform: scale(1.1);
+        filter: saturate(1.12) contrast(1.04);
+    }
+
+    .image-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.9),
+            rgba(0, 0, 0, 0.4),
+            transparent 55%
+        );
+        padding: 0.6rem 0.7rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        opacity: 0;
+        transform: translateY(8%);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        z-index: 2;
+    }
+
+    .gallery-card:hover .image-overlay,
+    .gallery-card:focus-within .image-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .image-meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .image-number {
+        color: #f9fafb;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .image-tag {
+        font-size: 0.72rem;
+        padding: 0.18rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.7);
+        background: rgba(15,23,42,0.9);
+        color: #e5e7eb;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .image-tag-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--poker-accent);
+    }
+
+    .image-caption {
+        margin-top: 0.35rem;
+        font-size: 0.75rem;
+        color: #d1d5db;
+        opacity: 0.9;
+        max-width: 90%;
+    }
+
+    .gallery-link {
+        display: block;
+        text-decoration: none;
+        outline: none;
+        height: 100%;
+    }
+
+    .gallery-link:focus {
+        outline: none;
+    }
+
+    .gallery-card:focus-within {
+        outline: 2px solid var(--poker-accent);
+        outline-offset: 3px;
+    }
+
+    .modal-content {
+        background: radial-gradient(circle at top, #020617, #020617 55%, #020617 100%);
+        border-radius: 1rem;
+        border: 1px solid var(--poker-border);
+        color: #e5e7eb;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        border-bottom-color: rgba(148, 163, 184, 0.3);
+        background: rgba(15,23,42,0.9);
+    }
+
+    .modal-title {
+        color: #f9fafb;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .modal-title span {
+        color: var(--poker-accent);
+    }
+
+    .modal-body {
+        background: radial-gradient(circle at center, #020617, #000);
+        padding: 0.75rem 0.75rem 1rem;
+    }
+
+    .modal-body-inner {
+        position: relative;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        border: 1px solid rgba(15,23,42,0.85);
+        background: #020617;
+    }
+
+    .modal-body img {
+        border-radius: 0.75rem;
+    }
+
+    .modal-footer {
+        border-top-color: rgba(148, 163, 184, 0.3);
+        background: rgba(15,23,42,0.95);
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .image-info-text {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    .modal-nav-btn {
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        background: rgba(15,23,42,0.95);
+        color: #e5e7eb;
+        padding: 0.25rem 0.9rem;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .modal-nav-btn:hover {
+        border-color: var(--poker-accent-soft);
+        background: rgba(220,20,60,0.15);
+        color: #f9fafb;
+    }
+
+    .btn-close {
+        filter: invert(1) grayscale(1);
+    }
+
+    .btn-close:focus {
+        box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.4);
+    }
+
+    .empty-gallery {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #9ca3af;
+        border-radius: 1rem;
+        border: 1px dashed rgba(148, 163, 184, 0.4);
+        background: radial-gradient(circle at top, rgba(15,23,42,0.9), rgba(15,23,42,0.6));
+    }
+
+    .empty-gallery-icon {
+        font-size: 3.4rem;
+        color: var(--poker-accent);
+        opacity: 0.7;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .gallery-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .gallery-card::before {
+            font-size: 1.2rem;
+            top: 8px;
+            left: 8px;
+        }
+
+        .image-overlay {
+            padding: 0.55rem 0.55rem 0.6rem;
+        }
+
+        .image-number {
+            font-size: 0.8rem;
+        }
+
+        .image-caption {
+            font-size: 0.72rem;
+        }
+    }
+/* Keep modal within viewport height */
+.modal-dialog {
+    max-height: 100vh;
+    margin: 1rem auto; /* small top/bottom spacing */
 }
 
-.gallery-card:hover {
-  transform: scale(1.03);
-  box-shadow: var(--shadow-md);
+/* Make body area scroll if needed, footer stays in view */
+.modal-content {
+    max-height: calc(100vh - 2rem); /* account for margin */
+    display: flex;
+    flex-direction: column;
 }
 
-.gallery-card .card-img-top {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  object-position: center;
-  transition: transform 0.3s ease;
+.modal-body {
+    flex: 1 1 auto;
+    overflow: auto; /* scroll only the image area */
 }
 
-.gallery-card:hover .card-img-top {
-  transform: scale(1.05);
+/* Ensure image doesn’t overflow horizontally */
+.modal-body-inner {
+    max-height: 100%;
 }
 
-.gallery-link {
-  display: block;
-  text-decoration: none;
-  outline: none;
+.modal-body-inner img {
+    max-width: 100%;
+    height: auto;
+    display: block;
 }
 
-.gallery-link:focus {
-  outline: 3px solid var(--theme-red);
-  outline-offset: -3px;
-}
-
-.gallery-card:focus-within {
-  outline: 3px solid var(--theme-red);
-  outline-offset: 2px;
-}
 </style>
+
 <section id="gallery" class="py-5">
     <div class="container" style="max-width: 1400px; margin: 0 auto;">
-        <h1 class="text-center mb-5">{% trans "Photo Gallery" %}</h1>
-        <div class="row g-3 g-md-4">
-            {% for image in gallery_images %}
-            <div class="col-6 col-sm-6 col-md-4 col-lg-3 mb-4">
-                <div class="card gallery-card">
-                    <a href="{{ image }}" data-bs-toggle="modal" data-bs-target="#imageModal{{ forloop.counter }}"
-                       class="gallery-link" aria-label="View image {{ forloop.counter }} in fullscreen">
-                        <img src="{{ image }}" class="card-img-top" alt="Poker Lounge Image {{ forloop.counter }}" loading="lazy">
-                    </a>
-                </div>
+        <h1 class="text-center mb-2">{% trans "" %}</h1>
+        <p class="gallery-subtitle text-center">
+            {% trans "" %}
+        </p>
 
-                <!-- Modal -->
-                <div class="modal fade" id="imageModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="imageModalLabel{{ forloop.counter }}" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered" style="max-width: clamp(600px, 85vw, 1200px);">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="imageModalLabel{{ forloop.counter }}">Poker Lounge Image {{ forloop.counter }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <img src="{{ image }}" class="img-fluid" alt="Poker Lounge Image {{ forloop.counter }}">
-                      </div>
+        {% if gallery_images %}
+
+            <div class="row g-3 g-md-4">
+                {% for image in gallery_images %}
+                <div class="col-6 col-sm-6 col-md-4 col-lg-3 mb-4 gallery-item" data-title="Image {{ forloop.counter }}">
+                    <div class="card gallery-card" data-suit="{% cycle '♠' '♥' '♦' '♣' %}">
+                        <a href="{{ image.full }}" data-bs-toggle="modal" data-bs-target="#imageModal{{ forloop.counter }}"
+                           class="gallery-link"
+                           data-index="{{ forloop.counter0 }}"
+                           aria-label="{% trans 'View image' %} {{ forloop.counter }} {% trans 'in fullscreen' %}">
+                            <div class="image-wrapper">
+                                <img src="{{ image.thumb }}" class="card-img-top"
+     alt="{% trans 'Poker Lounge Image' %} {{ forloop.counter }}" loading="lazy">
+                                <div class="image-overlay">
+                                </div>
+                            </div>
+                        </a>
                     </div>
-                  </div>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="imageModal{{ forloop.counter }}" tabindex="-1"
+                         aria-labelledby="imageModalLabel{{ forloop.counter }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" style="max-width: clamp(650px, 85vw, 1200px);">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="imageModalLabel{{ forloop.counter }}">
+                                        {% trans "Poker Lounge Image" %} <span>#{{ forloop.counter }}</span>
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="{% trans 'Close' %}"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="modal-body-inner">
+                                        <img src="{{ image.full }}" class="img-fluid"
+                                             alt="{% trans 'Poker Lounge Image' %} {{ forloop.counter }}">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <p class="image-info-text mb-0">
+                                        {% trans "Use the arrows or swipe to browse more moments." %}
+                                    </p>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="modal-nav-btn prev-btn" data-direction="prev">
+                                            ‹ {% trans "Previous" %}
+                                        </button>
+                                        <button type="button" class="modal-nav-btn next-btn" data-direction="next">
+                                            {% trans "Next" %} ›
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
+        {% else %}
+            <div class="empty-gallery">
+                <div class="empty-gallery-icon">🃏</div>
+                <h3 class="mb-2">{% trans "No Images Yet" %}</h3>
+                <p class="text-muted mb-1">
+                    {% trans "Your poker moments will appear here once you add images to" %} <code>static/mge_pictures/</code>
+                </p>
+                <p class="text-muted">
+                    {% trans "Upload shots of your tables, tournaments, and favorite hands to bring this lounge to life." %}
+                </p>
+            </div>
+        {% endif %}
     </div>
 </section>
+
+<script>
+    // Simple search filter (client-side, title-based)
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('gallerySearch');
+        const items = document.querySelectorAll('.gallery-item');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const q = this.value.toLowerCase().trim();
+                items.forEach(item => {
+                    const title = (item.dataset.title || '').toLowerCase();
+                    item.style.display = title.includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        // Modal next/prev (per Bootstrap gallery patterns)[web:12][web:18]
+        const modals = document.querySelectorAll('.modal[id^="imageModal"]');
+
+        modals.forEach(modal => {
+            modal.addEventListener('show.bs.modal', function (event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) return;
+                const currentIndex = parseInt(trigger.getAttribute('data-index') || '0', 10);
+
+                const allLinks = document.querySelectorAll('.gallery-link[data-index]');
+                const total = allLinks.length;
+
+                const prevBtn = modal.querySelector('.prev-btn');
+                const nextBtn = modal.querySelector('.next-btn');
+                const img = modal.querySelector('.modal-body img');
+
+                function updateImage(newIndex) {
+                    const link = allLinks[newIndex];
+                    if (!link) return;
+
+                    const newSrc = link.getAttribute('href');
+                    const newAlt = link.querySelector('img')?.getAttribute('alt') || img.alt;
+
+                    img.src = newSrc;
+                    img.alt = newAlt;
+                }
+
+                let index = currentIndex;
+
+                function setButtonsState() {
+                    if (!prevBtn || !nextBtn) return;
+                    prevBtn.disabled = index <= 0;
+                    nextBtn.disabled = index >= total - 1;
+                }
+
+                setButtonsState();
+
+                if (prevBtn) {
+                    prevBtn.onclick = function () {
+                        if (index > 0) {
+                            index -= 1;
+                            updateImage(index);
+                            setButtonsState();
+                        }
+                    };
+                }
+
+                if (nextBtn) {
+                    nextBtn.onclick = function () {
+                        if (index < total - 1) {
+                            index += 1;
+                            updateImage(index);
+                            setButtonsState();
+                        }
+                    };
+                }
+            });
+        });
+    });
+</script>
+
 {% endblock %}
