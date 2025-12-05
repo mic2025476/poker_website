@@ -10,8 +10,6 @@ cachetools
 cattrs
 certifi
 cffi
-chardet
-charset-normalizer
 cryptography
 Django
 django-cors-headers
@@ -30,19 +28,11 @@ google-cloud-storage
 google-crc32c
 google-resumable-media
 googleapis-common-protos
-googletrans
+googletrans-py
 grpcio
 grpcio-status
 gunicorn
-h11
-h2
-hpack
-hstspreload
-httpcore
 httplib2
-httpx
-hyperframe
-idna
 jmespath
 msgpack
 oauthlib
@@ -61,8 +51,6 @@ python-dateutil
 python-dotenv
 requests
 requests-cache
-requests-oauthlib
-rfc3986
 rsa
 s3transfer
 six
@@ -70,6 +58,5 @@ sniffio
 sqlparse
 typing_extensions
 uritemplate
-url-normalize
 urllib3
 whitenoise
