@@ -462,6 +462,11 @@
 
 /* Phones and small tablets */
 @media (max-width: 768px) {
+  #hero {
+    /* on phones, use even smaller file */
+    background-image: url("{% static 'mge_pictures/thumbs/DSC_0009.JPG' %}");
+    background-attachment: scroll; /* avoids jank on iOS */
+  }
   #authForm {
     width: 92vw;
     max-width: 380px;
@@ -505,7 +510,9 @@
   /* ===========================
      HERO
      =========================== */
-  #hero {
+#hero {
+    /* use optimized hero image (resized version) */
+    background-image: url("{% static 'mge_pictures/full/DSC_0009.JPG' %}");
     background-size: cover;
     background-position: center;
     padding: clamp(3rem, 8vh, 10rem) var(--container-gutter);
@@ -516,7 +523,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
+}
+
 
   #hero::before {
     content: '';
@@ -1160,8 +1168,7 @@
 </div>
 
 <!-- Main Hero Section -->
-<section id="hero" class="d-flex flex-column justify-content-center align-items-center"
-  style="background-image: url('{% static 'mge_pictures/DSC_0009.JPG' %}'); background-size: cover; background-position: center;">
+<section id="hero" class="d-flex flex-column justify-content-center align-items-center">
   <div class="text-center text-white mb-4">
     <h1 class="display-4 fw-bold">{% trans "Welcome to MG-Entertainment's Poker Lounge" %}</h1>
     <p class="lead">{% trans "Berlin's Premier Poker Lounge by MG Entertainment" %}</p>

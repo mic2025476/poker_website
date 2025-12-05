@@ -5,6 +5,7 @@ from gallery import views as galleryView
 from pricing import views as priceView
 from contact import views as contactView
 from django.views.generic import TemplateView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('home.urls'),name='home'),
@@ -12,7 +13,7 @@ urlpatterns = [
     path('', homeView.home, name='home'),  # Home page at '/'
     path('gallery/', galleryView.gallery, name='gallery'),
     path('pricing/', priceView.pricing, name='pricing'),
-    path('contact/', contactView.contact, name='contact'),
+path('contact/', include('contact.urls')),
     path('customers/', include('customers.urls')),
     path('bookings/', include('bookings.urls'), name='bookings'),
     path('payments/', include('payments.urls')),

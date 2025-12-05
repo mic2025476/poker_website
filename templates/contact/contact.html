@@ -1,111 +1,332 @@
-<!-- core/templates/contact.html -->
 {% extends 'core/base.html' %}
 {% load i18n %}
 
 {% block content %}
 <style>
-.contact-message {
-  min-height: 120px;
-  resize: vertical;
-}
-
-@media (min-width: 1280px) {
-  .contact-message {
-    min-height: 160px;
+  :root {
+    --poker-bg: #020617;
+    --poker-card: #0b1220;
+    --poker-card-soft: rgba(15,23,42,0.95);
+    --poker-accent: #dc143c;
+    --poker-accent-soft: rgba(220,20,60,0.18);
+    --poker-gold: #fbbf24;
+    --poker-border: rgba(148, 163, 184, 0.5);
+    --poker-text-soft: #e5e7eb;
   }
-}
-</style>
-<section id="contact" class="d-flex justify-content-center align-items-center min-vh-100 py-5 bg-light">
-    <div class="container" style="max-width: 900px;">
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-                <h1 class="text-center mb-4">{% trans "Contact Us" %}</h1>
-                <!-- Success/Error Message -->
-                <div id="contactAlert" class="alert d-none" role="alert"></div>
 
-                <!-- Contact Form -->
-                <form id="contactForm">
-                    <div class="mb-3">
-                        <label for="contactName" class="form-label">{% trans "Name" %}</label>
-                        <input type="text" class="form-control" id="contactName" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contactEmail" class="form-label">{% trans "Email address" %}</label>
-                        <input type="email" class="form-control" id="contactEmail" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contactMessage" class="form-label">{% trans "Message" %}</label>
-                        <textarea class="form-control contact-message" id="contactMessage" name="message" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 custom-red-button" id="submitBtn">
-                        {% trans "Send Message" %}
-                    </button>
-                </form>
-            </div>
+  #contact-section {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top, #111827 0, #020617 40%, #000 100%);
+    color: var(--poker-text-soft);
+    display: flex;
+    align-items: center;
+    padding: 4rem 0 3rem;
+  }
+
+  .contact-wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .contact-heading {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.8rem;
+    color: var(--poker-gold);
+  }
+
+  .contact-title {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: clamp(1.8rem, 2.5vw, 2.2rem);
+  }
+
+  .contact-subtitle {
+    color: #9ca3af;
+    font-size: 0.95rem;
+    max-width: 520px;
+  }
+
+  .contact-card {
+    border-radius: 1rem;
+    background: radial-gradient(circle at top left, rgba(220,20,60,0.15), #020617 55%);
+    border: 1px solid var(--poker-border);
+    box-shadow:
+      0 18px 40px rgba(0, 0, 0, 0.85),
+      0 0 0 1px rgba(15,23,42,0.9);
+    padding: 1.5rem 1.5rem 1.75rem;
+  }
+
+  .contact-card::before {
+    content: "♠";
+    position: absolute;
+    top: 10px;
+    right: 16px;
+    font-size: 2.4rem;
+    color: var(--poker-accent);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  .contact-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9ca3af;
+  }
+
+  .form-control.contact-input,
+  .form-control.contact-message {
+    background: rgba(15,23,42,0.9);
+    border-radius: 0.7rem;
+    border: 1px solid var(--poker-border);
+    color: #f9fafb;
+    font-size: 0.9rem;
+  }
+
+  .form-control.contact-input:focus,
+  .form-control.contact-message:focus {
+    border-color: var(--poker-accent);
+    box-shadow: 0 0 0 1px var(--poker-accent-soft);
+    background: rgba(15,23,42,0.95);
+    color: #f9fafb;
+  }
+
+  .form-control::placeholder {
+    color: #6b7280;
+  }
+
+  .contact-message {
+    min-height: 130px;
+    resize: vertical;
+  }
+
+  .contact-meta {
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
+
+  .contact-meta i {
+    color: var(--poker-accent);
+  }
+
+  .contact-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--poker-border);
+    background: rgba(15,23,42,0.9);
+    font-size: 0.75rem;
+    color: #e5e7eb;
+  }
+
+  .contact-pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--poker-accent);
+    box-shadow: 0 0 0 3px rgba(220,20,60,0.35);
+  }
+
+  .contact-details {
+    font-size: 0.9rem;
+    color: #d1d5db;
+  }
+
+  .contact-details a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .contact-details a:hover {
+    color: var(--poker-gold);
+  }
+
+  #contactAlert {
+    border-radius: 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-contact-submit {
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.82rem;
+    padding: 0.7rem 1.2rem;
+    border: none;
+    background: linear-gradient(135deg, var(--poker-accent), #b91c1c);
+    color: #f9fafb;
+    box-shadow: 0 10px 25px rgba(220,20,60,0.45);
+  }
+
+  .btn-contact-submit:hover {
+    background: linear-gradient(135deg, #f97373, var(--poker-accent));
+    color: #ffffff;
+  }
+
+  .btn-contact-submit:disabled {
+    opacity: 0.7;
+    box-shadow: none;
+  }
+
+  @media (min-width: 1200px) {
+    .contact-message {
+      min-height: 160px;
+    }
+  }
+</style>
+
+<section id="contact-section">
+  <div class="container contact-wrapper">
+    <div class="row g-4 align-items-start">
+      <div class="col-12 col-lg-5 mb-3 mb-lg-0">
+        <div class="mb-3">
+          <div class="contact-heading mb-2">
+            {% trans "Get in Touch" %}
+          </div>
+          <h1 class="contact-title mb-2">
+            {% trans "Contact Us" %}
+          </h1>
+          <p class="contact-subtitle">
+            {% trans "Have a question about bookings, private events or tournaments? Send us a message and our team will get back to you as soon as possible." %}
+          </p>
         </div>
+
+        <div class="d-flex flex-column gap-2 contact-details">
+          <div class="contact-pill mb-2">
+            <span class="contact-pill-dot"></span>
+            <span>{% trans "Typical reply time:" %}  {% trans "within 24 hours" %}</span>
+          </div>
+
+          <div><i class="fas fa-map-marker-alt me-2 text-danger"></i> Friedrichsberger Str. 24, 10243 Berlin</div>
+          <div><i class="fas fa-envelope me-2 text-danger"></i>
+            <a href="mailto:info@mgen-poker.com">info@mgen-poker.com</a>
+          </div>
+          <div><i class="fas fa-phone me-2 text-danger"></i>
+            <a href="tel:+491631660359">+49 163 166 0359</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-7 position-relative">
+        <!-- Success/Error Message -->
+        <div id="contactAlert" class="alert d-none mb-3" role="alert"></div>
+
+        <!-- Contact Form Card -->
+        <div class="position-relative contact-card">
+          <form id="contactForm">
+            <div class="mb-3">
+              <label for="contactName" class="contact-label mb-1">
+                {% trans "Name" %}
+              </label>
+              <input type="text" class="form-control contact-input" id="contactName"
+                     name="name" required
+                     placeholder="{% trans 'Your full name' %}">
+            </div>
+
+            <div class="mb-3">
+              <label for="contactEmail" class="contact-label mb-1">
+                {% trans "Email address" %}
+              </label>
+              <input type="email" class="form-control contact-input" id="contactEmail"
+                     name="email" required
+                     placeholder="you@example.com">
+            </div>
+
+            <div class="mb-3">
+              <label for="contactMessage" class="contact-label mb-1">
+                {% trans "Message" %}
+              </label>
+              <textarea class="form-control contact-message" id="contactMessage"
+                        name="message" required
+                        placeholder="{% trans 'Tell us how we can help you…' %}"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="contact-meta">
+                <i class="fas fa-lock me-1"></i>
+                {% trans "Your details are only used to reply to your request." %}
+              </div>
+            </div>
+
+            <button type="submit"
+                    class="btn btn-contact-submit w-100"
+                    id="submitBtn">
+              {% trans "Send Message" %}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 
 <script>
-document.getElementById('contactForm').addEventListener('submit', async function(e) {
+  const contactScriptUrl = "https://script.google.com/macros/s/AKfycbzjgFhr_1tSuMUTWMutUCpyOYWUcWpOGpY-GO-t_nz75S-13QQt0Wpd3xrFZMeae7OcJw/exec";
+
+  document.getElementById('contactForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('contactAlert');
     const form = e.target;
 
-    // Disable button and show loading
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '{% trans "Sending..." %}';
+    const name = document.getElementById('contactName').value.trim();
+    const email = document.getElementById('contactEmail').value.trim();
+    const message = document.getElementById('contactMessage').value.trim();
 
-    // Get form data
-    const formData = {
-        name: document.getElementById('contactName').value,
-        email: document.getElementById('contactEmail').value,
-        message: document.getElementById('contactMessage').value
-    };
+    if (!name || !email || !message) {
+      alertBox.className = 'alert alert-danger mb-3';
+      alertBox.textContent = '{% trans "Please fill in all fields." %}';
+      alertBox.classList.remove('d-none');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>{% trans "Sending..." %}';
+
+    // Build URL for Apps Script: mode=contact
+    const url = contactScriptUrl
+      + '?mode=contact'
+      + '&name=' + encodeURIComponent(name)
+      + '&email=' + encodeURIComponent(email)
+      + '&message=' + encodeURIComponent(message);
 
     try {
-        const response = await fetch('/contact/api/submit/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify(formData)
-        });
+      const response = await fetch(url);
+      const data = await response.json();
 
-        const data = await response.json();
-
-        if (response.ok) {
-            // Success
-            alertBox.className = 'alert alert-success';
-            alertBox.textContent = data.message || 'Your message has been sent successfully!';
-            alertBox.classList.remove('d-none');
-
-            // Reset form
-            form.reset();
-
-            // Hide alert after 5 seconds
-            setTimeout(() => {
-                alertBox.classList.add('d-none');
-            }, 5000);
-        } else {
-            // Error
-            alertBox.className = 'alert alert-danger';
-            alertBox.textContent = data.message || 'Failed to send message. Please try again.';
-            alertBox.classList.remove('d-none');
-        }
-    } catch (error) {
-        // Network error
-        alertBox.className = 'alert alert-danger';
-        alertBox.textContent = 'Network error. Please check your connection and try again.';
+      if (data.success) {
+        alertBox.className = 'alert alert-success mb-3';
+        alertBox.textContent =
+          data.message || '{% trans "Thank you! Your message has been sent." %}';
         alertBox.classList.remove('d-none');
+        form.reset();
+      } else {
+        alertBox.className = 'alert alert-danger mb-3';
+        alertBox.textContent =
+          data.message || '{% trans "Failed to send message. Please try again." %}';
+        alertBox.classList.remove('d-none');
+      }
+    } catch (err) {
+      console.error('Contact form error:', err);
+      alertBox.className = 'alert alert-danger mb-3';
+      alertBox.textContent =
+        '{% trans "Network error. Please check your connection and try again." %}';
+      alertBox.classList.remove('d-none');
     } finally {
-        // Re-enable button
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '{% trans "Send Message" %}';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '{% trans "Send Message" %}';
+      setTimeout(() => alertBox.classList.add('d-none'), 6000);
     }
-});
+  });
 </script>
+
 {% endblock %}

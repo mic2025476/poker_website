@@ -455,8 +455,15 @@
                            data-index="{{ forloop.counter0 }}"
                            aria-label="{% trans 'View image' %} {{ forloop.counter }} {% trans 'in fullscreen' %}">
                             <div class="image-wrapper">
-                                <img src="{{ image.thumb }}" class="card-img-top"
-     alt="{% trans 'Poker Lounge Image' %} {{ forloop.counter }}" loading="lazy">
+<img src="{{ image.thumb }}"
+     class="card-img-top"
+     alt="{% trans 'Poker Lounge Image' %} {{ forloop.counter }}"
+     loading="lazy"
+     decoding="async"
+     sizes="(max-width: 576px) 50vw,
+            (max-width: 992px) 33vw,
+            25vw">
+
                                 <div class="image-overlay">
                                 </div>
                             </div>

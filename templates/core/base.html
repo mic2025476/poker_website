@@ -201,7 +201,7 @@
             <a class="nav-link nav-link-toggle {% if request.path == '/pricing/' %}active{% endif %}" href="{% url 'pricing' %}">{% trans "Pricing" %}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link nav-link-toggle {% if request.path == '/contact/' %}active{% endif %}" href="{% url 'contact' %}">{% trans "Contact" %}</a>
+            <a class="nav-link nav-link-toggle {% if request.path == '/contact/' %}active{% endif %}" href="{% url 'contact:contact' %}">{% trans "Contact" %}</a>
           </li>
 
           <!-- Desktop Language Dropdown (icon only) -->
