@@ -12,16 +12,17 @@ FULL_DIR.mkdir(parents=True, exist_ok=True)
 THUMB_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_FULL_WIDTH = 1600   # px for modal / fullscreen
-MAX_THUMB_WIDTH = 480   # px for grid
-QUALITY = 80            # JPEG quality
+FULL_QUALITY   = 80     # full image quality
+
+MAX_THUMB_WIDTH = 360   # px for grid (smaller than before)
+THUMB_QUALITY   = 70    # more compression for thumbs
 
 def process_image(src_path: Path):
     name = src_path.name
-    if not src_path.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp"]:
+    if src_path.suffix.lower() not in [".jpg", ".jpeg", ".png", ".webp"]:
         return
 
     print("Processing", name)
-
     img = Image.open(src_path).convert("RGB")
 
     # ---------- full ----------
@@ -33,7 +34,7 @@ def process_image(src_path: Path):
             (MAX_FULL_WIDTH, int(img_full.height * ratio)),
             Image.LANCZOS
         )
-    img_full.save(full_path, "JPEG", quality=QUALITY, optimize=True)
+    img_full.save(full_path, "JPEG", quality=FULL_QUALITY, optimize=True)
 
     # ---------- thumbnail ----------
     thumb_path = THUMB_DIR / name
@@ -44,7 +45,7 @@ def process_image(src_path: Path):
             (MAX_THUMB_WIDTH, int(img_thumb.height * ratio)),
             Image.LANCZOS
         )
-    img_thumb.save(thumb_path, "JPEG", quality=QUALITY, optimize=True)
+    img_thumb.save(thumb_path, "JPEG", quality=THUMB_QUALITY, optimize=True)
 
 def main():
     for f in SRC_DIR.iterdir():
