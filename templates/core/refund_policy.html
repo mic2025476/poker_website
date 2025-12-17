@@ -3,7 +3,7 @@
 
 {% block content %}
 <style>
-  /* ===== TERMS PAGE LAYOUT ===== */
+  /* ===== LEGAL PAGE LAYOUT (same as Terms) ===== */
 
   .legal-hero {
     position: relative;
@@ -45,7 +45,7 @@
     opacity: 0.85;
   }
 
-  /* ===== TERMS CARD ===== */
+  /* ===== LEGAL CARD ===== */
 
   .legal-section {
     background: radial-gradient(circle at top, rgba(0,0,0,0.35), #050608 70%);
@@ -159,9 +159,9 @@
 
 <section class="legal-hero">
   <div class="legal-hero-inner">
-    <h1 class="legal-hero-title">{% trans "Terms & Conditions" %}</h1>
+    <h1 class="legal-hero-title">{% trans "Refund & Cancellation Policy" %}</h1>
     <p class="legal-hero-subtitle">
-      {% trans "Please read these terms carefully before using MGEN Poker Lounge's online services." %}
+      {% trans "Information about cancellations, refunds, and exceptions for event-related services." %}
     </p>
   </div>
 </section>
@@ -172,117 +172,88 @@
       <div class="legal-card-title">
         {% trans "MG-Entertainment Poker Lounge" %}
       </div>
+      <div class="legal-meta">
+        {% trans "Last updated" %}: <strong>2025-12-17</strong>
+      </div>
     </header>
 
-    <!-- 1. Introduction -->
+    <!-- 1. Overview -->
     <div class="legal-section-block">
       <div class="legal-section-kicker">{% trans "Section 1" %}</div>
-      <h2 class="legal-section-title">{% trans "Scope & Acceptance" %}</h2>
+      <h2 class="legal-section-title">{% trans "Overview" %}</h2>
       <p class="legal-text">
         {% blocktrans %}
-        By creating an account, booking a table, or otherwise using the online services of
-        <span class="legal-highlight">MGEN Poker Lounge</span> (the “Service”), you agree to be bound by
-        these Terms &amp; Conditions (“Terms”). If you do not agree with these Terms, please do not use
-        the Service.
+        This policy explains how cancellations and refunds work for bookings and event-related services
+        offered by <span class="legal-highlight">MGEN Poker Lounge</span>. Our services include the rental
+        of poker tables and related event equipment and may include beverage flat-rate packages depending
+        on the booking.
         {% endblocktrans %}
       </p>
     </div>
 
-    <!-- 2. Eligibility -->
+    <!-- 2. No right of withdrawal for event services -->
     <div class="legal-section-block">
       <div class="legal-section-kicker">{% trans "Section 2" %}</div>
-      <h2 class="legal-section-title">{% trans "Eligibility & Age Requirements" %}</h2>
+      <h2 class="legal-section-title">{% trans "No Right of Withdrawal for Event Services" %}</h2>
       <p class="legal-text">
         {% blocktrans %}
-        Access to our poker lounge and use of our booking platform is restricted to individuals who are at
-        least <span class="legal-highlight">18 years of age</span> (or any higher age required by local law).
-        By using the Service, you confirm that you meet the applicable legal age requirement and that you
-        are legally capable of entering into binding agreements.
+        For contracts related to leisure activities with a specific date or time period, there is generally
+        no right of withdrawal under German law (e.g., § 312g Abs. 2 Nr. 9 BGB). This typically applies to
+        reservations and event bookings for a defined date.
         {% endblocktrans %}
       </p>
     </div>
 
-    <!-- 3. Account & Bookings -->
+    <!-- 3. Customer cancellations -->
     <div class="legal-section-block">
       <div class="legal-section-kicker">{% trans "Section 3" %}</div>
-      <h2 class="legal-section-title">{% trans "Accounts, Reservations & No-Show Policy" %}</h2>
+      <h2 class="legal-section-title">{% trans "Cancellations by the Customer" %}</h2>
       <p class="legal-text">
         {% blocktrans %}
-        You are responsible for maintaining the confidentiality of your login credentials and for all
-        activity under your account. When booking a table, you agree to provide accurate information and
-        to respect the reserved time slot.
+        Customers may request a cancellation up to <span class="legal-highlight">7 days</span> before the
+        scheduled event date (unless a different deadline is agreed in writing). If cancelled in time, we
+        may refund payments in full or in part depending on the booking and costs already incurred.
         {% endblocktrans %}
       </p>
       <ul class="legal-list">
-        <li>{% trans "We reserve the right to cancel or adjust reservations in case of operational needs." %}</li>
-        <li>{% trans "Repeated no-shows or late cancellations may result in limited booking privileges." %}</li>
-        <li>{% trans "For group bookings or special events, additional conditions may apply on-site." %}</li>
+        <li>{% trans "Late cancellations (less than 7 days) may not be refundable." %}</li>
+        <li>{% trans "No-shows are generally not eligible for a refund." %}</li>
+        <li>{% trans "Custom or corporate events may have separate written cancellation terms." %}</li>
       </ul>
     </div>
 
-    <!-- 4. Responsible Gaming -->
+    <!-- 4. Cancellations by us -->
     <div class="legal-section-block">
       <div class="legal-section-kicker">{% trans "Section 4" %}</div>
-      <h2 class="legal-section-title">{% trans "Responsible Gaming" %}</h2>
+      <h2 class="legal-section-title">{% trans "Cancellations by Us" %}</h2>
       <p class="legal-text">
-{% blocktrans %}
-Our services are provided for entertainment purposes and relate to event bookings and the rental of poker tables
-and accessories. <span class="legal-highlight">No real-money gambling is offered or facilitated</span> through
-our website or booking platform.
-If you have questions about our house rules or event format, please contact our staff.
-{% endblocktrans %}
+        {% blocktrans %}
+        If we must cancel an event for reasons within our responsibility, we will refund payments already
+        made for the affected booking. Refunds are issued to the original payment method used.
+        {% endblocktrans %}
       </p>
     </div>
 
-    <!-- 5. Behaviour on Premises -->
+    <!-- 5. Refund processing -->
     <div class="legal-section-block">
       <div class="legal-section-kicker">{% trans "Section 5" %}</div>
-      <h2 class="legal-section-title">{% trans "House Rules & Conduct" %}</h2>
+      <h2 class="legal-section-title">{% trans "Refund Processing" %}</h2>
       <p class="legal-text">
         {% blocktrans %}
-        While on our premises, you agree to follow the house rules communicated by our staff.
-        We reserve the right to deny entry or remove guests who behave in a disruptive, unsafe,
-        or unlawful manner, or who do not comply with staff instructions.
+        Approved refunds are processed via the original payment method (e.g., PayPal) and are typically
+        completed within <span class="legal-highlight">5–10 business days</span>, depending on the payment
+        provider and bank processing times.
         {% endblocktrans %}
       </p>
     </div>
 
-    <!-- 6. Data Protection -->
+    <!-- 6. Contact -->
     <div class="legal-section-block">
       <div class="legal-section-kicker">{% trans "Section 6" %}</div>
-      <h2 class="legal-section-title">{% trans "Data Protection & Privacy" %}</h2>
-      <p class="legal-text">
-        {% blocktrans %}
-        We process your personal data in accordance with our
-        <a href="/privacy/" class="legal-anchor" target="_blank">Privacy Policy</a>, which explains in detail
-        what data we collect, for which purposes, and what rights you have under applicable data protection law
-        (including the GDPR).
-        {% endblocktrans %}
-      </p>
-    </div>
-
-    <!-- 7. Changes -->
-    <div class="legal-section-block">
-      <div class="legal-section-kicker">{% trans "Section 7" %}</div>
-      <h2 class="legal-section-title">{% trans "Changes to These Terms" %}</h2>
-      <p class="legal-text">
-        {% blocktrans %}
-        We may update these Terms from time to time to reflect operational, legal, or regulatory changes.
-        When we make material changes, we will update the “Last updated” date above and, where appropriate,
-        notify registered users by email or via the Service. Your continued use of the Service after such
-        changes constitutes acceptance of the updated Terms.
-        {% endblocktrans %}
-      </p>
-    </div>
-
-    <!-- 8. Contact -->
-    <div class="legal-section-block">
-      <div class="legal-section-kicker">{% trans "Section 8" %}</div>
       <h2 class="legal-section-title">{% trans "Contact" %}</h2>
       <p class="legal-text">
         {% blocktrans %}
-        If you have any questions about these Terms &amp; Conditions, bookings, or your account, please
-        contact us via the details provided in our
+        If you have questions about cancellations or refunds, please contact us using the details in our
         <a href="/impressum/" class="legal-anchor">Imprint / Impressum</a>.
         {% endblocktrans %}
       </p>

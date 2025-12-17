@@ -268,16 +268,26 @@
 
   <footer class="text-white mt-5 position-relative" role="contentinfo">
     <div class="container">
-      <div class="row">
-        <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-          <p class="fw-light">&copy; {{ current_year }} {% trans "MG Entertainment. All rights reserved." %}</p>
-        </div>
-        <div class="col-md-6 text-center text-md-end">
-          <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
-          <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
-          <a href="#" class="text-white"><i class="bi bi-twitter"></i></a>
-        </div>
-      </div>
+<div class="row align-items-center">
+  <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+    <p class="fw-light mb-2">&copy; {{ current_year }} {% trans "MG Entertainment. All rights reserved." %}</p>
+
+    <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start">
+      <a class="text-white text-decoration-none" href="{% url 'impressum' %}">{% trans "Impressum" %}</a>
+      <a class="text-white text-decoration-none" href="{% url 'privacy' %}">{% trans "Privacy" %}</a>
+      <a class="text-white text-decoration-none" href="{% url 'terms' %}">{% trans "Terms" %}</a>
+      <a class="text-white text-decoration-none" href="{% url 'refund-policy' %}">{% trans "Refund Policy" %}</a>
+    </div>
+  </div>
+
+  <div class="col-md-6 text-center text-md-end">
+    <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
+    <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
+    <a href="#" class="text-white"><i class="bi bi-twitter"></i></a>
+  </div>
+</div>
+
+
     </div>
   </footer>
 
