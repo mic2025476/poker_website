@@ -230,6 +230,8 @@ GOOGLE_CALENDAR_TOKEN_FILE = os.path.join(BASE_DIR, 'token.json')
 
 # CORS Settings for Google OAuth
 CORS_ALLOWED_ORIGINS = [
+    "https://mgen-poker.com",
+    "https://*.ngrok-free.app",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://localhost:8002",
@@ -309,3 +311,4 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 # settings.py
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"

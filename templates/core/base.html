@@ -248,7 +248,9 @@
             </ul>
           </li>
           <li class="nav-item" id="bookNowItem">
-            <button type="button" class="btn custom-red-button px-3 py-2 toggleAuthForm">{% trans "Book Now" %}</button>
+<a href="{% url 'home' %}?openAuth=1" class="btn custom-red-button px-3 py-2">
+  {% trans "Book Now" %}
+</a>
           </li>
         </ul>
       </div>
@@ -290,6 +292,29 @@
 
     </div>
   </footer>
+<script>
+  // Flags
+  window.__gsiLoaded = false;
+
+  // Called by the <script onload="...">
+  function onGoogleScriptLoad() {
+    window.__gsiLoaded = true;
+    tryInitGoogle();
+  }
+
+  // Tries to init only when BOTH are ready:
+  // 1) google script loaded, 2) initializeGoogleSignIn exists
+  function tryInitGoogle() {
+    if (!window.__gsiLoaded) return;
+
+    if (typeof window.initializeGoogleSignIn === "function") {
+      window.initializeGoogleSignIn(); // this will set window._googleCodeClient
+    } else {
+      // home.html hasn't defined it yet → wait a bit
+      setTimeout(tryInitGoogle, 100);
+    }
+  }
+</script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -297,11 +322,6 @@
 
   <script>
     // Global callback for when Google script loads
-    function onGoogleScriptLoad() {
-      if (window.initializeGoogleSignIn) {
-        window.initializeGoogleSignIn();
-      }
-    }
   <!-- Google Sign-In -->
     window.onGoogleScriptLoad = onGoogleScriptLoad;
 
@@ -351,5 +371,35 @@
       }
     });
   </script>
+<script>
+  // 1) A single global function that opens your popup/modal
+  //    Replace the body of this function with your existing "open popup" logic from home.html.
+  function openAuthPopup() {
+    // Example if you're using a Bootstrap modal with id="authModal":
+    // const modalEl = document.getElementById('authModal');
+    // const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    // modal.show();
+
+    // OR if it's a custom popup div:
+    // document.getElementById('authPopup').classList.add('show');
+
+    // TODO: paste your existing home-tab popup open logic here
+    if (typeof window.showAuthPopup === "function") {
+      window.showAuthPopup(); // if you already have a function like this in home
+    }
+  }
+
+  // 2) Event delegation: works even if elements are added later
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.toggleAuthForm');
+    if (!btn) return;
+
+    e.preventDefault();
+    openAuthPopup();
+  });
+</script>
+
 </body>
 </html>
+
+

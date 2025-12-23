@@ -1224,45 +1224,61 @@
     });
   }
 
-  // Initialize Google Sign-In (make it global so base template can call it)
-  window.initializeGoogleSignIn = function() {
-    console.log('initGoogleSignIn: google object?', typeof google !== 'undefined');
-    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-      google.accounts.id.initialize({
-        client_id: "537820281123-84i1o0sobdnlt4speooifv0bthqdbnma.apps.googleusercontent.com",
-        callback: (resp) => {
-          console.log('GSI callback raw:', resp);
-          try {
-            handleGoogleSignIn(resp);
-          } catch (e) {
-            console.error('handleGoogleSignIn error', e);
-            alert('Google sign-in failed (client). Check console.');
-          }
-        },
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
-      console.log('GSI initialized');
-    } else {
-      console.warn('Google script not loaded yet, retrying...');
-      setTimeout(window.initializeGoogleSignIn, 150);
-    }
-  };
+// OAuth Code Flow (more stable than google.accounts.id.prompt / FedCM)
+window._googleCodeClient = null;
+window.googleReady = false;
 
-  function handleGoogleSignIn(response) {
-    console.log('handleGoogleSignIn received:', response);
-    if (!response || !response.credential) {
-      console.error('No credential in response:', response);
-      alert('Google returned no credential. See console.');
-      return;
-    }
-    const token = response.credential;
+window.initializeGoogleSignIn = function () {
+  if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+    window._googleCodeClient = google.accounts.oauth2.initCodeClient({
+      client_id: "{{ GOOGLE_CLIENT_ID }}",
+      scope: "openid email profile",
+      ux_mode: "popup",
+      prompt: "select_account",
+
+      callback: (resp) => {
+        console.log("✅ Google callback fired:", resp);
+        if (!resp || !resp.code) {
+          setGoogleButtonLoading(window._googleAuthContext, false);
+          alert("Google did not return a code.");
+          return;
+        }
+        handleGoogleOAuthCode(resp.code);
+      },
+
+      error_callback: (err) => {
+        console.error("❌ Google OAuth error_callback:", err);
+        setGoogleButtonLoading(window._googleAuthContext, false);
+        alert("Google auth failed: " + (err?.type || "unknown"));
+      }
+    });
+
+    console.log("✅ Google OAuth client ready");
+  } else {
+    console.warn("google.accounts.oauth2 not available yet");
+  }
+};
+
+if (typeof window.tryInitGoogle === "function") {
+  window.tryInitGoogle();
+}
+function onGoogleScriptLoad() {
+  window.initializeGoogleSignIn();
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("openAuth") === "1") {
+    if (typeof window.openAuthModal === "function") window.openAuthModal();
+  }
+  window.initializeGoogleSignIn();
+});
+function handleGoogleOAuthCode(code) {
   const payload = {
-    google_token: token,
+    code: code,
     flow_type: window._googleAuthContext || 'login',
   };
 
-  // ✅ For Google SIGNUP, also send terms_accepted flag
+  // for signup enforce terms too
   if (window._googleAuthContext === 'signup') {
     const signupTermsCheckbox = document.getElementById('signupTerms');
     payload.terms_accepted = !!(signupTermsCheckbox && signupTermsCheckbox.checked);
@@ -1275,36 +1291,28 @@
       'X-CSRFToken': getCSRFToken()
     },
     body: JSON.stringify(payload)
-})
-.then(async res => {
-  console.log('Backend status', res.status, res.statusText);
-  const text = await res.text();
-  console.log('Backend raw response:', text);
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    throw new Error('Invalid JSON from backend: ' + e.message);
-  }
-})
-.then(result => {
-  console.log('Backend parsed result:', result);
-  setGoogleButtonLoading(window._googleAuthContext, false);
-
-  if (result.success) {
-    document.getElementById('authForm').classList.add('d-none');
-    window.simulateLogin && window.simulateLogin();
-    window.location.href = "/bookings/book";
-  } else {
-    alert(result.message || 'Google authentication failed.');
-  }
-})
-.catch(err => {
-  console.error('Error in google auth flow:', err);
-  setGoogleButtonLoading(window._googleAuthContext, false);
-  alert('An error occurred during Google authentication. See console/network tab.');
-});
-
-  }
+  })
+  .then(async res => {
+    const text = await res.text();
+    try { return JSON.parse(text); } 
+    catch { throw new Error("Backend returned non-JSON: " + text); }
+  })
+  .then(result => {
+    setGoogleButtonLoading(window._googleAuthContext, false);
+    if (result.success) {
+      document.getElementById('authForm').classList.add('d-none');
+      window.simulateLogin && window.simulateLogin();
+      window.location.href = "/bookings/book";
+    } else {
+      alert(result.message || "Google authentication failed.");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    setGoogleButtonLoading(window._googleAuthContext, false);
+    alert("Google authentication error. Check console.");
+  });
+}
 
 // keep track of which button triggered Google
 window._googleAuthContext = null;
@@ -1328,43 +1336,55 @@ function setGoogleButtonLoading(type, isLoading) {
   }
 }
 
+async function waitForGoogleReady(timeoutMs = 2500) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (window.googleReady && window._googleCodeClient) return true;
+    // try to init again (in case script finished after click)
+    if (typeof window.initializeGoogleSignIn === "function") {
+      window.initializeGoogleSignIn();
+    }
+    await new Promise(r => setTimeout(r, 120));
+  }
+  return false;
+}
+
 // Trigger Google Sign-In
 function signInWithGoogle(type) {
   window._googleAuthContext = type || 'login';
 
-  // ✅ Block Google SIGNUP if terms not accepted
+  // block signup if terms not accepted (keep your existing logic)
   if (window._googleAuthContext === 'signup') {
-    const signupTermsCheckbox = document.getElementById('signupTerms');
-    const signupTermsError = document.getElementById('signupTermsError');
-
-    if (!signupTermsCheckbox || !signupTermsCheckbox.checked) {
-      if (signupTermsError) {
-        signupTermsError.classList.remove('d-none');
-        signupTermsError.textContent = "{% trans 'You must accept the terms and privacy policy to sign up.' %}";
-      } else {
-        alert("{% trans 'You must accept the terms and privacy policy to sign up.' %}");
-      }
-      return; // 🚫 do NOT open Google popup
-    } else if (signupTermsError) {
-      signupTermsError.classList.add('d-none');
+    const cb = document.getElementById('signupTerms');
+    const err = document.getElementById('signupTermsError');
+    if (!cb || !cb.checked) {
+      if (err) err.classList.remove('d-none');
+      return;
     }
+    if (err) err.classList.add('d-none');
   }
-  setGoogleButtonLoading(window._googleAuthContext, true);
 
-  // allow DOM to settle before FedCM call
+setGoogleButtonLoading(window._googleAuthContext, true);
+
+//console.log("✅ Clicking Google button, client =", !!window._googleCodeClient);
+
+if (!window._googleCodeClient) {
+  if (typeof window.tryInitGoogle === "function") window.tryInitGoogle();
+
   setTimeout(() => {
-    try {
-      if (google?.accounts?.id) {
-        google.accounts.id.prompt();
-      } else {
-        alert("Google Sign-In is still loading. Please try again.");
-        setGoogleButtonLoading(window._googleAuthContext, false);
-      }
-    } catch (err) {
-      console.error("FedCM aborted:", err);
+    if (!window._googleCodeClient) {
       setGoogleButtonLoading(window._googleAuthContext, false);
+      alert("Google still loading. Please try again in 2 seconds.");
+      return;
     }
-  }, 150); // ← small delay fixes AbortError
+    window._googleCodeClient.requestCode();
+  }, 250);
+
+  return;
+}
+
+// IMPORTANT: call directly (no setTimeout, no await)
+window._googleCodeClient.requestCode();
 }
 
 
@@ -2002,4 +2022,14 @@ function signInWithGoogle(type) {
     updateStepUI();
   })();
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("openAuth") === "1") {
+      const authForm = document.getElementById("authForm");
+      if (authForm) authForm.classList.remove("d-none");
+    }
+  });
+</script>
+
 {% endblock %}
