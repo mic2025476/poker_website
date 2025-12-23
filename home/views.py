@@ -23,5 +23,7 @@ def home(request):
     context = {
         'gallery_images': gallery_images,
         'current_year': timezone.now().year,
-    }
-    return render(request, 'home/home.html', context)
+    } 
+    return render(request, "home/home.html", {
+        "GOOGLE_CLIENT_ID": settings.GOOGLE_OAUTH2_CLIENT_ID,
+    })

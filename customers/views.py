@@ -406,6 +406,9 @@ def update_phone_number(request):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
+
 @api_view(["POST"])
 def google_auth(request):
     """
@@ -413,7 +416,8 @@ def google_auth(request):
     - flow_type = 'signup': if email exists, return message asking user to log in instead.
     - flow_type = 'login' : if email exists, log in; otherwise create and log in.
     """
-    google_token = request.data.get("google_token")
+    print(f'request.data {request.data}')
+    code_or_token = request.data.get("code") or request.data.get("credential")
     flow_type = request.data.get("flow_type", "login")  # 'signup' or 'login'
     terms_accepted = request.data.get("terms_accepted", False)
 
@@ -423,18 +427,40 @@ def google_auth(request):
             ResponseData.error("You must accept the Terms & Conditions to sign up."),
             status=status.HTTP_400_BAD_REQUEST
         )
-    if not google_token:
-        return DRFResponse(
-            ResponseData.error("Google token missing."),
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    if not code_or_token:
+        return DRFResponse(ResponseData.error("Google token missing."),
+                           status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        google_request = google_requests.Request()
+        # ✅ If it looks like an auth code (NOT a JWT), exchange it for tokens
+        # JWT has 2 dots: header.payload.signature
+        if code_or_token.count(".") != 2:
+            token_res = requests.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": code_or_token,
+                    "client_id": settings.GOOGLE_OAUTH2_CLIENT_ID,
+                    "client_secret": settings.GOOGLE_OAUTH2_CLIENT_SECRET,
+                    "redirect_uri": "postmessage",
+                    "grant_type": "authorization_code",
+                },
+                timeout=10,
+            )
+            token_json = token_res.json()
+            if token_res.status_code != 200 or "id_token" not in token_json:
+                return DRFResponse(
+                    ResponseData.error(f"Google token exchange failed: {token_json}"),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            google_id_token = token_json["id_token"]
+        else:
+            # already an id_token
+            google_id_token = code_or_token
 
         idinfo = id_token.verify_oauth2_token(
-            google_token,
-            google_request,
+            google_id_token,
+            google_requests.Request(),
             settings.GOOGLE_OAUTH2_CLIENT_ID,
         )
 
@@ -533,77 +559,6 @@ def whoami(request):
         "session_row_exists": exists,
         "session_user_id": request.session.get("user_id"),
     })
-
-@api_view(["POST"])
-def forgot_password(request):
-    """
-    Step 1: User submits email, we generate an email OTP and send it.
-    """
-    try:
-        email_id = request.data.get("email_id")
-
-        if not email_id:
-            return DRFResponse(
-                ResponseData.error("Email is required."),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Don't reveal whether user exists or not
-        customer = CustomerModel.objects.filter(
-            email_id=email_id,
-            is_deleted=False
-        ).first()
-
-        if customer:
-            # Remove old unverified email OTPs for this address
-            OTPModel.objects.filter(
-                email_id=email_id,
-                otp_type="email",
-                is_verified=False
-            ).delete()
-
-            # Create new OTP record
-            otp_instance = OTPModel.objects.create(
-                email_id=email_id,
-                otp_type="email"
-            )
-            otp_instance.generate_otp()  # sets otp + created_at + save()
-
-            # Send OTP by email
-            subject = "Your Poker Lounge password reset code"
-            message = (
-                f"Hi {customer.first_name},\n\n"
-                f"Use the following one-time password (OTP) to reset your password: {otp_instance.otp}\n"
-                "This code is valid for 10 minutes.\n\n"
-                "If you did not request a password reset, you can ignore this email."
-            )
-
-            # Make sure EMAIL settings are configured in settings.py
-            try:
-                send_mail(
-                    subject=subject,
-                    message=message,
-                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
-                    recipient_list=[email_id],
-                    fail_silently=True,  # avoid breaking if email config is not perfect yet
-                )
-            except Exception as mail_error:
-                # Log / print if needed
-                print(f"Error sending reset email: {mail_error}")
-
-        # Always return success message to avoid user enumeration
-        return DRFResponse(
-            ResponseData.success_without_data(
-                "If an account with this email exists, an OTP has been sent."
-            ),
-            status=status.HTTP_200_OK
-        )
-
-    except Exception as e:
-        return DRFResponse(
-            ResponseData.error(str(e)),
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
 
 
 @api_view(["POST"])
