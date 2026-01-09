@@ -205,9 +205,8 @@ CSRF_TRUSTED_ORIGINS = [
 #cred = credentials.Certificate("pokerwebsite-96259-firebase-adminsdk-fbsvc-69c0d02c3a.json")
 #firebase_admin.initialize_app(cred)
 
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY_sandbox", "")
-STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY_sandbox", "")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET_sandbox", "")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 
 LANGUAGE_CODE = 'en'  # default
 

@@ -23,8 +23,8 @@ VAT_RATE = Decimal("0.19")
 # -------------------------
 # Stripe configuration
 # -------------------------
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY_sandbox", "")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET_sandbox", "")
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
 # If you want to explicitly allow multiple payment methods, you can set this to None and use
 # "automatic_payment_methods" in the session create call below.
