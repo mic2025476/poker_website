@@ -23,14 +23,7 @@ from response import Response as ResponseData  # Your custom response class
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
-gateway = braintree.BraintreeGateway(
-    braintree.Configuration(
-        environment=getattr(braintree.Environment, settings.BRAINTREE_ENVIRONMENT),
-        merchant_id=settings.BRAINTREE_MERCHANT_ID,
-        public_key=settings.BRAINTREE_PUBLIC_KEY,
-        private_key=settings.BRAINTREE_PRIVATE_KEY,
-    )
-)
+
 @api_view(["POST"])
 def customer_signup(request):
     try:
@@ -88,23 +81,6 @@ def customer_signup(request):
                     terms_accepted_at=now(),
                     terms_version="v1",  # or settings.TERMS_VERSION
                 )
-                result = gateway.customer.create({
-                    "first_name": new_customer.first_name,
-                    "last_name": new_customer.last_name,
-                    "email": new_customer.email_id,
-                    # "payment_method_nonce": "SOME_NONCE"  # only if you want to immediately store a payment method
-                })
-                if result.is_success:
-                    # 3. Store the Braintree customer ID locally
-                    new_customer.braintree_customer_id = result.customer.id
-                    new_customer.save()
-                else:
-                    # Decide how you want to handle the Braintree error:
-                    # e.g., you can still let signup succeed, or rollback user creation if Braintree fails
-                    # For example:
-                    new_customer.delete()
-                    return Response({"error": "Error creating Braintree customer: " + result.message}, status=status.HTTP_400_BAD_REQUEST)
-
 
                 return DRFResponse(
                     ResponseData.success_without_data("Customer signed up successfully. OTPs have been sent for phone & email."),
