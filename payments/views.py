@@ -172,56 +172,66 @@ def _deposit_to_cents(deposit_eur: float) -> int:
     return int(round(deposit_eur * 100))
 
 
-def _create_booking_and_calendar(data: dict, payment_reference: str = ""):
+def _finalize_booking_and_calendar(booking_id: int, data: dict, payment_reference: str = ""):
     """
-    This recreates your old DB logic in a cleaner way:
-    - Creates a booking
+    Finalizes an EXISTING pending booking (created at checkout session creation):
+    - Updates booking fields (safe server-side values)
+    - Sets is_active=True
     - assigns drinks (M2M)
     - creates Google Calendar event
     Returns booking object.
     """
+    if not booking_id:
+        raise ValueError("Missing booking_id")
+
+    # load the existing booking (must exist from create_checkout_session)
+    booking = BookingModel.objects.select_related("customer").filter(id=booking_id).first()
+    if not booking:
+        raise ValueError(f"Booking {booking_id} not found")
+
+    # idempotency: if webhook repeats, don't create multiple calendar events
+    # (We can't fully prevent duplicates unless you store calendar_event_id on booking;
+    #  but at least don't re-run if already active AND you decide that's enough.)
+    if booking.is_active:
+        return booking
+
     required_fields = ["booking_date", "number_of_people", "number_of_hours", "user_id"]
     for f in required_fields:
         if f not in data:
             raise ValueError(f"Missing {f}")
 
-    hours = int(data["number_of_hours"])
+    # always compute server-side
     people = int(data["number_of_people"])
     dealer = bool(data.get("dealer"))
-    drinks = bool(data.get("drinks_flatrate"))
+    drinks_flat = bool(data.get("drinks_flatrate"))
     service = bool(data.get("service"))
-    gross_total = calc_boss_gross_total(dealer, drinks, service)
+    gross_total = calc_boss_gross_total(dealer, drinks_flat, service)
 
-    total = gross_total
-    deposit = gross_total  # if you charge full
-    customer = CustomerModel.objects.get(id=data["user_id"], is_active=True)
-
-    booking_date_str = data.get("booking_date", "")
-
-    # ✅ ALWAYS fixed slot: 18:00 → next day 12:00 (18 hours)
-    booking_date = datetime.strptime(booking_date_str, "%Y-%m-%d").date()
+    booking_date = datetime.strptime(data["booking_date"], "%Y-%m-%d").date()
     start_time = datetime.strptime("18:00", "%H:%M").time()
+    hours = 18  # fixed slot
 
-    # ✅ also force hours (don’t trust client)
-    hours = 18
+    # Optional: ensure the booking belongs to the expected customer
+    customer = CustomerModel.objects.get(id=data["user_id"], is_active=True)
+    if booking.customer_id != customer.id:
+        # safety check: don't finalize someone else's booking
+        raise ValueError("Booking customer mismatch")
 
+    # Update the existing booking
+    booking.booking_date = booking_date
+    booking.start_time = start_time
+    booking.total_people = people
+    booking.hours_booked = hours
+    booking.total_amount = gross_total
+    booking.deposit_amount = gross_total
+    booking.is_active = True
 
+    # OPTIONAL: if your model has a payment reference field
+    # booking.payment_reference = payment_reference
 
-    # Create booking AFTER payment
-    booking = BookingModel.objects.create(
-        customer=customer,
-        booking_date=booking_date,
-        start_time=start_time,
-        total_people=people,
-        hours_booked=hours,
-        total_amount=total,
-        deposit_amount=deposit,
-        is_active=True,  # paid booking
-        # OPTIONAL: if your model has a field for payment reference
-        # payment_reference=payment_reference,
-    )
+    booking.save()
 
-    # Assign drinks (M2M)
+    # Assign drinks (M2M) if present (expects list of IDs)
     if data.get("drinks"):
         booking.drinks.set(data["drinks"])
         booking.save()
@@ -409,9 +419,19 @@ def stripe_webhook(request):
     # Only finalize booking when checkout completed
     elif event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
+        md = session.get("metadata") or {}
+        booking_id = md.get("booking_id")
+        if not booking_id:
+            return HttpResponse(status=200)
+
+        data = json.loads(md.get("booking_payload") or "{}")
         customer_email = (session.get("customer_details") or {}).get("email") or session.get("customer_email")
         payment_intent_id = session.get("payment_intent")
-
+        _finalize_booking_and_calendar(
+            booking_id=int(booking_id),
+            data=data,
+            payment_reference=f"pi:{payment_intent_id}",
+        )
         # Safety checks
         if not customer_email or not payment_intent_id:
             print("⚠️ Missing customer_email or payment_intent_id; cannot send branded receipt.")

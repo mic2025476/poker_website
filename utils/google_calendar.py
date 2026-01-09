@@ -8,6 +8,7 @@ from googleapiclient.discovery import build
 from django.conf import settings
 from google.oauth2 import service_account
 import time
+from zoneinfo import ZoneInfo
 from functools import lru_cache
 from django.core.cache import cache
 from googleapiclient.errors import HttpError
@@ -71,8 +72,9 @@ class GoogleCalendarService:
             end_date = start_date
 
         # RFC3339 UTC window
-        time_min = datetime.combine(start_date, datetime.min.time()).isoformat() + 'Z'
-        time_max = datetime.combine(end_date, datetime.max.time()).isoformat() + 'Z'
+        tz = ZoneInfo("Europe/Berlin")
+        time_min = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=tz).isoformat()
+        time_max = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=tz).isoformat()
 
         cache_key = f"gcal:events:{self.calendar_id}:{time_min}:{time_max}"
         cached = cache.get(cache_key)
@@ -298,14 +300,14 @@ class GoogleCalendarService:
         try:
             # Get the booking calendar ID
             calendar_id = self.get_or_create_booking_calendar()
-            
+            tz = ZoneInfo("Europe/Berlin")
             # Prepare event data
             start_datetime = datetime.combine(
-                booking_data['booking_date'], 
-                booking_data['start_time']
-            )
+                booking_data['booking_date'],
+                booking_data['start_time'],
+            ).replace(tzinfo=tz)
+
             end_datetime = start_datetime + timedelta(hours=booking_data['duration_hours'])
-            
             # Create event title and description
             title = f"Poker Booking - {booking_data['customer_name']}"
             
@@ -348,7 +350,7 @@ class GoogleCalendarService:
             }
             
             # Insert the event
-            print(f"Inserting event into calendar: {calendar_id}")
+            print(f"Inserting event into calendar: {calendar_id} {event_body}")
             created_event = self.service.events().insert(
                 calendarId=calendar_id,
                 body=event_body
@@ -382,16 +384,20 @@ class GoogleCalendarService:
             # Get the booking calendar ID
             calendar_id = self.get_or_create_booking_calendar()
             
-            # Search for the event by title and date
+            tz = ZoneInfo("Europe/Berlin")
+
             start_datetime = datetime.combine(
-                booking_data['booking_date'], 
-                booking_data['start_time']
-            )
-            end_datetime = datetime.combine(booking_data['booking_date'], datetime.max.time().replace(microsecond=0))
-            
-            # Create search parameters
-            time_min = start_datetime.isoformat() + 'Z'
-            time_max = end_datetime.isoformat() + 'Z'
+                booking_data['booking_date'],
+                booking_data['start_time'],
+            ).replace(tzinfo=tz)
+
+            end_datetime = datetime.combine(
+                booking_data['booking_date'],
+                datetime.max.time().replace(microsecond=0),
+            ).replace(tzinfo=tz)
+
+            time_min = start_datetime.isoformat()
+            time_max = end_datetime.isoformat()
             
             # Search for events on that day
             events_result = self.service.events().list(
