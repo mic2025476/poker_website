@@ -1603,7 +1603,7 @@
             </div>
           </div>
           
-          <!-- Step 3: Back and Confirm buttons -->
+          <!-- Step 3: Back and Pay buttons -->
           <div class="nav-buttons-step3" style="display: none;">
             <div class="row g-2">
               <div class="col-6">
@@ -1611,13 +1611,14 @@
                   <i class="fas fa-arrow-left me-1"></i>{% trans "Back" %}
                 </button>
               </div>
+
               <div class="col-6">
-                <button type="submit" form="bookingForm" class="btn btn-primary-custom w-100">
-                  <i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}
-                </button>
+                <!-- Stripe button will be moved here -->
+                <div id="stripePayNavSlot"></div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -2618,9 +2619,6 @@ console.log('Sending total_amount to backend:', totalAmount);
   }
 
   // ---- BANK TRANSFER FLOW (no Braintree on frontend) ----
-  const submitButton = document.querySelector('button[type="submit"][form="bookingForm"]');
-  submitButton.disabled = true;
-  submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {% trans "Saving booking..." %}';
   const formData = {
     booking_date: bookingDate + "T" + bookingTime, // e.g. 2025-03-01T18:00
     number_of_people: numberOfPeople,
@@ -2645,34 +2643,60 @@ console.log('Sending total_amount to backend:', totalAmount);
     });
 
     const data = await response.json();
+const msgBox = document.getElementById('bookingSubmitMessage');
+['bookingDate', 'numberOfPeople', 'agreeTerms'].forEach(id => {
+  const el = document.getElementById(id);
+  el?.addEventListener('change', () => {
+    const msgBox = document.getElementById('bookingSubmitMessage');
+    if (msgBox) msgBox.classList.add('d-none');
+  });
+});
+function showMsg(type, text) {
+  if (!msgBox) return;
+  msgBox.className = `alert alert-${type} mt-3`; // success | danger | warning | info
+  msgBox.textContent = text;
+  msgBox.classList.remove('d-none');
+}
+
     if (response.ok && data.success) {
-      alert('{% trans "Booking saved! Please complete the bank transfer to confirm your reservation." %}');
+      // ✅ stay on same step and show message
+      showMsg('success', '✅ Booking saved! Redirecting to your My Bookings…');
 
-      // Reset form
-      document.getElementById('bookingForm').reset();
+      // ✅ DO NOT reset form here (this was sending you back to step 1 feeling)
+      // document.getElementById('bookingForm').reset();
 
-      // Go to "My Bookings" and reload list
+      // ✅ after a short delay, go to My Bookings
       setTimeout(() => {
         const myBookingsTab = document.getElementById('my-bookings-tab');
         window.switchTab('my-bookings', myBookingsTab);
-        setTimeout(() => {
-          if (typeof window.loadMyBookings === 'function') {
-            window.loadMyBookings();
-          }
-        }, 200);
-      }, 500);
+
+        // reload list
+        if (typeof window.loadMyBookings === 'function') {
+          window.loadMyBookings();
+        }
+      }, 1500);
+
     } else {
-      alert('Error: ' + (data.message || 'Could not save booking'));
+      // ❌ stay on same step, show error
+      showMsg('danger', '❌ Booking failed: ' + (data.message || 'Could not save booking'));
     }
+
   } catch (error) {
     console.error(error);
     alert('Network error. Please try again.');
-  } finally {
-    submitButton.disabled = false;
-    submitButton.innerHTML = '<i class="fas fa-check me-1"></i>{% trans "Confirm Booking" %}';
   }
 });
 
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get("tab");
+
+  if (tab === "my-bookings") {
+    const btn = document.getElementById("my-bookings-tab");
+    window.switchTab("my-bookings", btn);
+
+    // clean URL (optional)
+    window.history.replaceState({}, document.title, "/bookings/book/");
+  }
 
   // Profile Management Functions
   window.loadProfile = function() {

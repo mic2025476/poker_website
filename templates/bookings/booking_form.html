@@ -92,7 +92,7 @@
               <input class="form-check-input" type="checkbox" id="dealerService" name="services" value="dealer">
               <label class="form-check-label fw-semibold small" for="dealerService">
                 <i class="fas fa-user-tie me-1"></i>{% trans "Professional Dealer" %}
-                <div class="text-muted small">{% trans "+€200 - Expert poker dealer for your session" %}</div>
+                <div class="text-muted small">{% trans "+€238 - Expert poker dealer for your session" %}</div>
               </label>
             </div>
           </div>
@@ -101,7 +101,7 @@
               <input class="form-check-input" type="checkbox" id="servicePersonal" name="services" value="service">
               <label class="form-check-label fw-semibold small" for="servicePersonal">
                 <i class="fas fa-user-cog me-1"></i>{% trans "Service Personal" %}
-                <div class="text-muted small">{% trans "+€200 - Dedicated service staff for your event" %}</div>
+                <div class="text-muted small">{% trans "+€238 - Dedicated service staff for your event" %}</div>
               </label>
             </div>
           </div>
@@ -128,7 +128,7 @@
             <input class="form-check-input" type="checkbox" id="drinksFlatrate" name="drinks_flatrate" value="flatrate">
             <label class="form-check-label fw-semibold small" for="drinksFlatrate">
               <i class="fas fa-wine-bottle me-1"></i>{% trans "Drinks Flatrate" %}
-              <div class="text-muted small">{% trans "+€200 - Unlimited beverages for your group" %}</div>
+              <div class="text-muted small">{% trans "+€238 - Unlimited beverages for your group" %}</div>
             </label>
           </div>
         </div>
@@ -165,23 +165,23 @@
         <div id="finalCostSummary">
           <div class="price-item">
             <span>{% trans "Whole Day Rental" %}</span>
-            <span class="fw-semibold">€400.00</span>
+            <span class="fw-semibold">€357.00</span>
           </div>
           <div class="price-item" id="finalDealerCost" style="display: none;">
             <span>{% trans "Professional Dealer" %}</span>
-            <span class="fw-semibold">€200.00</span>
+            <span class="fw-semibold">238.00</span>
           </div>
           <div class="price-item" id="finalServiceCost" style="display: none;">
             <span>{% trans "Service Personal" %}</span>
-            <span class="fw-semibold">€200.00</span>
+            <span class="fw-semibold">238.00</span>
           </div>
           <div class="price-item" id="finalDrinksCost" style="display: none;">
             <span>{% trans "Drinks Flatrate" %}</span>
-            <span class="fw-semibold">€200.00</span>
+            <span class="fw-semibold">238.00</span>
           </div>
           <div class="price-item">
             <span>{% trans "Total Amount" %}</span>
-            <span id="finalTotalAmount">€400.00</span>
+            <span id="finalTotalAmount">€357.00</span>
           </div>
         </div>
 
@@ -240,45 +240,37 @@
         </div>
         <div id="dropin-container" class="border rounded p-3" style="min-height: 350px; background: white; width: 100%; max-width: none; margin-bottom: 2rem;"></div>
       </div> -->
-<!-- Payment Section (Bank Transfer) -->
-<!-- Payment Section (Bank Transfer) -->
+<!-- Payment Section (Stripe) -->
+<!-- Payment Section (Stripe) -->
 <div class="mb-3" style="color: #000 !important;">
 
-  <div id="paymentMessage" class="mb-2 small" style="color: #000 !important;">
-    {% blocktrans %}Please transfer the amount of <strong><span id="bankTransferAmount" style="color:#000;">€400.00</span></strong> to the following bank account.{% endblocktrans %}
+  <!-- message goes here (shown after redirect back from Stripe) -->
+  <div id="stripePaymentAlert" class="alert d-none small" role="alert"></div>
+
+  <div class="mb-2 small" style="color:#000 !important;">
+    {% blocktrans %}
+      Pay securely with Stripe. Total amount:
+      <strong><span id="stripeAmount">€400.00</span></strong>
+    {% endblocktrans %}
   </div>
+<div id="bookingSubmitMessage" class="alert d-none mt-3" role="alert"></div>
+<button
+  type="button"
+  id="payWithStripeBtn"
+  class="btn btn-primary w-100"
+  data-enabled="false"
+>
+  {% trans "Pay with Stripe" %}
+</button>
 
-  <div class="border rounded p-3" style="background: #fff; color: #000 !important; border-color:#000;">
-    <dl class="row mb-0" style="color:#000 !important;">
 
-      <!-- Keys (dt) bold -->
-      <dt class="col-4" style="font-weight:600;">Kto. Inh.</dt>
-      <dd class="col-8">MG Entertainment UG (haftungsbeschränkt)</dd>
 
-      <dt class="col-4" style="font-weight:600;">IBAN</dt>
-      <dd class="col-8">DE96 1009 0000 3022 2630 04</dd>
-
-      <dt class="col-4" style="font-weight:600;">BIC</dt>
-      <dd class="col-8">BEVODEBBXXX</dd>
-
-      <dt class="col-4" style="font-weight:600;">{% trans "Reference" %}</dt>
-      <dd class="col-8">
-        {% trans "Please use your full name and booking date." %}
-      </dd>
-
-      <dt class="col-4" style="font-weight:600;">{% trans "Amount" %}</dt>
-      <dd class="col-8"><span id="bankTransferAmountRepeating">€400.00</span></dd>
-    </dl>
-
-    <hr class="my-2" style="border-color:#000;">
-
-    <div class="mt-2" style="color:#000 !important;">
-      <div class="mt-1 small" style="color:#000 !important;">
-        {% trans "If the amount is not received in time, the reservation may be cancelled." %}
-      </div>
-    </div>
+  <div class="mt-2 small" style="color:#000 !important; opacity:.85;">
+    {% trans "You will be redirected to Stripe to complete payment." %}
   </div>
 </div>
+
+
 
 
 
@@ -300,6 +292,86 @@
   #dropin-container .braintree-form__hosted-field{border:2px solid var(--gray-200)!important;border-radius:.5rem!important;padding:.75rem!important;font-size:var(--font-size-base)!important;min-height:44px!important;transition:border-color .2s!important}
   #dropin-container .braintree-form__hosted-field:focus{border-color:var(--theme-red)!important;box-shadow:0 0 0 3px var(--theme-red-light)!important;outline:none!important}
   #dropin-container .braintree-methods-list{width:100%!important}
+/* Stripe button should stay visible when disabled */
+/* Stripe button styled like Back button (custom, controlled) */
+.mgen-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;           /* same as your theme */
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.1;
+
+  background: #1f2937;           /* dark grey like back */
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+
+  transition: transform .12s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
+}
+
+.mgen-nav-btn:hover {
+  background: #111827;
+  border-color: rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+
+.mgen-nav-btn:active {
+  transform: translateY(0px);
+}
+
+/* ✅ IMPORTANT: disabled stays visible */
+.mgen-nav-btn:disabled,
+.mgen-nav-btn[aria-disabled="true"] {
+  opacity: 0.55;                 /* visible but inactive */
+  cursor: not-allowed;
+  filter: grayscale(15%);
+  transform: none;
+}
+
+/* Stripe button must NEVER disappear */
+#payWithStripeBtn {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1;
+}
+
+/* Disabled state: visible but inactive */
+#payWithStripeBtn:disabled,
+#payWithStripeBtn[aria-disabled="true"] {
+  display: inline-flex !important;
+  visibility: visible !important;
+
+  opacity: 0.55;          /* looks disabled */
+  cursor: not-allowed;
+  pointer-events: none;  /* cannot click */
+}
+
+#payWithStripeBtn[data-enabled="false"] {
+  cursor: not-allowed;
+}
+
+/* Stripe button = Back / Next button look */
+#payWithStripeBtn {
+  border-radius: 10px;          /* SAME as back button */
+  font-weight: 600;
+  height: 44px;                 /* matches other nav buttons */
+}
+
+/* Logical-disabled Stripe button (still blue) */
+#payWithStripeBtn[data-enabled="false"] {
+  cursor: not-allowed;
+}
+
+/* Optional: tiny visual hint (VERY subtle) */
+#payWithStripeBtn[data-enabled="false"]::after {
+  content: "";
+}
+
 </style>
 
 <script>
@@ -336,6 +408,28 @@ document.addEventListener('DOMContentLoaded', () => {
   function prevDateISO(dateStr){ const [y,m,d]=dateStr.split('-').map(Number); const dt=new Date(Date.UTC(y,m-1,d)); dt.setUTCDate(dt.getUTCDate()-1); return dt.toISOString().slice(0,10); }
   function addDaysISO(dateStr, days){ const [y,m,d]=dateStr.split('-').map(Number); const dt=new Date(Date.UTC(y,m-1,d)); dt.setUTCDate(dt.getUTCDate()+days); return dt.toISOString().slice(0,10); }
 
+  function showFieldError(inputEl, message) {
+  if (!inputEl) return;
+
+  // remove existing message (if any)
+  const existing = inputEl.parentNode.querySelector('.error-message');
+  if (existing) existing.remove();
+
+  const err = document.createElement('div');
+  err.className = 'error-message text-danger mt-1 small';
+  err.textContent = message;
+  inputEl.parentNode.appendChild(err);
+
+  inputEl.classList.add('is-invalid');
+}
+
+function clearFieldError(inputEl) {
+  if (!inputEl) return;
+  const existing = inputEl.parentNode.querySelector('.error-message');
+  if (existing) existing.remove();
+  inputEl.classList.remove('is-invalid');
+}
+
   function normalizeUnavailable(list){
     return (list||[]).map(s=>({ start: timeToMinutes(s.start_time), end: timeToMinutes(s.end_time) }));
   }
@@ -369,54 +463,48 @@ document.addEventListener('DOMContentLoaded', () => {
     navButtonContainers.forEach((c,idx)=> c.style.display = (idx===currentStep?'block':'none'));
   }
 
-  function updatePricing(){
-    let total = 400;
-    const dealerCost = document.getElementById('dealerCost');
-    const finalDealerCost = document.getElementById('finalDealerCost');
-    const serviceCost = document.getElementById('serviceCost');
-    const finalServiceCost = document.getElementById('finalServiceCost');
-    const finalDrinksCost = document.getElementById('finalDrinksCost');
+function updatePricing() {
+  const VAT = 0.19;
 
-    if (dealerCheckbox?.checked){
-      total += 200;
-      dealerCost && (dealerCost.style.display = 'flex');
-      finalDealerCost && (finalDealerCost.style.display = 'flex');
-    } else {
-      dealerCost && (dealerCost.style.display = 'none');
-      finalDealerCost && (finalDealerCost.style.display = 'none');
-    }
+  // Boss pricing (NET)
+const NET_DAY = 300;
+const NET_DEALER = 200;
+const NET_SERVICE = 200;   // ✅ add
+const NET_DRINKS = 200;
 
-    if (serviceCheckbox?.checked){
-      total += 200;
-      serviceCost && (serviceCost.style.display = 'flex');
-      finalServiceCost && (finalServiceCost.style.display = 'flex');
-    } else {
-      serviceCost && (serviceCost.style.display = 'none');
-      finalServiceCost && (finalServiceCost.style.display = 'none');
-    }
+  // Only these are relevant for boss logic:
+const dealerOn = dealerCheckbox?.checked;
+const serviceOn = serviceCheckbox?.checked;  // ✅ add
+const drinksOn = drinksCheckbox?.checked;
 
-    if (drinksCheckbox?.checked){
-      total += 200;
-      finalDrinksCost && (finalDrinksCost.style.display = 'flex');
-    } else {
-      finalDrinksCost && (finalDrinksCost.style.display = 'none');
-    }
+let netTotal = NET_DAY;
+if (dealerOn) netTotal += NET_DEALER;
+if (serviceOn) netTotal += NET_SERVICE;   // ✅ add
+if (drinksOn) netTotal += NET_DRINKS;
 
-    // 🔥 expose the same total to the rest of the app
-    window.bookingTotalAmount = total;
+  const grossTotal = netTotal * (1 + VAT);
 
-    // Update UI
-    const totalAmountEl = document.getElementById('totalAmount');
-    const finalTotalAmountEl = document.getElementById('finalTotalAmount');
-    if (totalAmountEl) totalAmountEl.textContent = `€${total.toFixed(2)}`;
-    if (finalTotalAmountEl) finalTotalAmountEl.textContent = `€${total.toFixed(2)}`;
+  // Show/hide rows (you already have these IDs)
+  const finalDealerCost = document.getElementById("finalDealerCost");
+  if (finalDealerCost) finalDealerCost.style.display = dealerOn ? "flex" : "none";
 
-    // Sync bank transfer block
-    const bankAmount1 = document.getElementById('bankTransferAmount');
-    const bankAmount2 = document.getElementById('bankTransferAmountRepeating');
-    if (bankAmount1) bankAmount1.textContent = `€${total.toFixed(2)}`;
-    if (bankAmount2) bankAmount2.textContent = `€${total.toFixed(2)}`;
-  }
+  const finalDrinksCost = document.getElementById("finalDrinksCost");
+  if (finalDrinksCost) finalDrinksCost.style.display = drinksOn ? "flex" : "none";
+
+  const finalServiceCost = document.getElementById("finalServiceCost");
+  if (finalServiceCost) finalServiceCost.style.display = serviceOn ? "flex" : "none";
+
+  // Expose total to Stripe button
+  window.bookingTotalAmount = grossTotal;
+
+  // Update the UI totals
+  document.getElementById("stripeAmount").textContent = `€${grossTotal.toFixed(2)}`;
+  document.getElementById("finalTotalAmount").textContent = `€${grossTotal.toFixed(2)}`;
+
+  // If you also update totalAmount somewhere else:
+  const totalAmountEl = document.getElementById("totalAmount");
+  if (totalAmountEl) totalAmountEl.textContent = `€${grossTotal.toFixed(2)}`;
+}
 
   function showStep(idx){
     steps.forEach((s,i)=>{ if(i!==idx) s.classList.remove('active'); });
@@ -448,7 +536,26 @@ async function validateStep(stepIdx){
       }
     });
     // ⬇️ ADD THIS BLOCK
-  if (stepIdx === 0 && window.dateAtSixUnavailable) {
+  // ✅ Step 2: Number of people must be 1–50
+if (stepIdx === 1) {
+  const peopleInput = document.getElementById("numberOfPeople");
+  const val = parseInt(peopleInput?.value, 10);
+
+  if (!peopleInput?.value || Number.isNaN(val)) {
+    ok = false;
+    showFieldError(peopleInput, _("Please enter number of people."));
+  } else if (val < 1) {
+    ok = false;
+    showFieldError(peopleInput, _("Minimum is 1 person."));
+  } else if (val > 50) {
+    ok = false;
+    showFieldError(peopleInput, _("Maximum capacity is 50 people."));
+  } else {
+    clearFieldError(peopleInput);
+  }
+}
+
+    if (stepIdx === 0 && window.dateAtSixUnavailable) {
     return false;
   }
     // NEW: Check terms checkbox on step 3 (payment step) - stepIdx === 2
@@ -798,5 +905,112 @@ if (bookingForm) {
   showStep(currentStep);
   updatePricing();
   updateStepIndicators();
+
+const stripePayBtn = document.getElementById("payWithStripeBtn");
+const termsCheckbox = document.getElementById("agreeTerms");
+
+function syncStripeButtonState() {
+  if (!termsCheckbox || !stripePayBtn) return;
+
+  const ok = termsCheckbox.checked;
+  stripePayBtn.dataset.enabled = ok ? "true" : "false";
+
+}
+
+
+
+// ---- Move Stripe button into sticky nav (Step 3) ----
+(function moveStripeButtonToNav() {
+  const btn = document.getElementById("payWithStripeBtn");
+  const navSlot = document.getElementById("stripePayNavSlot");
+  const inlineWrap = document.getElementById("stripePayInlineWrap");
+
+  if (!btn || !navSlot) return;
+
+  // Make it fit nicely next to Back
+  btn.classList.remove("w-100");
+  btn.classList.add("w-100"); // keep full width inside its col-6
+
+  // Move the wrapper (keeps layout clean)
+  if (inlineWrap) {
+    navSlot.appendChild(inlineWrap);
+  } else {
+    navSlot.appendChild(btn);
+  }
+})();
+
+// Initial state
+syncStripeButtonState();
+
+// React on checkbox change
+termsCheckbox.addEventListener("change", () => {
+  document.getElementById("termsError")?.classList.add("d-none");
+  termsCheckbox.classList.remove("is-invalid");
+  syncStripeButtonState();
+});
+
+const stripeAlert = document.getElementById("stripePaymentAlert");
+
+function showStripeAlert(type, text) {
+  if (!stripeAlert) return;
+  stripeAlert.className = `alert alert-${type} small`; // bootstrap
+  stripeAlert.textContent = text;
+  stripeAlert.classList.remove("d-none");
+}
+
+async function startStripeCheckout() {
+  const amountEuro = window.bookingTotalAmount || 400;
+  const amountCents = Math.round(amountEuro * 100);
+  window.user_id = "{{ request.session.user_id|default:'' }}";
+  const user_id = "{{ request.session.user_id|default:'' }}";
+  const resp = await fetch("/payments/create-checkout-session/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token }}",
+    },
+    body: JSON.stringify({
+      currency: "eur",
+      booking_date: document.getElementById("bookingDate")?.value,
+      booking_time: "18:00",
+      number_of_people: document.getElementById("numberOfPeople")?.value,
+      number_of_hours: 18,
+      user_id: user_id,
+      dealer: document.getElementById("dealerService")?.checked || false,
+      service: document.getElementById("servicePersonal")?.checked || false,
+      drinks_flatrate: document.getElementById("drinksFlatrate")?.checked || false,
+    }),
+  });
+
+  // If you ever see: Unexpected token '<' ... it means backend returned HTML (500/403 page)
+  const data = await resp.json();
+
+  if (!resp.ok || !data.url) {
+    throw new Error(data.error || "Could not start Stripe Checkout.");
+  }
+
+  window.location.href = data.url;
+}
+
+if (stripePayBtn) {
+  stripePayBtn.addEventListener("click", async () => {
+    if (stripePayBtn.dataset.enabled !== "true") {
+      document.getElementById("termsError")?.classList.remove("d-none");
+      document.getElementById("agreeTerms")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+      return;
+    }
+
+    try {
+      await startStripeCheckout();
+    } catch (err) {
+      showStripeAlert("danger", err.message || String(err));
+    }
+  });
+}
+
+
 });
 </script>

@@ -1,8 +1,11 @@
-# payments/urls.py
 from django.urls import path
 from . import views
 
+app_name = "payments"
+
 urlpatterns = [
-    path('braintree/client-token/', views.generate_client_token, name='generate_client_token'),
-    path('braintree/process-payment/', views.process_payment, name='process_payment'),
+    path("create-checkout-session/", views.create_checkout_session, name="create_checkout_session"),
+    path("stripe-webhook/", views.stripe_webhook, name="stripe_webhook"),
+    path("stripe/success/", views.stripe_success, name="stripe_success"),
+    path("stripe/cancel/", views.stripe_cancel, name="stripe_cancel"),
 ]

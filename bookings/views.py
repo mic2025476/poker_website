@@ -1,8 +1,6 @@
 import os
 from django.http import JsonResponse
 from django.shortcuts import render
-import braintree
-from django.http import HttpResponse  # Add this import
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response as DRFResponse
@@ -20,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import UnavailableTimeSlotModel
 from .serializers import UnavailableTimeSlotSerializer
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from poker_lounge import settings
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -29,14 +27,8 @@ from django.utils.dateparse import parse_time, parse_date
 from utils.google_calendar import GoogleCalendarService
 
 
-gateway = braintree.BraintreeGateway(
-    braintree.Configuration(
-        environment=getattr(braintree.Environment, settings.BRAINTREE_ENVIRONMENT),
-        merchant_id=settings.BRAINTREE_MERCHANT_ID,
-        public_key=settings.BRAINTREE_PUBLIC_KEY,
-        private_key=settings.BRAINTREE_PRIVATE_KEY,
-    )
-)
+FIXED_START_TIME = time(18, 0)   # 18:00
+FIXED_HOURS = 18                # 18 hours => ends at 12:00 next day
 
 def book(request):
     if not request.session.get("user_id"):
@@ -229,107 +221,95 @@ def edit_booking(request, booking_id):
 
 def notify_google_apps_script(payload):
     GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL")
+    import json
     try:
-        response = requests.post(GAS_WEBHOOK_URL, json=payload, timeout=5)
-        response.raise_for_status()
-        print("✅ Google Apps Script notified successfully.")
+        print("📤 Sending payload to GAS:")
+        print(json.dumps(payload, indent=2))
+
+        response = requests.post(
+            GAS_WEBHOOK_URL,
+            json=payload,
+            timeout=10
+        )
+
+        print("✅ GAS response status:", response.status_code)
+        print("📩 GAS response body:", response.text)
+
     except Exception as e:
-        print(f"⚠️ Failed to notify Google Apps Script: {e}")
+        print("❌ ERROR sending to GAS:", str(e))
         
 @api_view(["POST"])
 def check_date_availability(request):
-    """
-    Simple availability check – DOES NOT create a booking.
-    Used by frontend when user selects a date.
-    """
     try:
         data = request.data
-        print(f'check_date_availability request.data {data}')
-
         date_str = data.get("date")
-        time_str = data.get("start_time")
-        hours_booked_raw = data.get("hours_booked")
+        if not date_str:
+            return Response({"available": False, "message": "Missing date."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not date_str or not time_str or not hours_booked_raw:
-            return Response(
-                {"available": False, "message": "Missing required parameters."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        start_date = parse_date(date_str)  # ✅ selected day = START day (18:00)
+        if not start_date:
+            return Response({"available": False, "message": "Invalid date format."}, status=status.HTTP_200_OK)
 
-        try:
-            hours_booked = int(hours_booked_raw)
-        except ValueError:
-            return Response(
-                {"available": False, "message": "Invalid value for number of hours."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        today = datetime.now().date()
+        if start_date < today:
+            return Response({"available": False, "message": "Please select a future date."}, status=status.HTTP_200_OK)
 
-        # Parse date and time properly
-        booking_date = parse_date(date_str)   # datetime.date
-        start_time = parse_time(time_str)     # datetime.time
+        start_dt = datetime.combine(start_date, FIXED_START_TIME)           # 18:00 on selected day
+        end_dt = start_dt + timedelta(hours=FIXED_HOURS)                    # 12:00 next day
 
-        if not booking_date or not start_time:
-            return Response(
-                {"available": False, "message": "Invalid date or time format."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # ✅ IMPORTANT: also check bookings from the PREVIOUS day that may spill into this day
+        prev_day = start_date - timedelta(days=1)
 
-        print(f'check_date_availability: parsed booking_date={booking_date}, start_time={start_time}')
-
-        start_dt = datetime.combine(booking_date, start_time)
-        end_dt = start_dt + timedelta(hours=hours_booked)
-
-        # 1) Check existing active bookings (not cancelled)
         existing_bookings = BookingModel.objects.filter(
-            booking_date=booking_date,
+            booking_date__in=[start_date, prev_day],
             is_cancelled=False,
             is_active=True
         )
-        print(f'check_date_availability: existing_bookings={existing_bookings}')
 
         for booking in existing_bookings:
-            b_start = datetime.combine(booking_date, booking.start_time)
+            b_start = datetime.combine(booking.booking_date, booking.start_time)
             b_end = b_start + timedelta(hours=booking.hours_booked)
+
             if start_dt < b_end and end_dt > b_start:
                 return Response(
                     {"available": False, "message": "Selected time overlaps with an existing booking."},
                     status=status.HTTP_200_OK
                 )
 
-        # 2) Check unavailable manual blocks
-        blocked_slots = UnavailableTimeSlotModel.objects.filter(date=booking_date)
+        # manual blocks (optional: check start_date only, or include prev_day too)
+        blocked_slots = UnavailableTimeSlotModel.objects.filter(date__in=[start_date, prev_day])
         for slot in blocked_slots:
-            s_start = datetime.combine(booking_date, slot.start_time)
-            s_end = datetime.combine(booking_date, slot.end_time)
+            s_start = datetime.combine(slot.date, slot.start_time)
+            s_end = datetime.combine(slot.date, slot.end_time)
+
+            # handle blocks that cross midnight
+            if slot.end_time < slot.start_time:
+                s_end = s_end + timedelta(days=1)
+
             if start_dt < s_end and end_dt > s_start:
                 return Response(
                     {"available": False, "message": "Selected time overlaps with an unavailable slot."},
                     status=status.HTTP_200_OK
                 )
 
-        # 3) Check Google Calendar events
+        # Google Calendar check (best effort)
         try:
             calendar_service = GoogleCalendarService()
-            if not calendar_service.is_time_available(booking_date, start_time, end_dt.time()):
+            # If your service supports checking real datetimes, use that.
+            # Otherwise, leave as-is, but note: cross-day may not be perfect.
+            if not calendar_service.is_time_available(start_date, FIXED_START_TIME, end_dt.time()):
                 return Response(
                     {"available": False, "message": "Selected time conflicts with a HOANG event."},
                     status=status.HTTP_200_OK
                 )
         except Exception as e:
             print(f"Google Calendar check failed in check_date_availability: {e}")
-            # Do not hard-fail if calendar is down
 
-        # If we reached here, slot is free
-        return Response(
-            {"available": True, "message": "Time slot is available."},
-            status=status.HTTP_200_OK
-        )
+        return Response({"available": True, "message": "Time slot is available."}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return Response(
-            {"available": False, "message": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"available": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
 @api_view(["POST"])
 def check_availability(request):
@@ -352,8 +332,8 @@ def check_availability(request):
 
         # Parse date and time properly
         booking_date = parse_date(date_str)         # returns datetime.date
-        start_time = parse_time(time_str)           # returns datetime.time
-
+        start_time = FIXED_START_TIME     # ✅ always 18:00
+        hours_booked = FIXED_HOURS        # ✅ always 18
         if not booking_date or not start_time:
             return Response({"available": False, "message": "Invalid date or time format."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -373,7 +353,7 @@ def check_availability(request):
         )
         print(f'existing_bookingsexisting_bookings {existing_bookings}')
         for booking in existing_bookings:
-            b_start = datetime.combine(booking_date, booking.start_time)
+            b_start = datetime.combine(booking.booking_date, booking.start_time)
             # Calculate actual end time based on booking duration
             b_end = b_start + timedelta(hours=booking.hours_booked)
             if start_dt < b_end and end_dt > b_start:

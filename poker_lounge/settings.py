@@ -38,11 +38,11 @@ GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
 SECRET_KEY = "django-insecure-fekli8m2u-gup7&b4=bh1g8!4_dfpw^+-+2(1e^f+&*py(pipn"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "*",
-    "832b8387883c.ngrok-free.app",
+    "e4443f937321.ngrok-free.app",
     "13.61.115.3",
     "localhost",
     "127.0.0.1",
@@ -198,17 +198,16 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_EXPIRE_AT_BROWSER_OPEN = False
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://728f-2a03-fc82-218-1700-2825-9ebf-4f15-8ca9.ngrok-free.app",
+    "https://e4443f937321.ngrok-free.app",
     "http://13.61.115.3:8000",
 ]
 
-BRAINTREE_MERCHANT_ID = "dhp5r7gd5bhrvvm7"
-BRAINTREE_PUBLIC_KEY = "xcf8hntvh4m2v6nt"
-BRAINTREE_PRIVATE_KEY = "4a6d6d5ec9955ffb061226e73198a99e"
-BRAINTREE_ENVIRONMENT = "Sandbox"  # or 'Production'
-
 #cred = credentials.Certificate("pokerwebsite-96259-firebase-adminsdk-fbsvc-69c0d02c3a.json")
 #firebase_admin.initialize_app(cred)
+
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY_sandbox", "")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY_sandbox", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET_sandbox", "")
 
 LANGUAGE_CODE = 'en'  # default
 
