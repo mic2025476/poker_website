@@ -395,9 +395,7 @@ def check_availability(request):
             hours_booked=hours_booked,
             is_active=True
         )
-        # === NEW: Notify Google Apps Script ===
-        GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxR89GkT6BqEsR17KQSNNqLYKY0CRMCvrtxL1wKiBIjP0JTvPRsT5ITTrclkg2VeHSEsg/exec"
-        
+
         # Prepare payload for Google Apps Script
         payload = {
             "name": f"{customer.first_name} {customer.last_name}",

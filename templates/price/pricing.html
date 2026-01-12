@@ -1,172 +1,385 @@
-{% extends 'core/base.html' %}
+{% extends "core/base.html" %}
+{% load static %}
 {% load i18n %}
 
 {% block content %}
 <style>
-  /* Section background aligned with dark poker theme */
-  #pricing {
-    min-height: 100vh;
-    padding: 6rem 0 4rem;
-    background:
-      radial-gradient(circle at top, rgba(15,23,42,0.9), rgba(2,6,23,1));
-    color: #e5e7eb;
+  :root{
+    --poker-bg: #050810;
+    --poker-card: rgba(15,23,42,0.88);
+    --poker-border: rgba(148,163,184,0.28);
+    --poker-soft: rgba(148,163,184,0.12);
+    --poker-text: #e5e7eb;
+    --poker-muted: #9ca3af;
+    --poker-accent: #dc143c;
+    --poker-accent-soft: rgba(220, 20, 60, 0.18);
+    --poker-gold: #fbbf24;
+    --poker-blue: #2f66d0; /* your “next step” vibe */
   }
 
-  #pricing h1 {
-    font-size: clamp(2.1rem, 3vw, 2.6rem);
-    letter-spacing: 0.18em;
+  body{
+    background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+  }
+
+  .pricing-wrap{
+    padding: clamp(2rem, 3vw, 3rem) 0;
+    color: var(--poker-text);
+  }
+
+.pricing-hero{
+  text-align:center;
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  padding-top: 3.8rem;   /* 👈 ADD THIS */
+}
+
+  .pricing-hero h1{
+    font-weight: 800;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    margin-bottom: .6rem;
+  }
+  .pricing-hero p{
+    color: var(--poker-muted);
+    margin: 0 auto;
+    font-size: 1rem;
+    max-width: 650px;
   }
 
-  #pricing .pricing-subtitle {
-    color: #9ca3af;
-    max-width: 620px;
-    margin: 0 auto 2.5rem;
-    font-size: 0.95rem;
-  }
-
-  .pricing-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    box-shadow: var(--shadow-md);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    border-radius: 0.9rem;
-    overflow: hidden;
-    background: rgba(15,23,42,0.96);
-    border: 1px solid rgba(148,163,184,0.35);
-    backdrop-filter: blur(8px);
-  }
-
-  .pricing-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--theme-red);
-  }
-
-  .pricing-card .card-header {
-    padding: var(--space-5);
-    border-bottom: 1px solid rgba(148,163,184,0.35);
-    position: relative;
-    background:
-      radial-gradient(circle at top left, rgba(220,20,60,0.18), transparent 60%),
-      linear-gradient(135deg, rgba(15,23,42,0.98), rgba(15,23,42,0.95));
-  }
-
-  .pricing-card .card-header h3 {
-    margin-bottom: 0.1rem;
-    font-size: var(--font-h4);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-  }
-
-  .pricing-card .card-header .pricing-tagline {
-    font-size: 0.8rem;
-    color: #9ca3af;
-  }
-
-  .card-header-basic::after,
-  .card-header-premium::after,
-  .card-header-deluxe::after {
-    content: "♠";
-    position: absolute;
-    right: 1.1rem;
-    bottom: 0.5rem;
-    font-size: 2.7rem;
-    opacity: 0.08;
-    color: var(--theme-red);
-  }
-
-  .card-header-basic {
-    border-top: 3px solid var(--theme-red);
-  }
-
-  .card-header-premium {
-    border-top: 3px solid #fbbf24;
-  }
-
-  .card-header-deluxe {
-    border-top: 3px solid #facc15;
-  }
-
-  .pricing-card .card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: var(--space-6);
-  }
-
-  .pricing-card .price-amount {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-  }
-
-  .pricing-card .price-caption {
-    font-size: 0.85rem;
-    color: #9ca3af;
-    margin-bottom: var(--space-4);
-  }
-
-  .pricing-card ul {
-    margin-bottom: var(--space-5);
-    padding-left: 0;
-    list-style: none;
-    text-align: left;
-  }
-
-  .pricing-card ul li {
-    margin-bottom: var(--space-3);
-    font-size: 0.9rem;
-    line-height: var(--line-height-relaxed);
-    display: flex;
-    align-items: flex-start;
-    gap: 0.4rem;
-  }
-
-  .pricing-card ul li i {
-    margin-top: 0.1rem;
-    font-size: 0.9rem;
-    color: #22c55e;
-  }
-
-  .pricing-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem 0.8rem;
+  .badge-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    border: 1px solid var(--poker-border);
+    background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(15,23,42,0.55));
     border-radius: 999px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    border: 1px solid rgba(248,250,252,0.22);
-    background: radial-gradient(circle at top, rgba(248,250,252,0.12), transparent);
-    color: #f9fafb;
+    padding: .35rem .85rem;
+    font-size: .85rem;
+    margin-top: 1rem;
+  }
+  .badge-dot{
+    width:8px;height:8px;border-radius:999px;
+    background: var(--poker-accent);
+    box-shadow: 0 0 0 4px rgba(220,20,60,0.22);
   }
 
-  .pricing-pill-popular {
-    border-color: #fbbf24;
-    color: #fbbf24;
+  .pricing-grid{
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
   }
 
-  @media (min-width: 1280px) {
-    .pricing-card .card-body {
-      padding: var(--space-7);
-    }
+  .cardx{
+    grid-column: span 12;
+    border: 1px solid var(--poker-border);
+    background: var(--poker-card);
+    border-radius: 1rem;
+    overflow:hidden;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.75);
+    position: relative;
   }
 
-  @media (max-width: 767.98px) {
-    #pricing {
-      padding-top: 5.2rem;
-      padding-bottom: 3rem;
-    }
+  .cardx::after{
+    content:"";
+    position:absolute; inset:-1px;
+    border-radius: inherit;
+    border: 1px solid transparent;
+    background: linear-gradient(135deg, rgba(220,20,60,0.55), rgba(251,191,36,0.25)) border-box;
+    opacity: 0;
+    transition: opacity .25s ease;
+    mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events:none;
   }
+  .cardx:hover::after{ opacity: 1; }
+
+  .cardx-header{
+    padding: 1.1rem 1.1rem .75rem;
+    border-bottom: 1px solid rgba(148,163,184,0.18);
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:1rem;
+  }
+  .cardx-title{
+    font-weight: 750;
+    letter-spacing:.03em;
+    margin:0;
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    font-size: 1.1rem;
+  }
+  .chip{
+    font-size:.75rem;
+    border: 1px solid rgba(148,163,184,0.35);
+    background: rgba(2,6,23,0.35);
+    padding: .18rem .55rem;
+    border-radius: 999px;
+    color: var(--poker-text);
+    white-space:nowrap;
+  }
+
+  .cardx-body{
+    padding: 1.05rem 1.1rem 1.2rem;
+  }
+
+  .price-big{
+    font-size: clamp(1.7rem, 2.3vw, 2.1rem);
+    font-weight: 800;
+    margin: .2rem 0 .2rem;
+  }
+  .price-sub{
+    color: var(--poker-muted);
+    font-size: .9rem;
+    margin-bottom: .9rem;
+  }
+
+  .feature{
+    display:flex;
+    gap:.7rem;
+    align-items:flex-start;
+    padding:.55rem .6rem;
+    border: 1px solid rgba(148,163,184,0.18);
+    background: rgba(2,6,23,0.35);
+    border-radius: .85rem;
+    margin-bottom: .55rem;
+  }
+  .feature .icon{
+    width: 30px; height: 30px;
+    border-radius: 10px;
+    background: rgba(220,20,60,0.18);
+    display:flex; align-items:center; justify-content:center;
+    color: #fff;
+    flex: 0 0 auto;
+  }
+  .feature h6{
+    margin: 0;
+    font-size: .95rem;
+    font-weight: 700;
+  }
+  .feature p{
+    margin: .12rem 0 0;
+    color: var(--poker-muted);
+    font-size: .85rem;
+    line-height: 1.35;
+  }
+
+  .breakdown{
+    margin-top: 1rem;
+    border-top: 1px solid rgba(148,163,184,0.18);
+    padding-top: 1rem;
+  }
+  .rowx{
+    display:flex;
+    justify-content:space-between;
+    gap:1rem;
+    padding:.35rem 0;
+    font-size: .95rem;
+  }
+  .rowx span:last-child{ font-weight: 700; }
+  .rowx.muted{
+    color: var(--poker-muted);
+    font-size: .85rem;
+  }
+
+  .cta{
+    margin-top: 1rem;
+    display:flex;
+    gap:.8rem;
+    flex-wrap: wrap;
+    align-items:center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(148,163,184,0.18);
+    padding-top: 1rem;
+  }
+
+  .btnx{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:.55rem;
+    border-radius: 14px;
+    padding: .85rem 1.05rem;
+    border: 1px solid rgba(148,163,184,0.28);
+    background: rgba(2,6,23,0.45);
+    color: #fff;
+    text-decoration:none;
+    font-weight: 700;
+    letter-spacing: .02em;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    min-width: 210px;
+  }
+  .btnx:hover{
+    transform: translateY(-1px);
+    border-color: rgba(220,20,60,0.38);
+    background: rgba(220,20,60,0.14);
+    color:#fff;
+  }
+
+  .btnx.primary{
+    border-color: rgba(47,102,208,0.55);
+    background: rgba(47,102,208,0.95);
+  }
+  .btnx.primary:hover{
+    background: rgba(47,102,208,1);
+    border-color: rgba(47,102,208,0.8);
+  }
+
+  .fineprint{
+    color: var(--poker-muted);
+    font-size: .85rem;
+    line-height: 1.45;
+    margin-top: 1.2rem;
+    border: 1px dashed rgba(148,163,184,0.25);
+    border-radius: 1rem;
+    padding: 1rem;
+    background: rgba(2,6,23,0.35);
+  }
+
+  /* responsive layout */
+  @media (min-width: 992px){
+    .cardx.base { grid-column: span 7; }
+    .cardx.addons { grid-column: span 5; }
+  }
+body {
+  background:
+    linear-gradient(
+      rgba(0,0,0,0.7),
+      rgba(0,0,0,0.7)
+    ),
+    url("{% static 'mge_pictures/thumbs/DSC_0009.JPG' %}")
+    center center / cover no-repeat fixed;
+}
 </style>
 
-<section id="pricing" class="d-flex align-items-center">
+<section class="pricing-wrap">
+  <div class="container" style="max-width: 1200px;">
+    <div class="pricing-hero">
+      <p>
+        {% trans "Book the lounge for the full session (18:00 → 12:00 next day). Add premium services to upgrade the experience." %}
+      </p>
+      <div class="badge-pill">
+        <span class="badge-dot"></span>
+        <span>{% trans "Transparent pricing • VAT included in totals" %}</span>
+      </div>
+    </div>
 
+    <div class="pricing-grid">
+
+      <!-- BASE PACKAGE -->
+      <div class="cardx base">
+        <div class="cardx-header">
+          <div>
+            <h3 class="cardx-title">🃏 {% trans "Full Day Lounge Rental" %}</h3>
+            <div class="price-sub">{% trans "Fixed session: 18:00 – 12:00 next day" %}</div>
+          </div>
+          <span class="chip">{% trans "Most popular" %}</span>
+        </div>
+
+        <div class="cardx-body">
+          <!-- pricing numbers based on your latest logic -->
+          <!-- NET = 300, VAT 19%, GROSS = 357 -->
+          <div class="price-big">€357.00</div>
+          <div class="price-sub">{% trans "Includes 19% VAT (Net €300.00)" %}</div>
+
+          <div class="feature">
+            <div class="icon">♠</div>
+            <div>
+              <h6>{% trans "Private poker lounge experience" %}</h6>
+              <p>{% trans "A premium setting for your group — the full session is reserved for you." %}</p>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="icon">♦</div>
+            <div>
+              <h6>{% trans "Ideal for events & tournaments" %}</h6>
+              <p>{% trans "Perfect for birthday games, friendly tournaments, and team events." %}</p>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="icon">♣</div>
+            <div>
+              <h6>{% trans "Easy booking & secure payment" %}</h6>
+              <p>{% trans "Confirm instantly via Stripe. You’ll receive a booking confirmation email." %}</p>
+            </div>
+          </div>
+
+          <div class="breakdown">
+            <div class="rowx"><span>{% trans "Net price" %}</span><span>€300.00</span></div>
+            <div class="rowx"><span>{% trans "VAT (19%)" %}</span><span>€57.00</span></div>
+            <div class="rowx"><span>{% trans "Total" %}</span><span>€357.00</span></div>
+            <div class="rowx muted"><span>{% trans "Max capacity" %}</span><span>{% trans "50 people" %}</span></div>
+          </div>
+
+          <div class="cta">
+            <div style="color:var(--poker-muted); font-size:.85rem;">
+              {% trans "Need something special?" %} <strong>mgen@ming-group.de</strong>
+            </div>
+            <a href="{% url 'home' %}?openAuth=1"
+              class="btn custom-red-button px-3 py-2">
+              {% trans "Book Now" %}
+            </a>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD-ONS -->
+      <div class="cardx addons">
+        <div class="cardx-header">
+          <div>
+            <h3 class="cardx-title">✨ {% trans "Premium Add-ons" %}</h3>
+            <div class="price-sub">{% trans "Upgrade your session with optional services" %}</div>
+          </div>
+          <span class="chip">{% trans "Optional" %}</span>
+        </div>
+
+        <div class="cardx-body">
+          <!-- NET = 200, VAT 19%, GROSS = 238 -->
+          <div class="feature">
+            <div class="icon">👤</div>
+            <div>
+              <h6>{% trans "Professional Dealer" %}</h6>
+              <p>{% trans "A dedicated dealer to run the game smoothly for your group." %}</p>
+              <div style="margin-top:.35rem; font-weight:800;">€238.00</div>
+              <div class="price-sub" style="margin:0;">{% trans "Incl. VAT (Net €200.00)" %}</div>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="icon">🍸</div>
+            <div>
+              <h6>{% trans "Drinks Flatrate" %}</h6>
+              <p>{% trans "Unlimited beverages for your group during the session." %}</p>
+              <div style="margin-top:.35rem; font-weight:800;">€238.00</div>
+              <div class="price-sub" style="margin:0;">{% trans "Incl. VAT (Net €200.00)" %}</div>
+            </div>
+          </div>
+
+          <div class="fineprint">
+            <strong style="color:#fff;">{% trans "Good to know:" %}</strong><br>
+            • {% trans "Add-ons are selected during booking and included in your final total." %}<br>
+            • {% trans "Individual drinks can be purchased separately during your event." %}<br>
+            • {% trans "If you need custom packages, contact us." %}
+          </div>
+
+          <div class="cta" style="margin-top:1.2rem;">
+            <a class="btnx" href="/contact/">{% trans "Contact Us" %}</a>
+            <a href="{% url 'home' %}?openAuth=1"
+              class="btn custom-red-button px-3 py-2">
+              {% trans "Book Now" %}
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
 </section>
 {% endblock %}

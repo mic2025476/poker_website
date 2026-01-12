@@ -121,7 +121,7 @@
     border-bottom: none;
     justify-content: center;
     margin-bottom: 0.75rem;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    background: transparent;
     border-radius: 0.5rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   }
@@ -142,7 +142,7 @@
   }
 
   .nav-tabs .nav-link {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     padding: 0.6rem 1.2rem;
     border: none;
@@ -151,7 +151,7 @@
     transition: all 0.3s ease;
     color: #6c757d;
     background: transparent;
-    text-transform: uppercase;
+    text-transform: none;
     letter-spacing: 0.5px;
     position: relative;
     overflow: hidden;
@@ -165,7 +165,7 @@
 
   .nav-tabs .nav-link.active {
     color: var(--tab-active-text-color);
-    background: linear-gradient(135deg, var(--theme-red) 0%, var(--theme-red-hover) 100%);
+    background: rgba(0, 0, 0, 0.04); 
     box-shadow: 0 4px 15px var(--theme-red-light);
     transform: translateY(-2px);
   }
@@ -182,12 +182,28 @@
   }
 
 .form-label {
-    font-size: 0.62rem;   /* slightly smaller */
-    font-weight: 500;     /* lighter */
-    letter-spacing: 0.3px;
-    margin-bottom: 0.1rem;
-    color: #555;
+    font-size: 0.7rem;   /* you already scale on mobile; keep slightly bigger on desktop */
+    font-weight: 500;
+    margin-bottom: 0.15rem;
+    color: #444444;
 }
+
+.authForm .form-control {
+    font-size: 0.85rem;
+    padding: 0.55rem 0.75rem;
+    height: 40px;
+    margin-bottom: 0.6rem;
+}
+
+.authForm .input-group {
+    margin-bottom: 0.6rem;
+}
+
+.authForm .input-group-text {
+    height: 40px;
+    padding: 0 0.6rem;
+}
+
 
 
   #authForm .form-control {
@@ -785,13 +801,28 @@
 
   /* Password toggle styles */
 .password-toggle {
-    height: 42px !important;
+    height: 40px !important;
     display: flex;
     align-items: center;
     justify-content: center;
     border-left: none !important;
     border-radius: 0 0.5rem 0.5rem 0 !important;
 }
+
+.authForm .sticky-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: #ffffff;
+    padding-top: 0.6rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid #e5e5e5;
+}
+
+.text-muted-small {
+    font-size: 0.72rem;
+    color: #777777;
+}
+
 
 
   .password-toggle:hover {
@@ -826,15 +857,13 @@
 .signup-terms {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;       /* 🚫 don't wrap onto a second line */
   gap: 0.4rem;
-  margin-bottom: 0.5rem;
 }
 
 /* Label with checkbox + text side by side */
 .signup-terms-label {
   white-space: nowrap;     /* 🚫 keep the entire sentence on ONE line */
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: black;           /* adjust to your theme text color */
   overflow: hidden;        /* if it's too long on tiny screens: */
   text-overflow: ellipsis; /* ... show "..." at the end instead of wrapping */
@@ -846,7 +875,7 @@
 }
 /* Checkbox alignment */
 .signup-terms-checkbox {
-  margin-top: 0.2rem;
+  margin-top: 0.15rem;
 }
 
 /* Links in the text: match your accent color */
@@ -869,20 +898,40 @@
   color: #dc3545;           /* Bootstrap danger red */
 }
 
+/* Hide the Sign Up / Login tab pills (boss wants professional single view) */
+#authForm #authTab {
+  display: none !important;
+}
+.auth-header h5 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #000000;
+}
+
+.auth-subtitle {
+    font-size: 0.8rem;
+    color: #666666;
+}
+
 </style>
 
 <!-- Auth Form -->
 <div id="authForm" class="d-none" data-is-authenticated="{% if request.session.user_id %}true{% else %}false{% endif %}">
+<div class="auth-header text-center mb-2">
+  <h5 class="mb-1">Welcome back</h5>
+  <p class="auth-subtitle mb-0">Sign in or create your account to book a table.</p>
+</div>
+
   <button class="close-btn" onclick="document.getElementById('authForm').classList.add('d-none')">&times;</button>
   
   <ul class="nav nav-tabs" id="authTab" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active fw-semibold" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button" role="tab" aria-controls="signup" aria-selected="true">
+      <button class="nav-link fw-semibold" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button" role="tab" aria-controls="signup" aria-selected="true">
         {% trans "Sign Up" %}
       </button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link fw-semibold" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="false">
+      <button class="nav-link active fw-semibold" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="false">
         {% trans "Login" %}
       </button>
     </li>
@@ -890,7 +939,7 @@
 
   <div class="tab-content" id="authTabContent">
     <!-- Sign Up Tab -->
-    <div class="tab-pane fade show active" id="signup" role="tabpanel" aria-labelledby="signup-tab">
+    <div class="tab-pane fade" id="signup" role="tabpanel" aria-labelledby="signup-tab">
       <div id="signupStatus" class="alert d-none" role="alert"></div>
       <form id="signupForm">
         <div class="mb-2">
@@ -960,7 +1009,7 @@
     </div>
 
     <!-- Login Tab -->
-    <div class="tab-pane fade" id="login" role="tabpanel" aria-labelledby="login-tab">
+    <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
       <form id="loginForm">
         <div class="mb-2">
           <label for="loginEmail" class="form-label">{% trans "Email" %}</label>
@@ -988,6 +1037,11 @@
         </div>
 
         <div id="loginMessage" style="color: #b00020; margin-bottom: 0.75rem; font-size: 0.8rem;"></div>
+        <div class="text-center mt-2">
+          <span class="text-muted-small">Don’t have an account?</span>
+          <a href="#" id="switchToSignup" class="small text-decoration-underline ms-1">Sign up</a>
+        </div>
+
       </form>
       <!-- Reset Password Section (hidden initially) -->
       <div id="resetPasswordSection" class="d-none mt-2">
@@ -1105,7 +1159,7 @@
   <!-- Sticky Footer with Buttons -->
   <div class="sticky-footer">
     <!-- SIGN UP buttons -->
-    <div id="signupButtons">
+    <div id="signupButtons" class="d-none">
 <div class="signup-terms">
   <input
     type="checkbox"
@@ -1130,6 +1184,10 @@
   You must accept the terms and privacy policy to sign up.
 </div>
 
+  <div class="text-center mt-2">
+    <span class="text-muted-small">Already have an account?</span>
+    <a href="#" id="switchToLogin" class="small text-decoration-underline ms-1">Sign in</a>
+  </div>
 
 
       <button type="submit" form="signupForm" class="btn-auth">
@@ -1148,7 +1206,7 @@
 
     </div>
     <!-- LOGIN buttons (you already had this, just add id) -->
-    <div id="loginButtons" class="d-none">
+    <div id="loginButtons">
       <button type="submit" form="loginForm" class="btn-auth">
         {% trans "Login" %}
       </button>
@@ -1423,6 +1481,40 @@ window._googleCodeClient.requestCode();
     // Tab switching functionality
     const signupTab = document.getElementById('signup-tab');
     const loginTab = document.getElementById('login-tab');
+    function showAuthView(view) {
+      // view = "login" or "signup"
+      const targetTab = (view === "login") ? loginTab : signupTab;
+      if (targetTab) {
+        bootstrap.Tab.getOrCreateInstance(targetTab).show();
+      }
+
+      // footer buttons (existing behavior)
+      if (view === "login") {
+        if (signupButtons) signupButtons.classList.add('d-none');
+        if (loginButtons) loginButtons.classList.remove('d-none');
+      } else {
+        if (signupButtons) signupButtons.classList.remove('d-none');
+        if (loginButtons) loginButtons.classList.add('d-none');
+      }
+    }
+
+    // New professional links
+    const switchToSignup = document.getElementById('switchToSignup');
+    const switchToLogin = document.getElementById('switchToLogin');
+
+    if (switchToSignup) {
+      switchToSignup.addEventListener('click', (e) => {
+        e.preventDefault();
+        showAuthView("signup");
+      });
+    }
+
+    if (switchToLogin) {
+      switchToLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        showAuthView("login");
+      });
+    }
 
     if (signupTab && loginTab) {
       signupTab.addEventListener('click', function() {
@@ -2023,13 +2115,23 @@ window._googleCodeClient.requestCode();
   })();
 </script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("openAuth") === "1") {
-      const authForm = document.getElementById("authForm");
-      if (authForm) authForm.classList.remove("d-none");
-    }
-  });
+document.addEventListener("DOMContentLoaded", function () {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("openAuth") !== "1") return;
+
+  const authForm = document.getElementById("authForm");
+  if (!authForm) return;
+
+  const isAuthenticated = authForm.dataset.isAuthenticated === "true";
+
+  if (isAuthenticated) {
+    // already logged in -> go straight to booking form
+    window.location.href = "/bookings/book";
+  } else {
+    // not logged in -> open auth modal
+    authForm.classList.remove("d-none");
+  }
+});
 </script>
 
 {% endblock %}

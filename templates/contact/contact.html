@@ -267,18 +267,20 @@
               <label for="contactName" class="contact-label mb-1">
                 {% trans "Name" %}
               </label>
-              <input type="text" class="form-control contact-input" id="contactName"
-                     name="name" required
-                     placeholder="{% trans 'Your full name' %}">
+<input type="text" class="form-control contact-input" id="contactName"
+       name="name" required placeholder="{% trans 'Your full name' %}"
+       value="{{ prefill_name }}">
+
             </div>
 
             <div class="mb-3">
               <label for="contactEmail" class="contact-label mb-1">
                 {% trans "Email address" %}
               </label>
-              <input type="email" class="form-control contact-input" id="contactEmail"
-                     name="email" required
-                     placeholder="you@example.com">
+<input type="email" class="form-control contact-input" id="contactEmail"
+       name="email" required placeholder="you@example.com"
+       value="{{ prefill_email }}">
+
             </div>
 
             <div class="mb-3">
@@ -311,65 +313,67 @@
 </section>
 
 <script>
-  const contactScriptUrl = "https://script.google.com/macros/s/AKfycbzjgFhr_1tSuMUTWMutUCpyOYWUcWpOGpY-GO-t_nz75S-13QQt0Wpd3xrFZMeae7OcJw/exec";
-
   document.getElementById('contactForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const submitBtn = document.getElementById('submitBtn');
-    const alertBox = document.getElementById('contactAlert');
-    const form = e.target;
+    const alertBox  = document.getElementById('contactAlert');
+    const form      = e.target;
 
     const name = document.getElementById('contactName').value.trim();
     const email = document.getElementById('contactEmail').value.trim();
     const message = document.getElementById('contactMessage').value.trim();
 
-    if (!name || !email || !message) {
-      alertBox.className = 'alert alert-danger mb-3';
-      alertBox.textContent = '{% trans "Please fill in all fields." %}';
+    // helper to show alerts
+    function showAlert(type, text) {
+      alertBox.className = `alert alert-${type} mb-3`;
+      alertBox.textContent = text;
       alertBox.classList.remove('d-none');
+    }
+
+    if (!name || !email || !message) {
+      showAlert('danger', '{% trans "Please fill in all fields." %}');
       return;
     }
 
+    // UI: loading state
+    alertBox.classList.add('d-none');
     submitBtn.disabled = true;
+    const originalBtnHtml = submitBtn.innerHTML;
     submitBtn.innerHTML =
       '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>{% trans "Sending..." %}';
 
-    // Build URL for Apps Script: mode=contact
-    const url = contactScriptUrl
-      + '?mode=contact'
-      + '&name=' + encodeURIComponent(name)
-      + '&email=' + encodeURIComponent(email)
-      + '&message=' + encodeURIComponent(message);
-
     try {
-      const response = await fetch(url);
+      const response = await fetch("/contact/api/contact/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message })
+      });
+
+      // If Django returns HTML or non-JSON, this will throw -> caught below
       const data = await response.json();
 
-      if (data.success) {
-        alertBox.className = 'alert alert-success mb-3';
-        alertBox.textContent =
-          data.message || '{% trans "Thank you! Your message has been sent." %}';
-        alertBox.classList.remove('d-none');
-        form.reset();
-      } else {
-        alertBox.className = 'alert alert-danger mb-3';
-        alertBox.textContent =
-          data.message || '{% trans "Failed to send message. Please try again." %}';
-        alertBox.classList.remove('d-none');
+      if (!response.ok || data.success === false) {
+        // show server message if exists
+        const msg = data.message || data.error || '{% trans "Something went wrong. Please try again." %}';
+        showAlert('danger', msg);
+        return;
       }
+
+      // ✅ success
+      showAlert('success', '{% trans "Message sent! We will get back to you soon." %}');
+      form.reset();
+
     } catch (err) {
-      console.error('Contact form error:', err);
-      alertBox.className = 'alert alert-danger mb-3';
-      alertBox.textContent =
-        '{% trans "Network error. Please check your connection and try again." %}';
-      alertBox.classList.remove('d-none');
+      console.error("Contact submit failed:", err);
+      showAlert('danger', '{% trans "Network error. Please try again." %}');
     } finally {
+      // UI: restore button always
       submitBtn.disabled = false;
-      submitBtn.innerHTML = '{% trans "Send Message" %}';
-      setTimeout(() => alertBox.classList.add('d-none'), 6000);
+      submitBtn.innerHTML = originalBtnHtml;
     }
   });
 </script>
+
 
 {% endblock %}
