@@ -1996,6 +1996,7 @@ window.switchTab = function(tabId, clickedTab) {
   }
 };
 
+
 async function validateStep(stepIndex) {
   const step = document.querySelector(`.form-step[data-step="${stepIndex + 1}"]`);
   if (!step) {
@@ -2318,24 +2319,37 @@ if (termsCheckbox) {
             ` : ''}
           </div>
           
-          <div class="booking-card-actions">
-            ${!booking.is_cancelled ? (() => {
-              const cancellationInfo = checkCancellationPolicy(booking.booking_date);
-              const buttonClass = cancellationInfo.isWithin24Hours ? 'btn-cancel-warning' : 'btn-cancel';
-              const warningIcon = cancellationInfo.isWithin24Hours ? 'fa-exclamation-triangle' : 'fa-times';
+<div class="booking-card-actions">
+  ${(() => {
+    // booking.start_time is already used above in your code
+    const startDt = new Date(booking.start_time.replace(' ', 'T'));
+    const isPast = startDt.getTime() <= Date.now();
 
-              return `<button class="btn-action ${buttonClass} cancel-booking"
-                              data-booking-id="${booking.id}"
-                              data-booking-date="${booking.booking_date}"
-                              title="${cancellationInfo.isWithin24Hours ? 'Warning: Cancellation fee applies' : 'Free cancellation available'}">
-                        <i class="fas ${warningIcon}"></i>
-                        <span>${cancellationInfo.isWithin24Hours ? 'Cancel*' : 'Cancel'}</span>
-                      </button>`;
-            })() : `<button class="btn-action btn-cancelled cancel-booking" disabled>
-                      <i class="fas fa-ban"></i>
-                      <span>Cancelled</span>
-                    </button>`}
-          </div>
+    if (booking.is_cancelled) {
+      return `<button class="btn-action btn-cancelled cancel-booking" disabled>
+                <i class="fas fa-ban"></i>
+                <span>Cancelled</span>
+              </button>`;
+    }
+
+    // ✅ past booking => no cancel button at all
+    if (isPast) return '';
+
+    // future booking => show cancel button (your existing logic)
+    const cancellationInfo = checkCancellationPolicy(booking.booking_date);
+    const buttonClass = cancellationInfo.isWithin24Hours ? 'btn-cancel-warning' : 'btn-cancel';
+    const warningIcon = cancellationInfo.isWithin24Hours ? 'fa-exclamation-triangle' : 'fa-times';
+
+    return `<button class="btn-action ${buttonClass} cancel-booking"
+                    data-booking-id="${booking.id}"
+                    data-booking-date="${booking.booking_date}"
+                    title="${cancellationInfo.isWithin24Hours ? 'Warning: Cancellation fee applies' : 'Free cancellation available'}">
+              <i class="fas ${warningIcon}"></i>
+              <span>${cancellationInfo.isWithin24Hours ? 'Cancel*' : 'Cancel'}</span>
+            </button>`;
+  })()}
+</div>
+
         </div>
       `;
       container.innerHTML += card;
