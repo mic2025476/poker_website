@@ -4,6 +4,9 @@ import json
 from datetime import datetime
 from django.shortcuts import render
 import stripe
+from datetime import date
+from decimal import Decimal
+from django.views.decorators.http import require_POST
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
@@ -31,9 +34,11 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_CURRENCY_DEFAULT = "eur"
 
 VAT = 0.19
-NET_DAY = 300
-NET_DEALER = 200
-NET_DRINKS = 200
+NET_DAY = 350
+DEPOSIT_EUR = Decimal("500.00")
+DEPOSIT_CENTS = 50000
+NET_DEALER = 250
+NET_DRINKS = 150
 NET_SERVICE = 200
 # ⚠️ TEMPORARY – REMOVE AFTER LIVE TEST
 LIVE_TEST_AMOUNT_CENTS = None  # €0.70
@@ -57,11 +62,11 @@ def build_receipt_payload(*, customer, booking_payload, pi, company_cfg: dict):
     drinks = bool(booking_payload.get("drinks_flatrate", False))
 
     # Line items (NET)
-    items = [{"name": "Entire Day", "qty": 1, "net_unit": 300.00}]
+    items = [{"name": "Poker Rental", "qty": 1, "net_unit": float(NET_DAY)}]
     if dealer:
-        items.append({"name": "Dealer", "qty": 1, "net_unit": 200.00})
+        items.append({"name": "Dealer", "qty": 1, "net_unit": float(NET_DEALER)})
     if drinks:
-        items.append({"name": "Drinks Flatrate", "qty": 1, "net_unit": 200.00})
+        items.append({"name": "Drinks Flatrate", "qty": 1, "net_unit": float(NET_DRINKS)})
 
     net_subtotal = sum(i["qty"] * i["net_unit"] for i in items)
     vat_amount = float(Decimal(net_subtotal) * VAT_RATE)
@@ -165,7 +170,7 @@ def calc_boss_gross_total(dealer: bool, drinks_flatrate: bool, service: bool) ->
         net_total += NET_DRINKS
     if service:
         net_total += NET_SERVICE
-    gross_total = round(net_total * (1 + VAT), 2)
+    gross_total = round(net_total, 2)
     return gross_total
 
 def _deposit_to_cents(deposit_eur: float) -> int:
@@ -223,8 +228,11 @@ def _finalize_booking_and_calendar(booking_id: int, data: dict, payment_referenc
     booking.total_people = people
     booking.hours_booked = hours
     booking.total_amount = gross_total
-    booking.deposit_amount = gross_total
+    booking.deposit_amount = float(DEPOSIT_EUR)
     booking.is_active = True
+    booking.has_dealer = bool(data.get("dealer"))
+    booking.has_service_personal = bool(data.get("service"))
+    booking.has_drinks_flatrate = bool(data.get("drinks_flatrate"))
 
     # OPTIONAL: if your model has a payment reference field
     # booking.payment_reference = payment_reference
@@ -280,6 +288,121 @@ def euros_to_cents(value) -> int:
 # ----------------------------------------
 # STEP: Create Stripe Checkout Session
 # ----------------------------------------
+
+def round_up_to_nearest_10(eur: Decimal) -> Decimal:
+    # round UP to nearest 10
+    # 357 -> 360, 360 -> 360
+    eur = eur.quantize(Decimal("0.01"))
+    remainder = eur % Decimal("10")
+    if remainder == 0:
+        return eur
+    return eur + (Decimal("10") - remainder)
+
+def days_from_today(d: date) -> int:
+    return (d - date.today()).days
+
+@require_POST
+def pay_with_cash(request):
+    payload = json.loads(request.body.decode("utf-8"))
+
+    required = ["booking_date", "number_of_people", "user_id"]
+    for f in required:
+        if f not in payload:
+            return JsonResponse({"error": f"Missing {f}"}, status=400)
+
+    booking_date = datetime.strptime(payload["booking_date"], "%Y-%m-%d").date()
+
+    # ✅ Cash allowed only if booking is MORE than 2 days away
+    if days_from_today(booking_date) <= 2:
+        return JsonResponse({"error": "Cash payment is not available for bookings within 2 days."}, status=400)
+
+    user_id = int(payload["user_id"])
+    people = int(payload["number_of_people"])
+    dealer = bool(payload.get("dealer"))
+    service = bool(payload.get("service"))
+    drinks = bool(payload.get("drinks_flatrate"))
+
+    customer = CustomerModel.objects.get(id=user_id, is_active=True)
+
+    # booking price (gross)
+    gross_total = Decimal(str(calc_boss_gross_total(dealer, drinks, service)))
+    deposit = DEPOSIT_EUR
+
+    # cash due = booking + deposit
+    cash_due = gross_total + deposit
+
+    # ✅ round UP to nearest 10
+    rounded_cash_due = round_up_to_nearest_10(cash_due)
+    fee = (rounded_cash_due - cash_due).quantize(Decimal("0.01"))
+
+    start_time = datetime.strptime("18:00", "%H:%M").time()
+
+    booking = BookingModel.objects.create(
+        customer=customer,
+        booking_date=booking_date,
+        start_time=start_time,
+        total_people=people,
+        hours_booked=18,
+        total_amount=gross_total,
+        deposit_amount=deposit,
+        is_active=True,
+
+        # ✅ NEW: store add-ons
+        has_dealer=dealer,
+        has_service_personal=service,
+        has_drinks_flatrate=drinks,
+
+        is_cash=True,
+        cash_paid=False,
+        cash_rounding_fee=fee,
+    )
+
+
+    # drinks M2M
+    if payload.get("drinks"):
+        booking.drinks.set(payload["drinks"])
+
+    # calendar (optional - use your existing helper)
+    try:
+        calendar_service = GoogleCalendarService()
+
+        drink_names = []
+        if payload.get("drinks"):
+            from menu.models import DrinkModel
+            drink_objects = DrinkModel.objects.filter(id__in=payload["drinks"])
+            drink_names = [d.name for d in drink_objects]
+
+        booking_data = {
+            "customer_name": f"{customer.first_name} {customer.last_name}",
+            "booking_date": booking_date,
+            "start_time": start_time,     # 18:00
+            "duration_hours": 18,
+            "total_people": people,
+            "drinks": drink_names,
+            "booking_id": booking.id,
+        }
+
+        calendar_event = calendar_service.add_booking_event(booking_data)
+        if calendar_event:
+            print(f"✅ Created calendar event for CASH booking {booking.id}")
+        else:
+            print(f"⚠️ Calendar event creation failed for CASH booking {booking.id}")
+
+    except Exception as e:
+        print(f"⚠️ Error adding CASH booking to calendar: {e}")
+
+
+    return JsonResponse({
+        "ok": True,
+        "booking_id": booking.id,
+        "gross_total": str(gross_total),
+        "deposit": str(deposit),
+        "cash_due": str(cash_due),
+        "rounded_cash_due": str(rounded_cash_due),
+        "cash_rounding_fee": str(fee),
+        "redirect_url": "/payments/cash/success/",
+    })
+
 @require_POST
 def create_checkout_session(request):
     """
@@ -311,9 +434,12 @@ def create_checkout_session(request):
         dealer = bool(payload.get("dealer"))
         service = bool(payload.get("service"))
         drinks = bool(payload.get("drinks_flatrate"))
+        include_booking_amount = bool(payload.get("include_booking_amount", True))
         customer = CustomerModel.objects.get(id=user_id, is_active=True)
 
         gross_total = calc_boss_gross_total(dealer, drinks, service)
+        gross_total_cents = euros_to_cents(gross_total)
+        amount_cents = gross_total_cents + DEPOSIT_CENTS  # ALWAYS full + deposit
         booking_date = datetime.strptime(payload["booking_date"], "%Y-%m-%d").date()
         start_time = datetime.strptime("18:00", "%H:%M").time()
         hours = 18
@@ -326,24 +452,19 @@ def create_checkout_session(request):
             total_people=people,
             hours_booked=hours,
             total_amount=gross_total,
-            deposit_amount=gross_total,
+            deposit_amount=float(DEPOSIT_EUR),
             is_active=False,                 # ✅ pending until paid
             # payment_reference="",          # optional if you have it
         )
         # ----------------------------
         # TEMP LIVE TEST OVERRIDE
         # ----------------------------
-        if LIVE_TEST_AMOUNT_CENTS is not None:
-            amount_cents = euros_to_cents(LIVE_TEST_AMOUNT_CENTS)
-        else:
-            amount_cents = euros_to_cents(gross_total)
-
+        gross_total_cents = euros_to_cents(gross_total)     # your existing function
         # IMPORTANT: redirect back to your booking tab, not /book/
         success_url = request.build_absolute_uri("/payments/stripe/success/") + "?session_id={CHECKOUT_SESSION_ID}"
         cancel_url  = request.build_absolute_uri("/payments/stripe/cancel/")  + "?session_id={CHECKOUT_SESSION_ID}"
         # Get customer email (prefer backend DB if you can)
         customer_email = customer.email_id  # <-- you must send this from frontend OR fetch from CustomerModel
-        print(f"customer_email1111: {customer_email}")
         session = stripe.checkout.Session.create(
             mode="payment",
             payment_method_types=["card"],
@@ -352,15 +473,23 @@ def create_checkout_session(request):
             customer_email=customer_email,
 
             # ✅ Turn on Stripe-generated invoices for this Checkout payment
-                payment_intent_data={
-                    "receipt_email": customer_email,
-                    "metadata": {"booking_id": str(pending_booking.id)},  # ✅ so PI events can find it
+            payment_intent_data={
+                "receipt_email": customer.email_id,
+                "metadata": {
+                    "booking_id": str(pending_booking.id),
+                    "gross_total_cents": str(gross_total_cents),
+                    "deposit_cents": str(DEPOSIT_CENTS),
+                    "charge_type": "gross_plus_deposit",
                 },
+            },
             line_items=[{
                 "price_data": {
                     "currency": "eur",
-                    "product_data": {"name": "MGEN Booking"},
-                    "unit_amount": amount_cents,
+                    "product_data": {
+                        "name": "MGEN Booking (Total + Refundable Deposit)",
+                        "description": f"Booking total €{gross_total:.2f} + refundable deposit €500.00",
+                    },
+                    "unit_amount": amount_cents,  # ✅ gross + deposit
                 },
                 "quantity": 1,
             }],
@@ -370,7 +499,11 @@ def create_checkout_session(request):
 
             metadata={
                 "booking_id": str(pending_booking.id),
-                "booking_payload": json.dumps(payload),  # optional; keep if you want it for receipts
+                "booking_payload": json.dumps(payload),
+                "gross_total_cents": str(gross_total_cents),
+                "deposit_cents": str(DEPOSIT_CENTS),
+                "charge_type": "gross_plus_deposit",
+                "include_booking_amount": "true" if include_booking_amount else "false",
             },
         )
 
@@ -427,6 +560,11 @@ def stripe_webhook(request):
         data = json.loads(md.get("booking_payload") or "{}")
         customer_email = (session.get("customer_details") or {}).get("email") or session.get("customer_email")
         payment_intent_id = session.get("payment_intent")
+        booking = BookingModel.objects.filter(id=booking_id).first()
+        if booking:
+            booking.deposit_payment_intent_id = payment_intent_id
+            booking.save(update_fields=["deposit_payment_intent_id"])
+
         _finalize_booking_and_calendar(
             booking_id=int(booking_id),
             data=data,
@@ -449,11 +587,21 @@ def stripe_webhook(request):
         if not booking:
             return HttpResponse(status=200)
 
-        # If already active, do nothing
-        if not booking.is_active:
-            booking.is_active = True
-            booking.save(update_fields=["is_active"])
+        include_booking_amount = (
+            (session.get("metadata") or {}).get("include_booking_amount") == "true"
+        )
 
+        if include_booking_amount:
+            # Full booking + deposit paid online
+            booking.total_amount = booking.total_amount  # keep booking amount
+            booking.deposit_amount = Decimal("500.00")
+        else:
+            # Only deposit paid online
+            booking.total_amount = Decimal("0.00")
+            booking.deposit_amount = Decimal("500.00")
+
+        booking.is_active = True
+        booking.save()
     return HttpResponse(status=200)
 
 
@@ -473,6 +621,11 @@ def process_payment(request):
 def stripe_success(request):
     # session_id is optional; you can show it or ignore it
     return render(request, "payments/stripe_success.html")
+
+def pay_with_cash_success(request):
+    # session_id is optional; you can show it or ignore it
+    return render(request, "payments/pay_with_cash_success.html")
+
 
 def stripe_cancel(request):
     session_id = request.GET.get("session_id")

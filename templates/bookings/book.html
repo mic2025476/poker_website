@@ -1553,15 +1553,33 @@
       <div class="booking-card">
         <!-- Sticky Header -->
         <div class="booking-header">
-          <div class="text-center">
-            <h6 class="fw-bold text-dark mb-0">
-              {% trans "Book Your Day at Poka Lawn" %}
-            </h6>
-            <p class="text-muted mb-1" style="font-size: 0.75rem;">Premium poker experience</p>
-            <div class="d-flex justify-content-center">
-              <span style="font-size: 0.9rem; color: var(--theme-red);">♠︎ ♥︎ ♣︎ ♦︎</span>
-            </div>
-          </div>
+<div class="d-flex align-items-center justify-content-center position-relative">
+  <!-- Back Arrow -->
+  <button
+    type="button"
+    class="btn btn-link position-absolute start-0"
+    onclick="goToPreviousStep()"
+    style="text-decoration: none;"
+  >
+    <i class="fas fa-arrow-left fa-lg text-dark"></i>
+  </button>
+
+  <!-- Title -->
+  <div class="text-center">
+    <h6 class="fw-bold text-dark mb-0">
+      {% trans "Book Your Day at MG" %}
+    </h6>
+    <p class="text-muted mb-1" style="font-size: 0.75rem;">
+      Premium poker experience
+    </p>
+    <div class="d-flex justify-content-center">
+      <span style="font-size: 0.9rem; color: var(--theme-red);">
+        ♠︎ ♥︎ ♣︎ ♦︎
+      </span>
+    </div>
+  </div>
+</div>
+
         </div>
         
         <!-- Sticky Step Indicators -->
@@ -1589,13 +1607,8 @@
           
           <!-- Step 2: Back and Next buttons -->
           <div class="nav-buttons-step2" style="display: none;">
-            <div class="row g-2">
-              <div class="col-6">
-                <button type="button" class="btn btn-secondary-custom w-100 prev-step">
-                  <i class="fas fa-arrow-left me-1"></i>{% trans "Back" %}
-                </button>
-              </div>
-              <div class="col-6">
+            <div class="row g-1">
+              <div class="col-12">
                 <button type="button" class="btn btn-primary-custom w-100 next-step">
                   {% trans "Next" %} <i class="fas fa-arrow-right ms-1"></i>
                 </button>
@@ -1604,20 +1617,26 @@
           </div>
           
           <!-- Step 3: Back and Pay buttons -->
-          <div class="nav-buttons-step3" style="display: none;">
-            <div class="row g-2">
-              <div class="col-6">
-                <button type="button" class="btn btn-secondary-custom w-100 prev-step">
-                  <i class="fas fa-arrow-left me-1"></i>{% trans "Back" %}
-                </button>
-              </div>
+<!-- Step 3: Pay buttons only -->
+<div class="nav-buttons-step3" style="display: none;">
+  <div class="row g-2">
+    <div class="col-6">
+      <div id="stripePayNavSlot"></div>
+    </div>
 
-              <div class="col-6">
-                <!-- Stripe button will be moved here -->
-                <div id="stripePayNavSlot"></div>
-              </div>
-            </div>
-          </div>
+    <div class="col-6">
+    <button
+      type="button"
+      id="payWithCashBtn"
+      class="btn btn-secondary-custom w-100"
+    >
+      Pay with Cash
+    </button>
+
+    </div>
+  </div>
+</div>
+
 
         </div>
       </div>
@@ -1631,7 +1650,6 @@
           <div class="card-body p-2">
             <div class="text-center mb-2">
               <h6 class="fw-bold text-dark mb-0">My Bookings</h6>
-              <p class="text-muted mb-1" style="font-size: 0.75rem;">Manage your sessions</p>
             </div>
             
             <!-- Filter Section -->
@@ -1923,6 +1941,11 @@
 <!-- Consolidated JavaScript for both New & Edit Booking Forms -->
 <script>
 
+function goToPreviousStep() {
+  if (window.currentStep > 1) {
+    document.querySelector('.prev-step')?.click();
+  }
+}
 
 // Step management function
 window.showStep = function(stepNumber) {
@@ -2258,7 +2281,25 @@ if (termsCheckbox) {
       const statusClass = booking.is_cancelled ? 'status-cancelled' : 'status-active';
       const statusText = booking.is_cancelled ? 'Cancelled' : 'Active';
       const statusIcon = booking.is_cancelled ? 'fas fa-times-circle' : 'fas fa-check-circle';
-      
+
+const cashFee = parseFloat(booking.cash_rounding_fee || 0);
+const depositAmount = parseFloat(booking.deposit_amount || 0);
+const bookingAmount = parseFloat(booking.total_amount || 0);
+let displayTotal = 0;
+let paymentNote = "";
+
+if (booking.is_cash) {
+  // cash total = booking + deposit + rounding fee
+  displayTotal = bookingAmount + depositAmount + cashFee;
+
+  // show note depending on paid status
+  paymentNote = booking.cash_paid ? " (paid by cash)" : " (to be paid)";
+} else {
+  // stripe booking => paid online (booking + deposit)
+  displayTotal = bookingAmount + depositAmount;
+  paymentNote = " (paid online)";
+}
+
       const card = `
         <div class="booking-card-modern"
              data-booking-id="${booking.id}"
@@ -2302,7 +2343,7 @@ if (termsCheckbox) {
                   <i class="fas fa-euro-sign"></i>
                   Total
                 </div>
-                <div class="detail-value">€${booking.total_amount.toFixed(2)}</div>
+                <div class="detail-value">€${displayTotal.toFixed(2)}${paymentNote}</div>
               </div>
             </div>
             
@@ -3153,43 +3194,45 @@ function showMsg(type, text) {
   
   // Function to update pricing based on selected duration
 function updatePricing() {
-  if (!bookingDurationSelect) return;
+  const VAT = 0.19;
 
-  const selectedDuration = parseInt(bookingDurationSelect.value) || 0;
-  const dealerChecked = document.getElementById('dealerService')?.checked || false;
-  const serviceChecked = document.getElementById('servicePersonal')?.checked || false;
-  
-  // Base rental cost
-  const baseRental = selectedDuration * HOURLY_RATE;
+  // NET prices
+  const NET_DAY = 300;
+  const NET_DEALER = 200;
+  const NET_SERVICE = 200;   // ✅ add service
+  const NET_DRINKS = 200;
+  const drinksCheckbox = document.getElementById('drinksFlatrate');
+  const dealerOn  = dealerCheckbox?.checked || false;
+  const serviceOn = serviceCheckbox?.checked || false;  // ✅ keep service
+  const drinksOn  = drinksCheckbox?.checked || false;
 
-  // Show/hide base rental cost (unchanged)
-  const baseRentalCost = document.getElementById('baseRentalCost');
-  const rentalLabel = document.getElementById('rentalLabel');
-  const rentalAmount = document.getElementById('rentalAmount');
-  
-  if (selectedDuration > 0) {
-    if (baseRentalCost) baseRentalCost.style.display = 'flex';
-    if (rentalLabel) rentalLabel.textContent =
-      `${selectedDuration} hour${selectedDuration > 1 ? 's' : ''} Rental`;
-    if (rentalAmount) rentalAmount.textContent = `€${baseRental.toFixed(2)}`;
-  } else {
-    if (baseRentalCost) baseRentalCost.style.display = 'none';
-  }
-  
-  // Calculate total
-  let total = baseRental;
-  if (dealerChecked) total += 200;
-  if (serviceChecked) total += 200;
+  let netTotal = NET_DAY;
+  if (dealerOn)  netTotal += NET_DEALER;
+  if (serviceOn) netTotal += NET_SERVICE;   // ✅ add service into total
+  if (drinksOn)  netTotal += NET_DRINKS;
 
-  // 🔥 store it in the global variable
-  CURRENT_TOTAL_AMOUNT = total;
+  const grossTotal = netTotal * (1 + VAT);
 
-  // Update total amount in UI (keep this for the user)
-  const totalAmountEl = document.getElementById('totalAmount');
-  if (totalAmountEl) {
-    totalAmountEl.textContent = `€${total.toFixed(2)}`;
-  }
+  // ✅ Show/hide rows
+  const finalDealerCost = document.getElementById("finalDealerCost");
+  if (finalDealerCost) finalDealerCost.style.display = dealerOn ? "flex" : "none";
+
+  const finalServiceCost = document.getElementById("finalServiceCost");
+  if (finalServiceCost) finalServiceCost.style.display = serviceOn ? "flex" : "none"; // ✅ fix
+
+  const finalDrinksCost = document.getElementById("finalDrinksCost");
+  if (finalDrinksCost) finalDrinksCost.style.display = drinksOn ? "flex" : "none";
+
+  // Expose total to Stripe
+  window.bookingTotalAmount = grossTotal;
+
+  // Update UI totals
+  document.getElementById("finalTotalAmount").textContent = `€${grossTotal.toFixed(2)}`;
+
+  const totalAmountEl = document.getElementById("totalAmount");
+  if (totalAmountEl) totalAmountEl.textContent = `€${grossTotal.toFixed(2)}`;
 }
+
 
   // Add event listeners for service checkboxes
   const dealerCheckbox = document.getElementById('dealerService');

@@ -138,55 +138,6 @@
         <span>{% trans "MGEN" %}</span>
       </a>
 
-      <!-- Row for Toggler + Mobile Language -->
-      <div class="d-flex d-lg-none align-items-center">
-        <!-- Navbar Toggler for mobile -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-          aria-controls="navbarNav" aria-expanded="false" aria-label="{% trans 'Toggle navigation' %}">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <!-- Language Dropdown for mobile (icon only) -->
-        <div class="dropdown ms-2">
-          <button class="btn btn-light dropdown-toggle py-1 px-2" type="button" id="mobileLangBtn"
-            data-bs-toggle="dropdown" aria-expanded="false">
-            <!-- Just the globe icon, no text -->
-            <i class="bi bi-globe"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mobileLangBtn">
-            <li>
-              <a
-                class="dropdown-item d-flex justify-content-between align-items-center"
-                href="#" onclick="submitLanguage('en'); return false;">
-                English
-                {% if LANGUAGE_CODE == 'en' %}
-                  <i class="bi bi-check"></i>
-                {% endif %}
-              </a>
-            </li>
-            <li>
-              <a
-                class="dropdown-item d-flex justify-content-between align-items-center"
-                href="#" onclick="submitLanguage('de'); return false;">
-                Deutsch
-                {% if LANGUAGE_CODE == 'de' %}
-                  <i class="bi bi-check"></i>
-                {% endif %}
-              </a>
-            </li>
-            <li>
-              <a
-                class="dropdown-item d-flex justify-content-between align-items-center"
-                href="#" onclick="submitLanguage('zh-hans'); return false;">
-                中文 (简体)
-                {% if LANGUAGE_CODE == 'zh-hans' %}
-                  <i class="bi bi-check"></i>
-                {% endif %}
-              </a>
-            </li>
-            
-          </ul>
-        </div>
-      </div>
 
       <!-- Collapsible Content (desktop + mobile) -->
       <div class="collapse navbar-collapse" id="navbarNav">
@@ -204,36 +155,6 @@
             <a class="nav-link nav-link-toggle {% if request.path == '/contact/' %}active{% endif %}" href="{% url 'contact:contact' %}">{% trans "Contact" %}</a>
           </li>
 
-          <!-- Desktop Language Dropdown (icon only) -->
-          <li class="nav-item dropdown d-none d-lg-block">
-            <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button"
-               data-bs-toggle="dropdown" aria-expanded="false">
-              <!-- Just the globe icon, no text -->
-              <i class="bi bi-globe"></i>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-              <li>
-                <a
-                  class="dropdown-item d-flex justify-content-between align-items-center"
-                  href="#" onclick="submitLanguage('en'); return false;">
-                  English
-                  {% if LANGUAGE_CODE == 'en' %}
-                    <i class="bi bi-check"></i>
-                  {% endif %}
-                </a>
-              </li>
-              <li>
-                <a
-                  class="dropdown-item d-flex justify-content-between align-items-center"
-                  href="#" onclick="submitLanguage('de'); return false;">
-                  Deutsch
-                  {% if LANGUAGE_CODE == 'de' %}
-                    <i class="bi bi-check"></i>
-                  {% endif %}
-                </a>
-              </li>
-            </ul>
-          </li>
 
           <!-- Always render both account and book now elements; hide via JS if needed -->
           <li class="nav-item dropdown" id="profileNavItem">
@@ -258,11 +179,6 @@
   </nav>
 
   <!-- One hidden form to submit the language choice -->
-  <form id="langForm" method="post" action="{% url 'set_language' %}">
-    {% csrf_token %}
-    <input type="hidden" name="language" id="langCode" />
-    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
-  </form>
 
   <main id="main-content" tabindex="-1">
     {% block content %}{% endblock %}
@@ -275,7 +191,7 @@
     <p class="fw-light mb-2">&copy; {{ current_year }} {% trans "MG Entertainment. All rights reserved." %}</p>
 
     <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start">
-      <a class="text-white text-decoration-none" href="{% url 'impressum' %}">{% trans "Impressum" %}</a>
+      <a class="text-white text-decoration-none" href="{% url 'impressum' %}">{% trans "Imprint" %}</a>
       <a class="text-white text-decoration-none" href="{% url 'privacy' %}">{% trans "Privacy" %}</a>
       <a class="text-white text-decoration-none" href="{% url 'terms' %}">{% trans "Terms" %}</a>
       <a class="text-white text-decoration-none" href="{% url 'refund-policy' %}">{% trans "Refund Policy" %}</a>
