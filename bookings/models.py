@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from menu.models import DrinkModel
 from customers.models import CustomerModel
@@ -9,7 +10,7 @@ class BookingModel(models.Model):
     start_time = models.TimeField()
     total_people = models.PositiveIntegerField()
     hours_booked = models.PositiveIntegerField()
-    drinks = models.ManyToManyField(DrinkModel, related_name="bookings")
+    drinks = models.ManyToManyField(DrinkModel, related_name="bookings",blank=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2,null=True,blank=True)
     deposit_amount = models.DecimalField(max_digits=10, decimal_places=2)
     is_cancelled = models.BooleanField(default=False)
@@ -17,6 +18,17 @@ class BookingModel(models.Model):
     is_delete = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_cash = models.BooleanField(default=False)  # ✅ cash vs stripe
+    cash_paid = models.BooleanField(default=False)  # ✅ only meaningful when is_cash=True
+    cash_rounding_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    # bookings/models.py
+    has_dealer = models.BooleanField(default=False)
+    has_service_personal = models.BooleanField(default=False)
+    has_drinks_flatrate = models.BooleanField(default=False)
+
+    deposit_payment_intent_id = models.CharField(max_length=64, blank=True, null=True)
+    deposit_refunded = models.BooleanField(default=False)
+
 
     def __str__(self):
         return f"Booking {self.id} - {self.customer.first_name} {self.customer.last_name} at {self.start_time}"

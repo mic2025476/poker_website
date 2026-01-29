@@ -111,6 +111,10 @@ def get_user_bookings(request):
                     'is_cancelled': booking.is_cancelled,
                     'is_active': booking.is_active,
                     'created_at': booking.created_at.strftime('%Y-%m-%d %H:%M'),
+                    'cash_paid': booking.cash_paid,
+                    'is_cash': booking.is_cash,
+                    'cash_rounding_fee': float(booking.cash_rounding_fee or 0),
+
                     'drinks': [drink.name for drink in booking.drinks.all()]
                 })
 
