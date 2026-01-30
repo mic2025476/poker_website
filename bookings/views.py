@@ -25,7 +25,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.utils.dateparse import parse_time, parse_date
 from utils.google_calendar import GoogleCalendarService
-
+from pricing.services import get_pricing
 
 FIXED_START_TIME = time(18, 0)   # 18:00
 FIXED_HOURS = 18                # 18 hours => ends at 12:00 next day
@@ -35,9 +35,12 @@ def book(request):
         return redirect("/")  # or use reverse('home') if you're using named URLs
 
     drinks = DrinkModel.objects.all()
+    cfg = get_pricing()
+    print(f'cfgcfgcfg {cfg}')
     return render(request, 'bookings/book.html', {
         'drinks': drinks,
-        'timestamp': datetime.now().timestamp()
+        'timestamp': datetime.now().timestamp(),
+        "pricing_cfg": cfg,
         })
 
 @api_view(["POST"])

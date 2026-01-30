@@ -17,12 +17,24 @@ import requests
 from bookings.models import BookingModel
 from customers.models import CustomerModel
 from utils.google_calendar import GoogleCalendarService
-from response import Response as ResponseData  # your custom ResponseData wrapper
+from response import Response as ResponseData  
+from pricing.services import get_pricing
+from decimal import Decimal
 
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
 VAT_RATE = Decimal("0.19")
+from decimal import Decimal, ROUND_HALF_UP
+
+def euros_to_cents(value) -> int:
+    """
+    Accepts '0.7', 0.7, Decimal('0.70'), 1, '12.34' (euros)
+    Returns integer cents.
+    """
+    eur = Decimal(str(value))
+    cents = (eur * Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    return int(cents)
 # -------------------------
 # Stripe configuration
 # -------------------------
@@ -34,12 +46,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_CURRENCY_DEFAULT = "eur"
 
 VAT = 0.19
-NET_DAY = 350
-DEPOSIT_EUR = Decimal("500.00")
-DEPOSIT_CENTS = 50000
-NET_DEALER = 250
-NET_DRINKS = 150
-NET_SERVICE = 200
+GROSS_DAY = 350
 # ⚠️ TEMPORARY – REMOVE AFTER LIVE TEST
 LIVE_TEST_AMOUNT_CENTS = None  # €0.70
 
@@ -60,17 +67,16 @@ def build_receipt_payload(*, customer, booking_payload, pi, company_cfg: dict):
     """
     dealer = bool(booking_payload.get("dealer", False))
     drinks = bool(booking_payload.get("drinks_flatrate", False))
-
-    # Line items (NET)
-    items = [{"name": "Poker Rental", "qty": 1, "net_unit": float(NET_DAY)}]
+    cfg = get_pricing()
+    GROSS_DEALER = cfg.gross_dealer
+    GROSS_DRINKS = cfg.gross_drinks_flatrate
+    # Line items (GROSS)
+    items = [{"name": "Poker Rental", "qty": 1, "gross_unit": float(GROSS_DAY)}]
     if dealer:
-        items.append({"name": "Dealer", "qty": 1, "net_unit": float(NET_DEALER)})
+        items.append({"name": "Dealer", "qty": 1, "gross_unit": float(GROSS_DEALER)})
     if drinks:
-        items.append({"name": "Drinks Flatrate", "qty": 1, "net_unit": float(NET_DRINKS)})
-
+        items.append({"name": "Drinks Flatrate", "qty": 1, "gross_unit": float(GROSS_DRINKS)})
     net_subtotal = sum(i["qty"] * i["net_unit"] for i in items)
-    vat_amount = float(Decimal(net_subtotal) * VAT_RATE)
-    gross_total = float(Decimal(net_subtotal) * (Decimal("1.0") + VAT_RATE))
 
     # Stripe paid amount (gross) from PI
     paid_cents = (pi.get("amount_received") or pi.get("amount") or 0)
@@ -162,19 +168,18 @@ def send_receipt_via_gas(receipt: dict) -> None:
         print("⚠️ GAS call failed:", e)
 
 
-def calc_boss_gross_total(dealer: bool, drinks_flatrate: bool, service: bool) -> float:
-    net_total = NET_DAY
-    if dealer:
-        net_total += NET_DEALER
-    if drinks_flatrate:
-        net_total += NET_DRINKS
-    if service:
-        net_total += NET_SERVICE
-    gross_total = round(net_total, 2)
-    return gross_total
+def calc_gross_total_from_db(*, dealer: bool, drinks_flatrate: bool, service: bool) -> Decimal:
+    cfg = get_pricing()
 
-def _deposit_to_cents(deposit_eur: float) -> int:
-    return int(round(deposit_eur * 100))
+    gross_total = cfg.gross_day_rental
+    if dealer:
+        gross_total += cfg.gross_dealer
+    if drinks_flatrate:
+        gross_total += cfg.gross_drinks_flatrate
+    if service:
+        gross_total += cfg.gross_service
+
+    return round(gross_total, 2)
 
 
 def _finalize_booking_and_calendar(booking_id: int, data: dict, payment_reference: str = ""):
@@ -210,7 +215,7 @@ def _finalize_booking_and_calendar(booking_id: int, data: dict, payment_referenc
     dealer = bool(data.get("dealer"))
     drinks_flat = bool(data.get("drinks_flatrate"))
     service = bool(data.get("service"))
-    gross_total = calc_boss_gross_total(dealer, drinks_flat, service)
+    gross_total = calc_gross_total_from_db(dealer=dealer, drinks_flatrate=drinks_flat, service=service)
 
     booking_date = datetime.strptime(data["booking_date"], "%Y-%m-%d").date()
     start_time = datetime.strptime("18:00", "%H:%M").time()
@@ -221,7 +226,8 @@ def _finalize_booking_and_calendar(booking_id: int, data: dict, payment_referenc
     if booking.customer_id != customer.id:
         # safety check: don't finalize someone else's booking
         raise ValueError("Booking customer mismatch")
-
+    cfg = get_pricing()
+    DEPOSIT_EUR = cfg.deposit_amount
     # Update the existing booking
     booking.booking_date = booking_date
     booking.start_time = start_time
@@ -275,19 +281,6 @@ def _finalize_booking_and_calendar(booking_id: int, data: dict, payment_referenc
 
     return booking
 
-from decimal import Decimal, ROUND_HALF_UP
-
-def euros_to_cents(value) -> int:
-    """
-    Accepts '0.7', 0.7, Decimal('0.70'), 1, '12.34' (euros)
-    Returns integer cents.
-    """
-    eur = Decimal(str(value))
-    cents = (eur * Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-    return int(cents)
-# ----------------------------------------
-# STEP: Create Stripe Checkout Session
-# ----------------------------------------
 
 def round_up_to_nearest_10(eur: Decimal) -> Decimal:
     # round UP to nearest 10
@@ -303,6 +296,8 @@ def days_from_today(d: date) -> int:
 
 @require_POST
 def pay_with_cash(request):
+    cfg = get_pricing()
+    DEPOSIT_EUR = cfg.deposit_amount
     payload = json.loads(request.body.decode("utf-8"))
 
     required = ["booking_date", "number_of_people", "user_id"]
@@ -325,7 +320,7 @@ def pay_with_cash(request):
     customer = CustomerModel.objects.get(id=user_id, is_active=True)
 
     # booking price (gross)
-    gross_total = Decimal(str(calc_boss_gross_total(dealer, drinks, service)))
+    gross_total = Decimal(str(calc_gross_total_from_db(dealer=dealer, drinks_flatrate=drinks, service=service)))
     deposit = DEPOSIT_EUR
 
     # cash due = booking + deposit
@@ -405,6 +400,9 @@ def pay_with_cash(request):
 
 @require_POST
 def create_checkout_session(request):
+    cfg = get_pricing()
+    DEPOSIT_EUR = cfg.deposit_amount
+    DEPOSIT_CENTS = euros_to_cents(DEPOSIT_EUR)
     """
     Called from your booking page JS.
     Receives booking form data and returns Stripe Checkout URL.
@@ -437,7 +435,7 @@ def create_checkout_session(request):
         include_booking_amount = bool(payload.get("include_booking_amount", True))
         customer = CustomerModel.objects.get(id=user_id, is_active=True)
 
-        gross_total = calc_boss_gross_total(dealer, drinks, service)
+        gross_total = calc_gross_total_from_db(dealer=dealer, drinks_flatrate=drinks, service=service)
         gross_total_cents = euros_to_cents(gross_total)
         amount_cents = gross_total_cents + DEPOSIT_CENTS  # ALWAYS full + deposit
         booking_date = datetime.strptime(payload["booking_date"], "%Y-%m-%d").date()
@@ -487,7 +485,7 @@ def create_checkout_session(request):
                     "currency": "eur",
                     "product_data": {
                         "name": "MGEN Booking (Total + Refundable Deposit)",
-                        "description": f"Booking total €{gross_total:.2f} + refundable deposit €500.00",
+                        "description": f"Booking total €{gross_total:.2f} (VAT included) + deposit €{DEPOSIT_EUR:.2f}",
                     },
                     "unit_amount": amount_cents,  # ✅ gross + deposit
                 },

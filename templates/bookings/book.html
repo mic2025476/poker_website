@@ -8,6 +8,17 @@
 <script src="{% static 'js/booking_form.js' %}?v={{ timestamp }}"></script>
 <script src="{% static 'js/booking_edit_form.js' %}"></script>
 
+<script id="pricing-config" type="application/json">
+{
+  "gross_day_rental": "{{ pricing_cfg.gross_day_rental }}",
+  "gross_dealer": "{{ pricing_cfg.gross_dealer }}",
+  "gross_service": "{{ pricing_cfg.gross_service }}",
+  "gross_drinks_flatrate": "{{ pricing_cfg.gross_drinks_flatrate }}",
+  "vat_rate": "{{ pricing_cfg.vat_rate }}",
+  "deposit_amount": "{{ pricing_cfg.deposit_amount }}"
+}
+</script>
+
 <style>
   :root {
     /* Brand BLUE palette (matches home page "blue-table" theme) */
@@ -3194,24 +3205,29 @@ function showMsg(type, text) {
   
   // Function to update pricing based on selected duration
 function updatePricing() {
-  const VAT = 0.19;
+const PRICING = JSON.parse(document.getElementById("pricing-config").textContent);
 
-  // NET prices
-  const NET_DAY = 300;
-  const NET_DEALER = 200;
-  const NET_SERVICE = 200;   // ✅ add service
-  const NET_DRINKS = 200;
+
+  const VAT = parseFloat(PRICING.vat_rate); // 0.19
+  const GROSS_DAY = parseFloat(PRICING.gross_day_rental);
+  const GROSS_DEALER = parseFloat(PRICING.gross_dealer);
+  const GROSS_SERVICE = parseFloat(PRICING.gross_service);
+  const GROSS_DRINKS = parseFloat(PRICING.gross_drinks_flatrate);
+  const DEPOSIT = parseFloat(PRICING.deposit_amount);
   const drinksCheckbox = document.getElementById('drinksFlatrate');
   const dealerOn  = dealerCheckbox?.checked || false;
   const serviceOn = serviceCheckbox?.checked || false;  // ✅ keep service
   const drinksOn  = drinksCheckbox?.checked || false;
 
-  let netTotal = NET_DAY;
-  if (dealerOn)  netTotal += NET_DEALER;
-  if (serviceOn) netTotal += NET_SERVICE;   // ✅ add service into total
-  if (drinksOn)  netTotal += NET_DRINKS;
+  let grossTotal = GROSS_DAY; // (this is gross now)
+  if (dealerOn)  grossTotal += GROSS_DEALER;
+  if (serviceOn) grossTotal += GROSS_SERVICE;
+  if (drinksOn)  grossTotal += GROSS_DRINKS;
 
-  const grossTotal = netTotal * (1 + VAT);
+  // DO NOT multiply by VAT
+  window.bookingTotalAmount = grossTotal;
+
+  console.log('grossTotal',grossTotal)
 
   // ✅ Show/hide rows
   const finalDealerCost = document.getElementById("finalDealerCost");

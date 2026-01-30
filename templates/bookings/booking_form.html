@@ -95,7 +95,8 @@
               <input class="form-check-input" type="checkbox" id="dealerService" name="services" value="dealer">
               <label class="form-check-label fw-semibold small" for="dealerService">
                 <i class="fas fa-user-tie me-1"></i>{% trans "Professional Dealer" %}
-                <div class="text-muted small">{% trans "+€250 - Expert poker dealer for your session" %}</div>
+                <div class="text-muted small">{% trans "+€" %}{{ pricing_cfg.gross_dealer }}
+{% trans " - Expert poker dealer for your session" %}</div>
               </label>
             </div>
           </div>
@@ -104,7 +105,7 @@
               <input class="form-check-input" type="checkbox" id="servicePersonal" name="services" value="service">
               <label class="form-check-label fw-semibold small" for="servicePersonal">
                 <i class="fas fa-user-cog me-1"></i>{% trans "Service Personal" %}
-                <div class="text-muted small">{% trans "+€250 - Dedicated service staff for your event" %}</div>
+                <div class="text-muted small">{% trans "+€" %}{{ pricing_cfg.gross_service }}{% trans " - Dedicated service staff for your event" %}</div>
               </label>
             </div>
           </div>
@@ -131,7 +132,7 @@
             <input class="form-check-input" type="checkbox" id="drinksFlatrate" name="drinks_flatrate" value="flatrate">
             <label class="form-check-label fw-semibold small" for="drinksFlatrate">
               <i class="fas fa-wine-bottle me-1"></i>{% trans "Drinks Flatrate" %}
-              <div class="text-muted small">{% trans "+€150 - Unlimited beverages for your group" %}</div>
+              <div class="text-muted small">{% trans "+€" %}{{ pricing_cfg.gross_drinks_flatrate }}{% trans " - Unlimited beverages for your group" %}</div>
             </label>
           </div>
         </div>
@@ -167,19 +168,19 @@
         <div id="finalCostSummary">
           <div class="price-item">
             <span>{% trans "Whole Day Rental" %}</span>
-            <span class="fw-semibold">€350.00</span>
+            <span class="fw-semibold">€{{ pricing_cfg.gross_day_rental }}</span>
           </div>
           <div class="price-item" id="finalDealerCost" style="display: none;">
             <span>{% trans "Professional Dealer" %}</span>
-            <span class="fw-semibold">€250.00</span>
+            <span class="fw-semibold">€{{ pricing_cfg.gross_dealer }}</span>
           </div>
           <div class="price-item" id="finalServiceCost" style="display: none;">
             <span>{% trans "Service Personal" %}</span>
-            <span class="fw-semibold">€200.00</span>
+            <span class="fw-semibold">€{{ pricing_cfg.gross_service }}</span>
           </div>
           <div class="price-item" id="finalDrinksCost" style="display: none;">
             <span>{% trans "Drinks Flatrate" %}</span>
-            <span class="fw-semibold">€150.00</span>
+            <span class="fw-semibold">€{{ pricing_cfg.gross_drinks_flatrate }}</span>
           </div>
 
 <div class="price-item">
@@ -188,7 +189,7 @@
 </div>
 
 <div class="fw-bold small text-muted mt-1 mb-2">
-  A €500 security deposit is required and will be refunded after the event, once the venue and equipment are checked.
+  A €{{ pricing_cfg.deposit_amount }} security deposit is required and will be refunded after the event, once the venue and equipment are checked.
 </div>
 
 
@@ -649,24 +650,26 @@ function clearFieldError(inputEl) {
     navButtonContainers.forEach((c,idx)=> c.style.display = (idx===currentStep?'block':'none'));
   }
 function updatePricing() {
-  const VAT = 0.0;
-  const NET_DAY = 350;
-  const NET_DEALER = 250;
-  const NET_SERVICE = 200;
-  const NET_DRINKS = 150;
-  const DEPOSIT = 500;
+const PRICING = JSON.parse(document.getElementById("pricing-config").textContent);
+
+
+  const VAT = parseFloat(PRICING.vat_rate); // 0.19
+  const GROSS_DAY = parseFloat(PRICING.gross_day_rental);
+  const GROSS_DEALER = parseFloat(PRICING.gross_dealer);
+  const GROSS_SERVICE = parseFloat(PRICING.gross_service);
+  const GROSS_DRINKS = parseFloat(PRICING.gross_drinks_flatrate);
+  const DEPOSIT = parseFloat(PRICING.deposit_amount);
 
   const dealerOn = !!dealerCheckbox?.checked;
   const serviceOn = !!serviceCheckbox?.checked;
   const drinksOn = !!drinksCheckbox?.checked;
 
-  let netTotal = NET_DAY;
-  if (dealerOn) netTotal += NET_DEALER;
-  if (serviceOn) netTotal += NET_SERVICE;
-  if (drinksOn) netTotal += NET_DRINKS;
+  let grossTotal = GROSS_DAY;
+  if (dealerOn) grossTotal += GROSS_DEALER;
+  if (serviceOn) grossTotal += GROSS_SERVICE;
+  if (drinksOn) grossTotal += GROSS_DRINKS;
   const finalDrinksCost = document.getElementById("finalDrinksCost");
   if (finalDrinksCost) finalDrinksCost.style.display = drinksOn ? "flex" : "none";
-  const grossTotal = netTotal * (1 + VAT);
 const bookingDateValue = document.getElementById("bookingDate")?.value;
 const bookingDateObj = parseBookingDateToLocalDate(bookingDateValue);
 const lastMinute = isWithin2DaysFromToday(bookingDateObj);
