@@ -11,6 +11,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Debug migrations present
+        run: |
+          git rev-parse HEAD
+          ls -la bookings/migrations
+          find . -path "*/bookings/migrations/*.py" | sort
 
       - name: SSH into EC2 and run deploy script
         uses: appleboy/ssh-action@v1.0.0
