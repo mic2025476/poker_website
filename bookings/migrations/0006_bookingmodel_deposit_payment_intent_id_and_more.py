@@ -10,14 +10,22 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='bookingmodel',
-            name='deposit_payment_intent_id',
-            field=models.CharField(blank=True, max_length=64, null=True),
-        ),
-        migrations.AddField(
-            model_name='bookingmodel',
-            name='deposit_refunded',
-            field=models.BooleanField(default=False),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    sql="""
+                        ALTER TABLE bookings_bookingmodel
+                        ADD COLUMN IF NOT EXISTS deposit_payment_intent_id varchar(255);
+                    """,
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name="bookingmodel",
+                    name="deposit_payment_intent_id",
+                    field=models.CharField(max_length=255, null=True, blank=True),
+                ),
+            ],
         ),
     ]
