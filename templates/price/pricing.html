@@ -280,10 +280,11 @@ body {
         </div>
 
         <div class="cardx-body">
-          <!-- pricing numbers based on your latest logic -->
-          <!-- NET = 300, VAT 19%, GROSS = 357 -->
-          <div class="price-big">€357.00</div>
-          <div class="price-sub">{% trans "Includes 19% VAT (Net €300.00)" %}</div>
+          <div class="price-big">€{{ base.gross|floatformat:2 }}</div>
+          <div class="price-sub">
+            {% trans "Includes" %} {{ vat_percent|floatformat:0 }}% {% trans "VAT" %}
+            ({% trans "Net" %} €{{ base.net|floatformat:2 }})
+          </div>
 
           <div class="feature">
             <div class="icon">♠</div>
@@ -310,9 +311,9 @@ body {
           </div>
 
           <div class="breakdown">
-            <div class="rowx"><span>{% trans "Net price" %}</span><span>€300.00</span></div>
-            <div class="rowx"><span>{% trans "VAT (19%)" %}</span><span>€57.00</span></div>
-            <div class="rowx"><span>{% trans "Total" %}</span><span>€357.00</span></div>
+            <div class="rowx"><span>{% trans "Net price" %}</span><span>€{{ base.net|floatformat:2 }}</span></div>
+            <div class="rowx"><span>{% trans "VAT" %} ({{ vat_percent|floatformat:0 }}%)</span><span>€{{ base.vat|floatformat:2 }}</span></div>
+            <div class="rowx"><span>{% trans "Total" %}</span><span>€{{ base.gross|floatformat:2 }}</span></div>
             <div class="rowx muted"><span>{% trans "Max capacity" %}</span><span>{% trans "50 people" %}</span></div>
           </div>
 
@@ -340,14 +341,16 @@ body {
         </div>
 
         <div class="cardx-body">
-          <!-- NET = 200, VAT 19%, GROSS = 238 -->
+
           <div class="feature">
             <div class="icon">👤</div>
             <div>
               <h6>{% trans "Professional Dealer" %}</h6>
               <p>{% trans "A dedicated dealer to run the game smoothly for your group." %}</p>
-              <div style="margin-top:.35rem; font-weight:800;">€250.00</div>
-              <div class="price-sub" style="margin:0;">{% trans "Incl. VAT (Net €200.00)" %}</div>
+              <div style="margin-top:.35rem; font-weight:800;">€{{ dealer.gross|floatformat:2 }}</div>
+              <div class="price-sub" style="margin:0;">
+                {% trans "Incl. VAT (Net" %} €{{ dealer.net|floatformat:2 }})
+              </div>
             </div>
           </div>
 
@@ -356,8 +359,10 @@ body {
             <div>
               <h6>{% trans "Drinks Flatrate" %}</h6>
               <p>{% trans "Unlimited beverages for your group during the session." %}</p>
-              <div style="margin-top:.35rem; font-weight:800;">€150.00</div>
-              <div class="price-sub" style="margin:0;">{% trans "Incl. VAT (Net €126.05)" %}</div>
+              <div style="margin-top:.35rem; font-weight:800;">€{{ drinks.gross|floatformat:2 }}</div>
+              <div class="price-sub" style="margin:0;">
+                {% trans "Incl. VAT (Net" %} €{{ drinks.net|floatformat:2 }})
+              </div>
             </div>
           </div>
 
@@ -365,6 +370,7 @@ body {
             <strong style="color:#fff;">{% trans "Good to know:" %}</strong><br>
             • {% trans "Add-ons are selected during booking and included in your final total." %}<br>
             • {% trans "Individual drinks can be purchased separately during your event." %}<br>
+            • {% trans "Deposit:" %} €{{ deposit_amount|floatformat:2 }}<br>
             • {% trans "If you need custom packages, contact us." %}
           </div>
 
