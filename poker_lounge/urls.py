@@ -21,4 +21,5 @@ path('contact/', include('contact.urls')),
     path("privacy/", TemplateView.as_view(template_name="core/privacy.html"), name="privacy"),
     path("impressum/", TemplateView.as_view(template_name="core/impressum.html"), name="impressum"),
     path("refund-policy/", TemplateView.as_view(template_name="core/refund_policy.html"), name="refund-policy"),
+    path("promotions/", include("promotions.urls")),
 ]

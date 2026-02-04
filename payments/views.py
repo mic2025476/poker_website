@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 from django.shortcuts import render
 import stripe
+from promotions.services import validate_promo, calculate_discount_gross
 from datetime import date
 from decimal import Decimal
 from django.views.decorators.http import require_POST
@@ -321,6 +322,20 @@ def pay_with_cash(request):
 
     # booking price (gross)
     gross_total = Decimal(str(calc_gross_total_from_db(dealer=dealer, drinks_flatrate=drinks, service=service)))
+    promo_code = payload.get("promo_code", "").strip()
+    discount_gross = Decimal("0.00")
+    applied_promo = None
+
+    if promo_code:
+        promo, err = validate_promo(promo_code, gross_total, customer=customer)
+        if err:
+            return JsonResponse({"error": f"Promo code invalid: {err}"}, status=400)
+
+        discount_gross = calculate_discount_gross(promo, gross_total)
+        applied_promo = promo
+
+    gross_total = gross_total - discount_gross
+
     deposit = DEPOSIT_EUR
 
     # cash due = booking + deposit
@@ -341,6 +356,9 @@ def pay_with_cash(request):
         total_amount=gross_total,
         deposit_amount=deposit,
         is_active=True,
+        promo_code=applied_promo,
+        discount_gross=discount_gross,
+
 
         # ✅ NEW: store add-ons
         has_dealer=dealer,
@@ -416,6 +434,7 @@ def create_checkout_session(request):
         # IMPORTANT: your frontend must send JSON
         # If you currently send FormData, change frontend OR parse request.POST instead.
         payload = json.loads(request.body.decode("utf-8"))
+        promo_code = (payload.get("promo_code") or "").strip()
         # ✅ FIXED SLOT - never trust client time/hours
         payload["booking_time"] = "18:00"
         payload["number_of_hours"] = 18
@@ -435,8 +454,35 @@ def create_checkout_session(request):
         include_booking_amount = bool(payload.get("include_booking_amount", True))
         customer = CustomerModel.objects.get(id=user_id, is_active=True)
 
-        gross_total = calc_gross_total_from_db(dealer=dealer, drinks_flatrate=drinks, service=service)
-        gross_total_cents = euros_to_cents(gross_total)
+        # 1. Base gross (server truth)
+        gross_total = calc_gross_total_from_db(
+            dealer=dealer,
+            drinks_flatrate=drinks,
+            service=service
+        )
+
+        # 2. Promo validation (server-side)
+        discount_gross = Decimal("0.00")
+        applied_promo = None
+
+        if promo_code:
+            promo, err = validate_promo(
+                promo_code,
+                gross_total,
+                customer=customer,
+            )
+            if err:
+                return JsonResponse({"error": f"Promo code invalid: {err}"}, status=400)
+
+            discount_gross = calculate_discount_gross(promo, gross_total)
+            applied_promo = promo
+
+        # 3. Final booking total AFTER discount
+        discounted_booking_total = gross_total - discount_gross
+
+        gross_total_cents = euros_to_cents(discounted_booking_total)
+        amount_cents = gross_total_cents + DEPOSIT_CENTS
+
         amount_cents = gross_total_cents + DEPOSIT_CENTS  # ALWAYS full + deposit
         booking_date = datetime.strptime(payload["booking_date"], "%Y-%m-%d").date()
         start_time = datetime.strptime("18:00", "%H:%M").time()
@@ -449,16 +495,15 @@ def create_checkout_session(request):
             start_time=start_time,
             total_people=people,
             hours_booked=hours,
-            total_amount=gross_total,
+            total_amount=discounted_booking_total,
             deposit_amount=float(DEPOSIT_EUR),
-            is_active=False,                 # ✅ pending until paid
-            # payment_reference="",          # optional if you have it
+
+            promo_code=applied_promo,
+            discount_gross=discount_gross,
+
+            is_active=False,
         )
-        # ----------------------------
-        # TEMP LIVE TEST OVERRIDE
-        # ----------------------------
-        gross_total_cents = euros_to_cents(gross_total)     # your existing function
-        # IMPORTANT: redirect back to your booking tab, not /book/
+
         success_url = request.build_absolute_uri("/payments/stripe/success/") + "?session_id={CHECKOUT_SESSION_ID}"
         cancel_url  = request.build_absolute_uri("/payments/stripe/cancel/")  + "?session_id={CHECKOUT_SESSION_ID}"
         # Get customer email (prefer backend DB if you can)
@@ -485,7 +530,7 @@ def create_checkout_session(request):
                     "currency": "eur",
                     "product_data": {
                         "name": "MGEN Booking (Total + Refundable Deposit)",
-                        "description": f"Booking total €{gross_total:.2f} (VAT included) + deposit €{DEPOSIT_EUR:.2f}",
+                        "description": f"Booking total €{discounted_booking_total:.2f} (VAT included) + deposit €{DEPOSIT_EUR:.2f}",
                     },
                     "unit_amount": amount_cents,  # ✅ gross + deposit
                 },
@@ -502,6 +547,8 @@ def create_checkout_session(request):
                 "deposit_cents": str(DEPOSIT_CENTS),
                 "charge_type": "gross_plus_deposit",
                 "include_booking_amount": "true" if include_booking_amount else "false",
+                "promo_code": promo_code or "",
+                "discount_cents": str(euros_to_cents(discount_gross)),
             },
         )
 

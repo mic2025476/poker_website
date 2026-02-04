@@ -28,6 +28,10 @@ class BookingModel(models.Model):
 
     deposit_payment_intent_id = models.CharField(max_length=64, blank=True, null=True)
     deposit_refunded = models.BooleanField(default=False)
+    promo_code = models.ForeignKey("promotions.PromoCode", null=True, blank=True, on_delete=models.SET_NULL)
+    discount_gross = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_gross = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # final total after discount
+
 
 
     def __str__(self):

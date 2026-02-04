@@ -183,6 +183,48 @@
             <span class="fw-semibold">€{{ pricing_cfg.gross_drinks_flatrate }}</span>
           </div>
 
+<!-- Promo Code row (no button, compact input aligned like amounts) -->
+<div class="price-item align-items-center">
+  <span class="fw-semibold">Promo Code</span>
+
+  <div class="ms-auto d-flex align-items-center" style="gap:10px;">
+<input
+  type="text"
+  id="promoCodeInput"
+  placeholder="ENTER"
+  autocomplete="off"
+  spellcheck="false"
+  class="promo-underline-input text-end"
+  style="
+    width: 120px;
+    height: 28px;
+    border: none;
+    border-bottom: 1.5px solid #cfd4da;
+    border-radius: 0;
+    padding: 2px 0;
+    background: transparent;
+    font-weight: 600;
+    letter-spacing: .12em;
+    outline: none;
+    box-shadow: none;
+  "
+/>
+
+  </div>
+</div>
+
+<div id="promoMsg" class="promo-hint"></div>
+
+<div id="finalDiscountRow" class="price-item discount" style="display:none;">
+  <span>Discount</span>
+  <span id="finalDiscountAmount" class="amount">-€0.00</span>
+</div>
+
+
+<input type="hidden" name="promo_code" id="promoCodeHidden" value="">
+<input type="hidden" name="promo_discount_gross" id="promoDiscountHidden" value="0">
+
+
 <div class="price-item">
   <span class="fw-bold">Total</span>
   <span class="fw-bold" id="finalTotalAmount">€0.00</span>
@@ -476,6 +518,53 @@
 #bookingForm{
   position: relative;   /* IMPORTANT */
 }
+
+.promo-underline-input {
+  transition: border-color 0.2s ease;
+}
+
+.promo-underline-input:focus {
+  border-bottom-color: #0d6efd; /* Bootstrap primary blue */
+}
+
+.promo-underline-input::placeholder {
+  letter-spacing: .08em;
+  opacity: 0.6;
+}
+
+/* Promo helper / validation message */
+.promo-hint {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 500;
+  color: #c0392b; /* muted red */
+  font-family: inherit;
+}
+
+/* Optional: softer variant if you want */
+.promo-hint.warning {
+  color: #b54708; /* amber-ish */
+}
+
+.promo-hint.hidden {
+  display: none;
+}
+.promo-hint.success {
+  color: #1e8e3e;
+  font-weight: 600;
+}
+
+/* Discount row when promo is applied */
+.price-item.discount {
+  color: #1e8e3e;        /* same green as promo success */
+  font-weight: 600;
+}
+
+.price-item.discount .amount {
+  color: #1e8e3e;
+}
+
 </style>
 
 <script>
@@ -650,6 +739,7 @@ function clearFieldError(inputEl) {
     navButtonContainers.forEach((c,idx)=> c.style.display = (idx===currentStep?'block':'none'));
   }
 function updatePricing() {
+
 const PRICING = JSON.parse(document.getElementById("pricing-config").textContent);
 
 
@@ -677,6 +767,25 @@ const lastMinute = isWithin2DaysFromToday(bookingDateObj);
 const optionBlock = document.getElementById("bookingAmountOptionBlock");
 const lastMinuteNote = document.getElementById("lastMinuteNote");
 const includeCheckbox = document.getElementById("includeBookingAmount");
+window.grossBookingTotal = grossTotal;
+
+// Re-check promo whenever total changes (even if promo was previously invalid)
+const inp = document.getElementById("promoCodeInput");
+const normalizedInput = (inp?.value || "").trim().toUpperCase();
+
+if (normalizedInput && promoLooksComplete(normalizedInput)) {
+  if (!window.__promoReapplyInFlight && window.__promoLastGrossTotal !== grossTotal) {
+
+    window.__promoLastGrossTotal = grossTotal;
+    window.__promoReapplyInFlight = true;
+
+    applyPromoToCurrentTotal(normalizedInput)
+      .catch(() => {})
+      .finally(() => { window.__promoReapplyInFlight = false; });
+  }
+}
+
+
 
 // If last-minute: hide option + force include booking amount
 if (lastMinute) {
@@ -696,7 +805,23 @@ if (lastMinute) {
 
 const includeBooking = lastMinute ? true : (includeCheckbox?.checked ?? true);
   // ✅ compute what will be charged
-  const chargedNow = grossTotal + DEPOSIT;
+  const promoDiscount = Number(window.appliedPromoDiscount || 0);
+  const discountedBookingTotal = Math.max(0, grossTotal - promoDiscount);
+
+  // charge = discounted booking total + deposit
+  const chargedNow = discountedBookingTotal + DEPOSIT;
+
+  const discountRow = document.getElementById("finalDiscountRow");
+const discountAmount = document.getElementById("finalDiscountAmount");
+
+if (discountRow && discountAmount) {
+  if (promoDiscount > 0.0001) {
+    discountRow.style.display = "flex";
+    discountAmount.textContent = `-€${promoDiscount.toFixed(2)}`;
+  } else {
+    discountRow.style.display = "none";
+  }
+}
 
   // deposit display
   const depEl = document.getElementById("stripeDepositAmount");
@@ -757,6 +882,40 @@ if (cashInfo) {
   window.amountToChargeNow = chargedNow;
 }
 
+
+function bindPricingListeners() {
+  // 1) Main service toggles
+  ["dealerService", "servicePersonal", "drinksFlatrate"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("change", () => {
+      updatePricing();
+    });
+  });
+
+  // 2) If you have other price toggles (add IDs here)
+  ["includeBookingAmount"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("change", () => updatePricing());
+  });
+
+  // 3) If “drinks” are individual checkboxes that affect price (only if they do!)
+  document.querySelectorAll('input[name="drinks"]').forEach(cb => {
+    cb.addEventListener("change", () => updatePricing());
+  });
+
+  // 4) Promo input itself (optional)
+  const promoInp = document.getElementById("promoCodeInput");
+  if (promoInp) {
+    promoInp.addEventListener("input", () => {
+      // don’t auto-apply here unless you want; just keeps state fresh
+    });
+  }
+}
+
+// call it once after updatePricing exists
+bindPricingListeners();
 
 function showStep(idx) {
   steps.forEach((s, i) => {
@@ -1164,9 +1323,9 @@ if (bookingForm) {
       forceFixedSlot();
     });
   }
-  showStep(currentStep);
-  updatePricing();
-  updateStepIndicators();
+showStep(currentStep);
+updatePricing();
+updateStepIndicators();
 
 const stripePayBtn = document.getElementById("payWithStripeBtn");
 const termsCheckbox = document.getElementById("agreeTerms");
@@ -1193,6 +1352,7 @@ if (payWithCashBtn) {
         booking_time: "18:00",
         number_of_people: document.getElementById("numberOfPeople")?.value,
         number_of_hours: 18,
+        promo_code: document.getElementById("promoCodeHidden")?.value || "",
         user_id: "{{ request.session.user_id|default:'' }}",
         dealer: document.getElementById("dealerService")?.checked || false,
         service: document.getElementById("servicePersonal")?.checked || false,
@@ -1306,6 +1466,7 @@ async function startStripeCheckout() {
       dealer: document.getElementById("dealerService")?.checked || false,
       service: document.getElementById("servicePersonal")?.checked || false,
       drinks_flatrate: document.getElementById("drinksFlatrate")?.checked || false,
+      promo_code: document.getElementById("promoCodeHidden")?.value || "",
     }),
   });
 
@@ -1338,6 +1499,225 @@ if (stripePayBtn) {
   });
 }
 
+window.updatePricing = updatePricing;
 
 });
+
+// =======================
+// PROMO (NO BUTTON) AUTO APPLY + CLEAR ON EDIT
+// =======================
+
+function getCSRFToken() {
+  return document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || "";
+}
+
+function clearPromoUIOnly() {
+  const promoMsg = document.getElementById("promoMsg");
+  if (promoMsg) {
+    promoMsg.className = "small mt-1";
+    promoMsg.textContent = "";
+  }
+
+  // clear cached values
+  window.appliedPromoCode = "";
+  window.appliedPromoDiscount = 0;
+
+  // hidden fields (so backend doesn’t get stale promo)
+  const promoHidden = document.getElementById("promoCodeHidden");
+  const discHidden = document.getElementById("promoDiscountHidden");
+  if (promoHidden) promoHidden.value = "";
+  if (discHidden) discHidden.value = "0";
+
+  // hide discount row
+  const discountRow = document.getElementById("finalDiscountRow");
+  if (discountRow) discountRow.style.display = "none";
+}
+
+window.__promoReapplyInFlight = false;
+window.__promoLastGrossTotal = null;
+
+function setPromoState({ code = "", discount = 0, ok = false, message = "" }) {
+  const promoMsg = document.getElementById("promoMsg");
+  const promoHidden = document.getElementById("promoCodeHidden");
+  const discHidden = document.getElementById("promoDiscountHidden");
+
+  if (promoHidden) promoHidden.value = ok ? code : "";
+  if (discHidden) discHidden.value = ok ? String(discount) : "0";
+
+  window.appliedPromoCode = ok ? String(code).trim().toUpperCase() : "";
+  window.appliedPromoDiscount = ok ? Number(discount) : 0;
+
+  if (promoMsg) {
+    promoMsg.textContent = message || "";
+  }
+}
+
+function clearAppliedPromoDiscount() {
+  // promo is no longer applied
+  window.promoDiscount = 0;
+  window.appliedPromoCode = null;
+
+  // hide discount row
+  const discountRow = document.getElementById("finalDiscountRow");
+  const discountAmount = document.getElementById("finalDiscountAmount");
+  if (discountRow) discountRow.style.display = "none";
+  if (discountAmount) discountAmount.textContent = "-€0.00";
+
+  // recompute total back to gross
+  // (IMPORTANT: use the latest grossTotal that updatePricing sets)
+  const grossTotal = window.bookingTotalAmount || 0;
+
+  const totalAmountEl = document.getElementById("totalAmount");
+  if (totalAmountEl) totalAmountEl.textContent = `€${grossTotal.toFixed(2)}`;
+
+  const finalTotalEl = document.getElementById("finalTotalAmount");
+  if (finalTotalEl) finalTotalEl.textContent = `€${grossTotal.toFixed(2)}`;
+}
+
+function promoLooksComplete(code) {
+  return code.length >= 5;
+}
+
+let promoDebounceTimer = null;
+let lastRequestedCode = "";
+
+async function applyPromoToCurrentTotal(code) {
+  // gross total without deposit (you already set this in updatePricing)
+  const grossTotal = Number(window.grossBookingTotal || 0);
+  if (!grossTotal || grossTotal <= 0) {
+    // totals not ready yet, just clear
+    clearPromoUIOnly();
+    window.updatePricing?.();
+    return;
+  }
+
+  lastRequestedCode = code;
+
+  const res = await fetch("/promotions/apply/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": getCSRFToken(),
+    },
+    body: new URLSearchParams({
+      code: code,
+      gross_total: String(grossTotal),
+    }),
+  });
+
+  const data = await res.json();
+
+  // If user typed something else while request was in-flight, ignore response
+  const current = (document.getElementById("promoCodeInput")?.value || "").trim().toUpperCase();
+  if (current !== lastRequestedCode) return;
+
+  if (!data.ok) {
+if (data.error?.code === "min_total_not_met") {
+  const min = parseFloat(data.error.min_required);
+  const cur = parseFloat(data.error.current_total);
+  const remaining = Math.max(0, min - cur);
+
+  // keep the user's code for later re-validation (optional)
+  window.enteredPromoCode = code;
+
+  // ✅ IMPORTANT: clear the *applied* promo state properly
+  setPromoState({
+    ok: false,
+    code: "",       // not applied
+    discount: 0,
+    message: ""
+  });
+
+  // show warning message
+  showPromoMessage(
+    `Add €${remaining.toFixed(2)} more to use this promo (minimum €${min.toFixed(2)}).`,
+    "warning"
+  );
+
+  // recompute totals WITHOUT discount
+  window.updatePricing?.();
+  return;
+}
+
+
+
+  // fallback
+  showPromoMessage("Invalid promo code", "error");
+  return;
+}
+
+if (window.__promoMinRequired) {
+  const remaining = window.__promoMinRequired - grossTotal;
+  if (remaining > 0) {
+    showPromoMessage(
+      `Add €${remaining.toFixed(2)} more to use this promo.`,
+      "warning"
+    );
+  }
+}
+
+function showPromoMessage(text, type = "info") {
+  const el = document.getElementById("promoMsg");
+  if (!el) return;
+
+  el.textContent = text;
+  el.className = `promo-hint ${type}`;
+}
+
+  const discount = Number(data.discount_gross || 0);
+
+  setPromoState({
+    ok: true,
+    code: data.code,
+    discount,
+    message: ""
+  });
+showPromoMessage(
+  `Applied: ${data.code} (−€${discount.toFixed(2)})`,
+  "success"
+);
+  window.updatePricing?.();
+}
+
+// ✅ Auto-apply on typing (no button)
+document.getElementById("promoCodeInput")?.addEventListener("input", (e) => {
+  const input = e.target;
+
+  // normalize
+  let code = (input.value || "").toUpperCase().replace(/\s+/g, "");
+  input.value = code;
+
+  // IMPORTANT UX: clear message immediately when user edits
+  clearPromoUIOnly();
+  window.updatePricing?.();
+
+  if (!code) return;
+
+  // debounce backend calls
+  if (promoDebounceTimer) clearTimeout(promoDebounceTimer);
+
+  promoDebounceTimer = setTimeout(() => {
+    if (promoLooksComplete(code)) {
+      applyPromoToCurrentTotal(code).catch(() => {
+        
+      });
+    }
+  }, 350);
+});
+
+// Optional: pressing Enter applies immediately
+document.getElementById("promoCodeInput")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    const code = (e.target.value || "").trim().toUpperCase();
+    clearPromoUIOnly();
+    window.updatePricing?.();
+    if (code && promoLooksComplete(code)) {
+      applyPromoToCurrentTotal(code).catch(() => {
+        
+      });
+    }
+  }
+});
+
 </script>
