@@ -885,7 +885,7 @@ if (bookingDateObj) {
   booking.setHours(0,0,0,0);
 
   const diffDays = Math.floor((booking - today) / (1000*60*60*24));
-  cashAllowed = diffDays > cutoffDays;
+  cashAllowed = diffDays >= cutoffDays;
 }
 
 if (cashBtn) cashBtn.disabled = !cashAllowed;
