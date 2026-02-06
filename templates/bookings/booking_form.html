@@ -738,6 +738,44 @@ function clearFieldError(inputEl) {
     });
     navButtonContainers.forEach((c,idx)=> c.style.display = (idx===currentStep?'block':'none'));
   }
+
+
+// global cache
+window.settingsForDate = null;
+let settingsFetchDoneFor = null;
+
+async function fetchReservationSettingsForDate(dateStr){
+  if (!dateStr) return null;
+
+  const url = `/bookings/reservation-settings/?date=${encodeURIComponent(dateStr)}`;
+  const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+
+  // IMPORTANT: if backend returns HTML error page -> avoid JSON.parse crash
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) {
+    const text = await res.text();
+    throw new Error("Settings endpoint did not return JSON. Got: " + text.slice(0, 80));
+  }
+
+  const data = await res.json();
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error || "Could not load reservation settings");
+  }
+
+  window.settingsForDate = data.settings;     // e.g. { cash_cutoff_days: 3 }
+  settingsFetchDoneFor = dateStr;
+  return window.settingsForDate;
+}
+
+function getCashCutoffDays() {
+  // ✅ prefer fetched value (only after Next click)
+  const v = window.settingsForDate?.cash_cutoff_days;
+  if (typeof v === "number") return v;
+
+  // fallback (so page doesn't break)
+  return 2; // default until fetched
+}
+
 function updatePricing() {
 
 const PRICING = JSON.parse(document.getElementById("pricing-config").textContent);
@@ -839,6 +877,7 @@ const cashBtn = document.getElementById("payWithCashBtn");
 const cashInfo = document.getElementById("cashInfo");
 
 let cashAllowed = false;
+const cutoffDays = getCashCutoffDays();
 if (bookingDateObj) {
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -846,7 +885,7 @@ if (bookingDateObj) {
   booking.setHours(0,0,0,0);
 
   const diffDays = Math.floor((booking - today) / (1000*60*60*24));
-  cashAllowed = diffDays > 2; // ✅ only if more than 2 days away
+  cashAllowed = diffDays > cutoffDays;
 }
 
 if (cashBtn) cashBtn.disabled = !cashAllowed;
@@ -870,8 +909,8 @@ if (cashInfo) {
         `Cash total will be rounded up to €${cashRounded.toFixed(2)} (cash handling fee €${cashFee.toFixed(2)}).`;
     }
   } else {
-    cashInfo.textContent =
-      `Cash payment is not available for bookings within 2 days. Please pay with Stripe.`;
+cashInfo.textContent =
+  `Cash payment is not available for bookings within ${cutoffDays} days. Please pay with Stripe.`;
   }
 }
 
@@ -1240,19 +1279,44 @@ console.log('[dayUnavailable]',
 
 
 
-  nextButtons.forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      btn.disabled=true; const prevHTML=btn.innerHTML;
-      btn.innerHTML='<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
-      try{
-        if (await validateStep(currentStep)){
-          if (currentStep < steps.length-1){ currentStep++; showStep(currentStep); updatePricing(); }
-        }
-      } finally {
-        btn.disabled=false; btn.innerHTML=prevHTML;
+nextButtons.forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    btn.disabled = true;
+    const prevHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
+
+    try{
+      const ok = await validateStep(currentStep);
+      if (!ok) return;
+
+      // ✅ ONLY when leaving step 1 (your step index 0)
+      if (currentStep === 1) {
+        const dateStr = document.getElementById("bookingDate")?.value;
+
+        // loader text change
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading settings...';
+
+        // fetch ONCE for selected date
+        await fetchReservationSettingsForDate(dateStr);
+
+        // now pricing can safely use window.settingsForDate
+        updatePricing();
       }
-    });
+
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        showStep(currentStep);
+        updatePricing();
+      }
+    } catch (e) {
+      console.error(e);
+      alert(e.message || String(e));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = prevHTML;
+    }
   });
+});
 
   prevButtons.forEach(btn=>{
     btn.addEventListener('click', ()=>{
