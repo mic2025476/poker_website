@@ -311,7 +311,7 @@ def pay_with_cash(request):
     cutoff_days = settings.cash_cutoff_days
 
     # ✅ Cash allowed only if booking is MORE than 2 days away
-    if days_from_today(booking_date) <= cutoff_days:
+    if days_from_today(booking_date) < cutoff_days:
         return JsonResponse({"error": f"Cash payment is not available for bookings within {cutoff_days} days."}, status=400)
 
     user_id = int(payload["user_id"])
