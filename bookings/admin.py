@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import BookingModel, UnavailableTimeSlotModel
+from .models import BookingModel, ReservationSettingsModel, UnavailableTimeSlotModel
 
 @admin.register(BookingModel)
 class BookingAdmin(admin.ModelAdmin):
@@ -13,3 +13,7 @@ class BookingAdmin(admin.ModelAdmin):
 class UnavailableTimeSlotAdmin(admin.ModelAdmin):
     list_display = ("id", "start_time", "end_time")
     search_fields = ("start_time", "end_time")
+
+@admin.register(ReservationSettingsModel)
+class ReservationSettingsAdmin(admin.ModelAdmin):
+    list_display = ("id", "cash_cutoff_days")

@@ -44,3 +44,15 @@ class UnavailableTimeSlotModel(models.Model):
 
     def __str__(self):
         return f"Unavailable on {self.date} from {self.start_time} to {self.end_time}"
+    
+class ReservationSettingsModel(models.Model):
+    cash_cutoff_days = models.PositiveIntegerField(default=3)  # N days before date
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "Reservation Settings"
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

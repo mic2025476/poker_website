@@ -16,7 +16,7 @@ from django.utils.dateparse import parse_date
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import UnavailableTimeSlotModel
+from .models import ReservationSettingsModel, UnavailableTimeSlotModel
 from .serializers import UnavailableTimeSlotSerializer
 from datetime import datetime, time, timedelta
 from poker_lounge import settings
@@ -33,7 +33,6 @@ FIXED_HOURS = 18                # 18 hours => ends at 12:00 next day
 def book(request):
     if not request.session.get("user_id"):
         return redirect("/")  # or use reverse('home') if you're using named URLs
-
     drinks = DrinkModel.objects.all()
     cfg = get_pricing()
     print(f'cfgcfgcfg {cfg}')
@@ -311,8 +310,11 @@ def check_date_availability(request):
                 )
         except Exception as e:
             print(f"Google Calendar check failed in check_date_availability: {e}")
-
-        return Response({"available": True, "message": "Time slot is available."}, status=status.HTTP_200_OK)
+        settings = ReservationSettingsModel.get_solo()
+        settings_dict = {
+            "cash_cutoff_days": settings.cash_cutoff_days,
+        }
+        return Response({"available": True, "message": "Time slot is available.", "settings": settings_dict}, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response({"available": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -489,11 +491,11 @@ def cancel_booking(request):
                 'booking_id': booking.id
             }
             
-            calendar_deleted = calendar_service.delete_booking_event(booking_data)
-            if calendar_deleted:
-                print(f"✅ Successfully deleted calendar event for cancelled booking {booking.id}")
-            else:
-                print(f"⚠️ Could not find calendar event to delete for booking {booking.id}")
+            #calendar_deleted = calendar_service.delete_booking_event(booking_data)
+            #if calendar_deleted:
+            #    print(f"✅ Successfully deleted calendar event for cancelled booking {booking.id}")
+            #else:
+            #    print(f"⚠️ Could not find calendar event to delete for booking {booking.id}")
         except Exception as e:
             print(f"⚠️ Error deleting calendar event for booking {booking.id}: {e}")
 
@@ -750,3 +752,12 @@ def get_unavailable_dates_range(request):
     except Exception as e:
         print(f"Error getting unavailable dates range: {e}")
         return Response({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+def reservation_settings(request):
+    s = ReservationSettingsModel.get_solo()
+    return JsonResponse({
+        "ok": True,
+        "settings": {
+            "cash_cutoff_days": s.cash_cutoff_days,
+        }
+    })

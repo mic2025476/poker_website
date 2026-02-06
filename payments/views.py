@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import requests
-from bookings.models import BookingModel
+from bookings.models import BookingModel, ReservationSettingsModel
 from customers.models import CustomerModel
 from utils.google_calendar import GoogleCalendarService
 from response import Response as ResponseData  
@@ -271,11 +271,11 @@ def _finalize_booking_and_calendar(booking_id: int, data: dict, payment_referenc
             "booking_id": booking.id,
         }
 
-        calendar_event = calendar_service.add_booking_event(booking_data)
-        if calendar_event:
-            print(f"✅ Created calendar event for booking {booking.id}")
-        else:
-            print(f"⚠️ Calendar event creation failed for booking {booking.id}")
+        #calendar_event = calendar_service.add_booking_event(booking_data)
+        #if calendar_event:
+        #    print(f"✅ Created calendar event for booking {booking.id}")
+        #else:
+        #    print(f"⚠️ Calendar event creation failed for booking {booking.id}")
 
     except Exception as e:
         print(f"⚠️ Error adding booking to calendar: {e}")
@@ -307,10 +307,12 @@ def pay_with_cash(request):
             return JsonResponse({"error": f"Missing {f}"}, status=400)
 
     booking_date = datetime.strptime(payload["booking_date"], "%Y-%m-%d").date()
+    settings = ReservationSettingsModel.get_solo()
+    cutoff_days = settings.cash_cutoff_days
 
     # ✅ Cash allowed only if booking is MORE than 2 days away
-    if days_from_today(booking_date) <= 2:
-        return JsonResponse({"error": "Cash payment is not available for bookings within 2 days."}, status=400)
+    if days_from_today(booking_date) <= cutoff_days:
+        return JsonResponse({"error": f"Cash payment is not available for bookings within {cutoff_days} days."}, status=400)
 
     user_id = int(payload["user_id"])
     people = int(payload["number_of_people"])
